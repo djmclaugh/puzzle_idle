@@ -1,6 +1,9 @@
 
 {
-"include": ["public/src/**/*"],
+"include": [
+  "public/src/**/*",
+  "public/test/**/*"
+],
 "compilerOptions": {
   "strict": true,
   "target": "ES6",

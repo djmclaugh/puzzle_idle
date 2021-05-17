@@ -1,0 +1,79 @@
+import Vue from '../vue.js'
+
+interface LatinCellComponentProps {
+  possibilities: Set<number>,
+  range: number,
+}
+
+interface LatinCellComponentData {
+  p: Set<number>,
+  hover: boolean,
+}
+
+export default {
+  props: ['possibilities', 'range'],
+
+  setup(props: LatinCellComponentProps) {
+
+    const data: LatinCellComponentData = Vue.reactive({
+      p: props.possibilities,
+      hover: false,
+    });
+
+    function onClick(event: MouseEvent) {
+      const target: HTMLDivElement = event.target! as HTMLDivElement;
+      const possibility = Number.parseInt(target.textContent!) - 1;
+      if (event.ctrlKey) {
+        // Toggle this possibility
+        if (data.p.has(possibility)) {
+          data.p.delete(possibility);
+        } else {
+          data.p.add(possibility);
+        }
+      } else {
+        // Make this the only possibility
+        data.p.clear();
+        data.p.add(possibility);
+      }
+    }
+
+    return () => {
+      const items = [];
+
+      if (data.p.size == 1) {
+        const node = Vue.h('span', {
+          class: 'sudoku-selection',
+          style: {
+            opacity: (data.hover && props.range) > 0 ? 0.5 : 1,
+          },
+        }, (data.p.values().next().value + 1).toString());
+        items.push(node);
+      }
+
+      const possibilityNodes = [];
+      for (let i = 0; i < props.range; ++i) {
+        const node = Vue.h('div', {
+          class: ['sudoku-possibility', {'crossed-out': !data.p.has(i)}],
+          key: i.toString(),
+          onClick: onClick,
+        }, (i+1).toString());
+        possibilityNodes.push(node);
+      }
+      const possibilities = Vue.h('div', {
+        class: 'sudoku-possibilities',
+        style: {
+          visibility: data.p.size == 1 && !data.hover ? 'hidden' : 'visible',
+        },
+      }, possibilityNodes);
+      items.push(possibilities);
+
+      return Vue.h('div', {
+        class: ['sudoku-cell'],
+        onMouseover: () => {data.hover = true;},
+        onMouseout: () => {
+          data.hover = false;
+        },
+      }, items);
+    };
+  },
+}

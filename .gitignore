@@ -8,3 +8,5 @@ public/lib/vue@3.0.11/dist/vue.runtime.global.js
 # generated code
 public/src/**/*.js
 public/src/**/*.js.map
+public/test/**/*.js
+public/test/**/*.js.map
