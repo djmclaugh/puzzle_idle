@@ -5,7 +5,7 @@ import Towers from '../../../src/puzzles/towers.js'
 const App = {
   render() {
     const s3 = Vue.h(TowersComponent, {
-      puzzle: new Towers(),
+      puzzle: Towers.randomOfSize(3),
     });
     return Vue.h('div', {}, [s3]);
   },

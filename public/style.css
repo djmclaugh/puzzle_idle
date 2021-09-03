@@ -15,11 +15,46 @@ canvas {
   user-select: none;
 }
 
+.towers-grid-2 {
+  width: 400px;
+  height: 400px;
+  grid-template-columns: 0.7fr 1fr 1fr 0.7fr;
+  grid-template-rows: 0.7fr 1fr 1fr 0.7fr;
+}
+
 .towers-grid-3 {
   width: 500px;
   height: 500px;
   grid-template-columns: 0.7fr 1fr 1fr 1fr 0.7fr;
   grid-template-rows: 0.7fr 1fr 1fr 1fr 0.7fr;
+}
+
+.towers-grid-4 {
+  width: 500px;
+  height: 500px;
+  grid-template-columns: 0.7fr 1fr 1fr 1fr 1fr 0.7fr;
+  grid-template-rows: 0.7fr 1fr 1fr 1fr 1fr 0.7fr;
+}
+
+.towers-grid-5 {
+  width: 660px;
+  height: 660px;
+  grid-template-columns: 0.7fr 1fr 1fr 1fr 1fr 1fr 0.7fr;
+  grid-template-rows: 0.7fr 1fr 1fr 1fr 1fr 1fr 0.7fr;
+}
+
+.towers-grid-6 {
+  width: 800px;
+  height: 800px;
+  grid-template-columns: 0.7fr 1fr 1fr 1fr 1fr 1fr 1fr 0.7fr;
+  grid-template-rows: 0.7fr 1fr 1fr 1fr 1fr 1fr 1fr 0.7fr;
+}
+
+.towers-grid-7 {
+  width: 900px;
+  height: 900px;
+  grid-template-columns: 0.7fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 0.7fr;
+  grid-template-rows: 0.7fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 0.7fr;
 }
 
 .sudoku-grid {
