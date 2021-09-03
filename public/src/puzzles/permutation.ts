@@ -14,18 +14,31 @@ export class Permutation {
       inputs[i] = this.f(inputs[i]);
     }
   }
+
+  public suffle<T>(list: T[]): void {
+    if (this.order.length != list.length) {
+      throw new Error("List of the wrong size.")
+    }
+    const temp = list.concat();
+    for (let i = 0; i < list.length; ++i) {
+      list[this.order[i]] = temp[i];
+    }
+  }
 }
 
-export const S2 = [
-  new Permutation([0, 1]),
-  new Permutation([1, 0]),
-];
+// Fisher–Yates shuffle
+export function randomPermutation(size: number) {
+  const l: number[] = [];
+  for (let i = 0; i < size; ++i) {
+    l.push(i);
+  }
+  for (let i = 0; i < size; ++i) {
+    const rand = i + Math.floor(Math.random() * (size - i));
+    const temp = l[rand];
+    l[rand] = l[i];
+    l[i] = temp;
+  }
+  return new Permutation(l);
+}
 
-export const S3 = [
-  new Permutation([0, 1, 2]),
-  new Permutation([0, 2, 1]),
-  new Permutation([1, 0, 2]),
-  new Permutation([1, 2, 0]),
-  new Permutation([2, 0, 1]),
-  new Permutation([2, 1, 0]),
-];
+// TODO: Look into Steinhaus–Johnson–Trotter algorithm

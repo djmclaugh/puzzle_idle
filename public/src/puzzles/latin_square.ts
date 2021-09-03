@@ -1,4 +1,5 @@
-import { S3 } from './permutation.js'
+import { randomPermutation } from './permutation.js'
+import IsotopyClasses from './data/latin_squares/isotopy_classes.js'
 
 export default class LatinSquare {
   private grid: number[][] = [];
@@ -17,65 +18,68 @@ export default class LatinSquare {
     return this.grid[index].concat();
   }
 
-  public static randomOfSize(size: number) {
+  public cell(x:number, y: number): number {
+    return this.grid[x][y];
+  }
+
+  private static randomIsotopyClass(size: number) {
+    if (size >= IsotopyClasses.length) {
+      throw new Error("Only have enough data to get isotopy classes of order 7 or less.");
+    }
+    // Not all isotopy classes have the same number of members.
+    // So a uniform distribution for choosing the isotopy classe won't give us a uniform
+    // distribution for all latin squares.
+    // But this is good enough for now.
+    // TODO: Figure this out
+    return IsotopyClasses[size][Math.floor(Math.random() * IsotopyClasses[size].length)];
+  }
+
+  private static randomSquareFromIsotopyClass(isoClass: string) {
+    // We can gat every element of an isotopy class by permutating the rows, columns, and labels.
+    // But not each square has the same number of unique row, column, and label permutation
+    // combinations that will lead to it.
+    // So choosing row, column, and label permuations uniformly randomly won't determine a square
+    // uniformly randomly
+    // But this is good enough for now.
+    // TODO: Figure this out
+    const n = Math.sqrt(isoClass.length);
+    const rowPerm = randomPermutation(n);
+    const columnPerm = randomPermutation(n);
+    const labelPerm = randomPermutation(n);
+
     const square = new LatinSquare();
-    for (let i = 0; i < size; ++i) {
-      square.grid.push([]);
-      for (let j = 0; j < size; ++j) {
-        square.grid[i].push(-1);
+    let index = 0;
+    for (let i = 0; i < n; ++i) {
+      const row = [];
+      for (let j = 0; j < n; ++j) {
+        const label = Number.parseInt(isoClass[index]);
+        ++index;
+        row.push(labelPerm.f(label));
       }
+      rowPerm.suffle(row);
+      square.grid.push(row);
     }
+    columnPerm.suffle(square.grid);
 
-    // Manually generate them for now until I find a way to do it somewhat uniformaly for larger
-    // squares.
-    if (size == 1) {
-      square.grid[0][0] = 0;
-    } else if (size == 2) {
-      if (Math.random() < 0.5) {
-        square.grid[0][0] = 0;
-        square.grid[1][0] = 1;
-        square.grid[0][1] = 1;
-        square.grid[1][1] = 0;
-      } else {
-        square.grid[0][0] = 1;
-        square.grid[1][0] = 0;
-        square.grid[0][1] = 0;
-        square.grid[1][1] = 1;
-      }
-    } else if (size == 3) {
-      square.grid[0][0] = 0;
-      square.grid[1][0] = 1;
-      square.grid[2][0] = 2;
-      if (Math.random() < 0.5) {
-        square.grid[0][1] = 1;
-        square.grid[1][1] = 2;
-        square.grid[2][1] = 0;
-        square.grid[0][2] = 2;
-        square.grid[1][2] = 0;
-        square.grid[2][2] = 1;
-      } else {
-        square.grid[0][1] = 2;
-        square.grid[1][1] = 0;
-        square.grid[2][1] = 1;
-        square.grid[0][2] = 1;
-        square.grid[1][2] = 2;
-        square.grid[2][2] = 0;
-      }
-      const perm = S3[Math.floor(Math.random() * S3.length)];
-      square.grid.forEach(column => {
-        perm.applyToEach(column);
-      });
-    } else {
-      throw new Error("Not yet implemented");
-    }
-
+    console.log(square.toString());
     return square;
+  }
+
+  public static randomOfSize(size: number) {
+    const isoClass = this.randomIsotopyClass(size);
+    return this.randomSquareFromIsotopyClass(isoClass);
+  }
+
+  public copy(): LatinSquare {
+    const c = new LatinSquare();
+    c.grid = this.grid.map(column => column.concat());
+    return c;
   }
 
   public toString() {
     const lines = [];
     for (let i = 0; i < this.n; ++i) {
-      lines.push(this.grid[i].join(' '));
+      lines.push(this.row(i).join(' '));
     }
     return lines.join('\n');
   }
@@ -86,7 +90,7 @@ export default class LatinSquare {
     for (let i = 0; i < grid.length; ++i) {
       square.grid.push([]);
       for (let j = 0; j < grid.length; ++j) {
-        square.grid[i].push(Number.parseInt(grid[i][j]));
+        square.grid[i].push(Number.parseInt(grid[j][i]));
       }
     }
     return square;

@@ -1,7 +1,7 @@
 import LatinSquare from '../latin_square.js'
 
 // Returns how many towers can be seen.
-function view(values: number[]) {
+export function view(values: number[]) {
   let seen = 0;
   let max = -1;
   for (const value of values) {
@@ -13,7 +13,7 @@ function view(values: number[]) {
   return seen;
 }
 
-type Possibilities = Set<number>;
+export type Possibilities = Set<number>;
 
 export default class Towers {
   private grid: number[][];
@@ -34,8 +34,20 @@ export default class Towers {
   public get sHints() {
     return this.southHints.concat();
   }
+  public getHints(face: HintFace) {
+    switch(face) {
+      case HintFace.NORTH:
+        return this.nHints
+      case HintFace.EAST:
+        return this.eHints
+      case HintFace.SOUTH:
+        return this.sHints
+      case HintFace.WEST:
+        return this.wHints
+    }
+  }
 
-  public marks: Possibilities[][];
+  public marks: Possibilities[][] = [];
 
   public get n() {
     return this.northHints.length;
@@ -57,7 +69,6 @@ export default class Towers {
     this.grid = grid;
     this.marks = [];
     for (let i = 0; i < this.n; ++i) {
-      this.marks.push([]);
       for (let j = 0; j < this.n; ++j) {
         this.marks[i].push(new Set());
         if (this.grid[i][j] == -1) {
@@ -151,6 +162,44 @@ export default class Towers {
     bottomHint += (this.southHints[this.n - 1] == -1 ? ' ' : this.southHints[this.n - 1]) + '  ';
     rows.push(bottomRow);
     rows.push(bottomHint);
+
+    return rows.join('\n');
+  }
+
+  public marksToString() {
+    const rows: string[] = [];
+    let topRow = '┌';
+    for (let i = 0; i < this.n - 1; ++i) {
+      topRow +='─┬';
+    }
+    topRow += '─┐';
+    rows.push(topRow);
+
+    for (let i = 0; i < this.solution.n; ++i) {
+      let mid = '│' + this.marksRow(i).map(v => {
+        if (v.size == 1) {
+          return v.values().next().value + '│';
+        } else {
+          return '?' + '│';
+        }
+      }).join('');
+      rows.push(mid);
+      if (i != this.solution.n - 1) {
+        let row = '├';
+        for (let i = 0; i < this.solution.n - 1; ++i) {
+          row +='─┼';
+        }
+        row += '─┤';
+        rows.push(row);
+      }
+    }
+
+    let bottomRow = '└';
+    for (let i = 0; i < this.solution.n - 1; ++i) {
+      bottomRow +='─┴';
+    }
+    bottomRow += '─┘';
+    rows.push(bottomRow);
 
     return rows.join('\n');
   }
