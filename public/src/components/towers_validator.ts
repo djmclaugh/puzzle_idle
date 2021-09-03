@@ -1,7 +1,7 @@
 import Vue from '../vue.js'
 import LatinSquareCellComponent from './latin_square_cell.js'
 import TowersComponent, { TowersGridSize, Background } from './towers.js'
-import Towers from '../puzzles/towers.js'
+import Towers from '../puzzles/towers/towers.js'
 
 interface TowersValidatorComponentProps {
   puzzle: Towers,
@@ -78,6 +78,19 @@ function isReverse(face: HintFace) {
   }
 }
 
+function getHints(puzzle: Towers, face: HintFace): number[] {
+  if (face == HintFace.WEST) {
+    return puzzle.wHints;
+  } else if (face == HintFace.NORTH) {
+    return puzzle.nHints;
+  } else if (face == HintFace.EAST) {
+    return puzzle.eHints;
+  } else if (face == HintFace.SOUTH) {
+    return puzzle.sHints;
+  }
+  throw Error("This should never happen");
+}
+
 export default {
   props: ['puzzle', 'speed'],
 
@@ -138,6 +151,20 @@ export default {
           if (s.row == n) {
             s.row = 0;
             data.step += 1;
+            if (data.step == ValidationStep.HINTS) {
+              const hintS = data.hintCheck;
+              while(data.step != ValidationStep.DONE && getHints(puzzle, hintS.face)[hintS.index] == -1) {
+                hintS.index += 1
+                if (hintS.index == n) {
+                  hintS.index = 0;
+                  hintS.face += 1;
+                }
+                if (hintS.face > HintFace.SOUTH) {
+                  hintS.face = 0;
+                  data.step += 1;
+                }
+              }
+            }
           }
         }
         s.beat = 1 - s.beat;
@@ -161,18 +188,7 @@ export default {
             }
             s.indexSoFar += 1;
           } else {
-            let hints: number[];
-            if (s.face == HintFace.WEST) {
-              hints = puzzle.wHints;
-            } else if (s.face == HintFace.NORTH) {
-              hints = puzzle.nHints;
-            } else if (s.face == HintFace.EAST) {
-              hints = puzzle.eHints;
-            } else if (s.face == HintFace.SOUTH) {
-              hints = puzzle.sHints;
-            } else {
-              throw Error("This should never happen");
-            }
+            let hints = getHints(puzzle, s.face);
             if (hints[s.index] != s.seenSoFar.length) {
               return false;
             }
@@ -186,6 +202,17 @@ export default {
             if (s.face > HintFace.SOUTH) {
               s.face = 0;
               data.step += 1;
+            }
+            while(data.step != ValidationStep.DONE && getHints(puzzle, s.face)[s.index] == -1) {
+              s.index += 1
+              if (s.index == n) {
+                s.index = 0;
+                s.face += 1;
+              }
+              if (s.face > HintFace.SOUTH) {
+                s.face = 0;
+                data.step += 1;
+              }
             }
           }
         }
@@ -321,18 +348,7 @@ export default {
             })
           })
         } else {
-          let hints: number[];
-          if (s.face == HintFace.WEST) {
-            hints = puzzle.wHints;
-          } else if (s.face == HintFace.NORTH) {
-            hints = puzzle.nHints;
-          } else if (s.face == HintFace.EAST) {
-            hints = puzzle.eHints;
-          } else if (s.face == HintFace.SOUTH) {
-            hints = puzzle.sHints;
-          } else {
-            throw Error("This should never happen");
-          }
+          let hints: number[] = getHints(puzzle, s.face);
           let message = `--- Can exactly ${hints[s.index]} tower(s) be seen?`;
           let colour = '#ffffc0f0';
           if (s.beat == 1) {

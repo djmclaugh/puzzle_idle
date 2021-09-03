@@ -5,4 +5,5 @@ export default {
   reactive: Vue.reactive,
   h: Vue.h,
   createApp: Vue.createApp,
+  onMounted: Vue.onMounted,
 }

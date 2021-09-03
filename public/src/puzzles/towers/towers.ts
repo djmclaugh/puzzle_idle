@@ -1,4 +1,4 @@
-import LatinSquare from './latin_square.js'
+import LatinSquare from '../latin_square.js'
 
 // Returns how many towers can be seen.
 function view(values: number[]) {
@@ -16,7 +16,7 @@ function view(values: number[]) {
 type Possibilities = Set<number>;
 
 export default class Towers {
-  private solution: LatinSquare;
+  private grid: number[][];
   private westHints: number[];
   private northHints: number[];
   private eastHints: number[];
@@ -38,7 +38,7 @@ export default class Towers {
   public marks: Possibilities[][];
 
   public get n() {
-    return this.solution.n;
+    return this.northHints.length;
   }
 
   public marksRow(r: number) {
@@ -49,28 +49,55 @@ export default class Towers {
     return this.marks[c].concat();
   }
 
-  constructor() {
-    this.solution = LatinSquare.randomOfSize(3);
-    this.westHints = [-1, -1, -1];
-    this.northHints = [-1, -1, -1];
-    this.eastHints = [-1, -1, -1];
-    this.southHints = [-1, -1, -1];
-    for (let i = 0; i < 3; ++i) {
-      this.westHints[i] = view(this.solution.row(i));
-      this.eastHints[i] = view(this.solution.row(i).reverse());
-      this.northHints[i] = view(this.solution.column(i));
-      this.southHints[i] = view(this.solution.column(i).reverse());
-    }
+  constructor(grid: number[][], wHints: number[], nHints: number[], eHints: number[], sHints: number[]) {
+    this.westHints = wHints;
+    this.northHints = nHints;
+    this.eastHints = eHints;
+    this.southHints = sHints;
+    this.grid = grid;
     this.marks = [];
     for (let i = 0; i < this.n; ++i) {
       this.marks.push([]);
       for (let j = 0; j < this.n; ++j) {
         this.marks[i].push(new Set());
-        for (let k = 0; k < this.n; ++k) {
-          this.marks[i][j].add(k);
+        if (this.grid[i][j] == -1) {
+          for (let k = 0; k < this.n; ++k) {
+            this.marks[i][j].add(k);
+          }
+        } else {
+          this.marks[i][j].add(this.grid[i][j]);
         }
       }
     }
+  }
+
+  public static fromString(s: string): Towers {
+    const rows = s.split("\n");
+    const wHints: number[] = [];
+    const nHints: number[] = [];
+    const eHints: number[] = [];
+    const sHints: number[] = [];
+    const grid: number[][] = [];
+
+    const n = rows.length - 2;
+
+    for (let i = 0; i < n; ++i) {
+      grid.push([]);
+    }
+
+    for (let i = 1; i < n + 1; ++i) {
+      nHints.push(rows[0][i] == "?" ? -1 : parseInt(rows[0][i]));
+      sHints.push(rows[n + 1][i] == "?" ? -1 : parseInt(rows[n + 1][i]));
+
+      wHints.push(rows[i][0] == "?" ? -1 : parseInt(rows[i][0]));
+      eHints.push(rows[i][n + 1] == "?" ? -1 : parseInt(rows[i][n + 1]));
+
+      for (let row = 0; row < n; ++row) {
+        grid[row].push(rows[row + 1][i] == "?" ? -1 : parseInt(rows[row + 1][i]));
+      }
+    }
+
+    return new Towers(grid, wHints, nHints, eHints, sHints);
   }
 
   public isReadyForValidation(): boolean {
@@ -97,16 +124,16 @@ export default class Towers {
     rows.push(topHint);
     rows.push(topRow);
 
-    for (let i = 0; i < this.solution.n; ++i) {
-      let mid = '│' + this.solution.row(i).map(v => {
-        return v + '│';
+    for (let i = 0; i < this.grid.length; ++i) {
+      let mid = '│' + this.grid[i].map(v => {
+        return (v >= 0 ? v : "?") + '│';
       }).join('');
       mid = (this.westHints[i] == -1 ? ' ' : this.westHints[i]) + mid;
       mid = mid + (this.eastHints[i] == -1 ? ' ' : this.eastHints[i]);
       rows.push(mid);
-      if (i != this.solution.n - 1) {
+      if (i != this.grid.length - 1) {
         let row = ' ├';
-        for (let i = 0; i < this.solution.n - 1; ++i) {
+        for (let i = 0; i < this.grid.length - 1; ++i) {
           row +='─┼';
         }
         row += '─┤ ';
@@ -116,7 +143,7 @@ export default class Towers {
 
     let bottomRow = ' └';
     let bottomHint = '  ';
-    for (let i = 0; i < this.solution.n - 1; ++i) {
+    for (let i = 0; i < this.grid.length - 1; ++i) {
       bottomRow +='─┴';
       bottomHint += (this.southHints[i] == -1 ? ' ' : this.southHints[i]) + ' ';
     }

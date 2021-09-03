@@ -1,7 +1,8 @@
 import Vue from './vue.js'
-import Towers from './puzzles/towers.js'
+import Towers from './puzzles/towers/towers.js'
 import TowersComponent from './components/towers.js'
 import TowersValidatorComponent from './components/towers_validator.js'
+import { randomOfSize } from './puzzles/towers/towers_loader.js'
 
 interface AppData {
   money: number,
@@ -13,17 +14,22 @@ interface AppData {
 }
 
 let puzzleUUID = 0;
+randomOfSize(3);
 
 const App = {
   setup(): any {
     const data: AppData = Vue.reactive({
       money: 0,
-      currentPuzzle: new Towers(),
+      currentPuzzle: {},
       validating: false,
-      validationSpeed: 1,
+      validationSpeed: 10,
       isDone: false,
       isCorrect: false,
     });
+
+    Vue.onMounted(async () => {
+      data.currentPuzzle = await randomOfSize(4);
+    })
 
     return () => {
       const items = [];
@@ -46,18 +52,18 @@ const App = {
           data.isDone = false;
           data.isCorrect = false;
         },
-        disabled: data.validating || !data.currentPuzzle.isReadyForValidation(),
+        disabled: !(data.currentPuzzle instanceof Towers) || data.validating || !data.currentPuzzle.isReadyForValidation(),
       }, 'Validate');
       items.push(checkButton);
 
       if (data.validating) {
         let message = data.isDone ? (data.isCorrect ? 'Cash in $$$' : 'Return to edit mode') : 'Cancel';
         const stopButton = Vue.h('button', {
-          onClick: () => {
+          onClick: async () => {
             data.validating = false;
             if (data.isCorrect) {
               data.money += 5;
-              data.currentPuzzle = new Towers();
+              data.currentPuzzle = await randomOfSize(4),
               puzzleUUID += 1;
             }
           },
