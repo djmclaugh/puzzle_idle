@@ -71,7 +71,7 @@ export default {
         }
 
         const cell = Vue.h(LatinSquareCellComponent, {
-          possibilities: puzzle.marks[i % n ][Math.floor(i / n)],
+          possibilities: puzzle.marks[Math.floor(i / n)][i % n],
           range: props.interactive ? n : -1,
           style: style,
         });

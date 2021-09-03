@@ -1,5 +1,5 @@
 import Bot from './bot.js'
-import Towers from '../towers.js'
+import Towers from '../towers/towers.js'
 
 /**
  * Goes through the whole grid until it finds a cell with only 1 option.
@@ -15,8 +15,6 @@ export default class TowersRowChecker extends Bot {
   private column2: number = 0;
   private currentTarget: number = -1;
   private beat = -1;
-
-  public logs: string[] = [];
 
   constructor(p: Towers) {
     super();
@@ -36,9 +34,9 @@ export default class TowersRowChecker extends Bot {
     if (this.beat == 1) {
       if (this.currentTarget == -1) {
         // Find the next solved cell.
-        if (marks[this.column1][this.row].size == 1) {
+        if (marks[this.row][this.column1].size == 1) {
           this.logs.push(`Found solved cells at position (${this.column1 + 1}, ${this.row + 1}).`)
-          this.currentTarget = this.p.marks[this.column1][this.row].values().next().value;
+          this.currentTarget = this.p.marks[this.row][this.column1].values().next().value;
           this.column2 = this.column1 == 0 ? 1 : 0;
         } else {
           this.column1 += 1;
@@ -58,9 +56,9 @@ export default class TowersRowChecker extends Bot {
         }
       } else {
         // Find cells in the same row that still has that option.
-        if (marks[this.column2][this.row].has(this.currentTarget)) {
+        if (marks[this.row][this.column2].has(this.currentTarget)) {
           this.logs.push(`Since cell (${this.column1 + 1}, ${this.row + 1}) must be value ${this.currentTarget + 1}, cell (${this.column2 + 1}, ${this.row + 1}) can't also be value ${this.currentTarget + 1} because both cells are in the same row.`);
-          marks[this.column2][this.row].delete(this.currentTarget);
+          marks[this.row][this.column2].delete(this.currentTarget);
           didModify = true;
         }
         this.column2 += 1;

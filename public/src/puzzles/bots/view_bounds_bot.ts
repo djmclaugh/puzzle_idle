@@ -1,5 +1,5 @@
 import Bot from './bot.js'
-import Towers, {HintFace, faceToString, isVertical, isReverse, isClockwise, next} from '../towers.js'
+import Towers, {HintFace, faceToString, isVertical, isReverse, isClockwise, next} from '../towers/towers.js'
 
 /**
  * Goes through all the hints one at a time.
@@ -21,8 +21,6 @@ export default class ViewBoundsBot extends Bot {
   private rowIndex: number = -1;
   private innerIndex: number = -1;
   private beat = -1;
-
-  public logs: string[] = [];
 
   constructor(p: Towers) {
     super();
@@ -51,9 +49,9 @@ export default class ViewBoundsBot extends Bot {
 
     if (this.beat == 1) {
       for (let i = max; i < n; ++i) {
-        if (marks[x][y].has(i)) {
+        if (marks[y][x].has(i)) {
           this.logs.push(`Cell (${x + 1}, ${y + 1}) cannot be ${i + 1} because of the ${faceToString(this.face)} hint.`);
-          marks[x][y].delete(i);
+          marks[y][x].delete(i);
           didModify = true;
         }
       }

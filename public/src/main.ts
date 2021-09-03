@@ -2,8 +2,8 @@ import Vue from './vue.js'
 import Towers from './puzzles/towers/towers.js'
 import TowersRowChecker from './puzzles/bots/towers_row_checker.js'
 import TowersColumnChecker from './puzzles/bots/towers_column_checker.js'
+import Bot from './puzzles/bots/bot.js'
 import ViewBoundsBot from './puzzles/bots/view_bounds_bot.js'
-import TowersSolver from './puzzles/solvers/towers_solver.js'
 import TowersComponent from './components/towers.js'
 import TowersValidatorComponent from './components/towers_validator.js'
 import { randomOfSize } from './puzzles/towers/towers_loader.js'
@@ -37,14 +37,19 @@ const App = {
       botLogs: [],
     });
 
+    let bot1: Bot;
+    let bot2: Bot;
+    let bot3: Bot;
+
     Vue.onMounted(async () => {
-      data.currentPuzzle = await randomOfSize(4);
+      data.currentPuzzle = await randomOfSize(5);
+      bot1 = new TowersRowChecker(data.currentPuzzle);
+      bot2 = new TowersColumnChecker(data.currentPuzzle);
+      bot3 = new ViewBoundsBot(data.currentPuzzle);
+      data.botLogs = bot3.logs = Vue.reactive(bot3.logs);
     })
 
-    let bot1 = new TowersRowChecker(data.currentPuzzle);
-    let bot2 = new TowersColumnChecker(data.currentPuzzle);
-    let bot3 = new ViewBoundsBot(data.currentPuzzle);
-    data.botLogs = bot3.logs = Vue.reactive(bot3.logs);
+
     function loop() {
       setTimeout(async () => {
         if (!data.validating) {
@@ -113,9 +118,11 @@ const App = {
             data.validating = false;
             if (data.isCorrect) {
               data.money += 5;
-              data.currentPuzzle = await randomOfSize(4),
+              data.currentPuzzle = await randomOfSize(5),
               bot1 = new TowersRowChecker(data.currentPuzzle);
               bot2 = new TowersColumnChecker(data.currentPuzzle);
+              bot3 = new ViewBoundsBot(data.currentPuzzle);
+              data.botLogs = bot3.logs = Vue.reactive(bot3.logs);
               puzzleUUID += 1;
             }
           },

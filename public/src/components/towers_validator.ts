@@ -2,6 +2,7 @@ import Vue from '../vue.js'
 import LatinSquareCellComponent from './latin_square_cell.js'
 import TowersComponent, { TowersGridSize, Background } from './towers.js'
 import Towers from '../puzzles/towers/towers.js'
+import { HintFace } from '../puzzles/towers/towers.js'
 
 interface TowersValidatorComponentProps {
   puzzle: Towers,
@@ -34,13 +35,6 @@ enum ValidationStep {
   COLUMN = 2,
   HINTS = 3,
   DONE = 4,
-}
-
-enum HintFace {
-  WEST = 1,
-  NORTH = 2,
-  EAST = 3,
-  SOUTH = 4,
 }
 
 function faceToString(face: HintFace) {
@@ -98,7 +92,7 @@ export default {
 
     const puzzle = props.puzzle;
     const n = puzzle.n;
-    const solution = puzzle.marks.map(column => column.map(cell => cell.values().next().value));
+    const solution = puzzle.marks.map(row => row.map(cell => cell.values().next().value));
     const data: ValidationState = Vue.reactive({
       step: ValidationStep.ROW,
       latinCheck: {
@@ -130,11 +124,11 @@ export default {
         const s = data.latinCheck;
         if (s.beat == 1) {
           if (data.step == ValidationStep.ROW) {
-            if (solution[s.index1][s.row] == solution[s.index2][s.row]) {
+            if (solution[s.row][s.index1] == solution[s.row][s.index2]) {
               return false;
             }
           } else if (data.step == ValidationStep.COLUMN) {
-            if (solution[s.row][s.index1] == solution[s.row][s.index2]) {
+            if (solution[s.index1][s.row] == solution[s.index2][s.row]) {
               return false;
             }
           }
@@ -178,7 +172,7 @@ export default {
             const x = isV ? s.index : (isR ? n - s.indexSoFar - 1 : s.indexSoFar);
             const y = isV ? (isR ? n - s.indexSoFar - 1 : s.indexSoFar) : s.index;
 
-            const current = solution[x][y];
+            const current = solution[y][x];
             if (canBeSeen(s.seenSoFar.map(a => a.value), current)) {
               s.seenSoFar.push({
                 x: x,
@@ -246,11 +240,11 @@ export default {
         const y = data.latinCheck.row;
         const x1 = data.latinCheck.index1;
         const x2 = data.latinCheck.index2;
-        let message = `-- Is ${solution[x1][y] + 1} different from ${solution[x2][y] + 1}?`;
+        let message = `-- Is ${solution[y][x1] + 1} different from ${solution[y][x2] + 1}?`;
         let colour = '#ffffc0f0';
 
         if (data.latinCheck.beat == 1) {
-          if (solution[x1][y] == solution[x2][y]) {
+          if (solution[y][x1] == solution[y][x2]) {
             message += ' No ❌';
             colour = '#ffc0c0f0';
           } else {
@@ -281,11 +275,11 @@ export default {
         const x = data.latinCheck.row;
         const y1 = data.latinCheck.index1;
         const y2 = data.latinCheck.index2;
-        let message = `-- Is ${solution[x][y1] + 1} different from ${solution[x][y2] + 1}?`;
+        let message = `-- Is ${solution[y1][x] + 1} different from ${solution[y2][x] + 1}?`;
         let colour = '#ffffc0f0';
 
         if (data.latinCheck.beat == 1) {
-          if (solution[x][y1] == solution[x][y2]) {
+          if (solution[y1][x] == solution[y2][x]) {
             message += ' No ❌';
             colour = '#ffc0c0f0';
           } else {
@@ -325,10 +319,10 @@ export default {
           const isR = isReverse(s.face);
           const x = isV ? s.index : (isR ? n - s.indexSoFar - 1 : s.indexSoFar);
           const y = isV ? (isR ? n - s.indexSoFar - 1 : s.indexSoFar) : s.index;
-          let message = `--- Can the ${solution[x][y] + 1} tower be seen?`;
+          let message = `--- Can the ${solution[y][x] + 1} tower be seen?`;
           let colour = '#ffffc0f0';
           if (s.beat == 1) {
-            if (canBeSeen(s.seenSoFar.map(a => a.value), solution[x][y])) {
+            if (canBeSeen(s.seenSoFar.map(a => a.value), solution[y][x])) {
               message += ' Yes';
               colour = '#c0ffc0f0';
             } else {

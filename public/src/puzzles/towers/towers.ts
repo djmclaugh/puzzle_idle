@@ -1,5 +1,3 @@
-import LatinSquare from '../latin_square.js'
-
 // Returns how many towers can be seen.
 export function view(values: number[]) {
   let seen = 0;
@@ -14,6 +12,46 @@ export function view(values: number[]) {
 }
 
 export type Possibilities = Set<number>;
+
+export enum HintFace {
+  WEST = 1,
+  NORTH = 2,
+  EAST = 3,
+  SOUTH = 4,
+}
+
+export function faceToString(face: HintFace) {
+  switch (face) {
+    case HintFace.WEST:
+      return "West";
+    case HintFace.NORTH:
+      return "North";
+    case HintFace.EAST:
+      return "East";
+    case HintFace.SOUTH:
+      return "South";
+  }
+}
+
+export function isVertical(face: HintFace): boolean {
+  return face % 2 == 0;
+}
+
+export function isHorizontal(face: HintFace): boolean {
+  return !isVertical(face);
+}
+
+export function isReverse(face: HintFace): boolean {
+  return face > 2;
+}
+
+export function isClockwise(face: HintFace): boolean {
+  return face == HintFace.NORTH || face == HintFace.EAST;
+}
+
+export function next(face: HintFace): HintFace {
+  return (face % 4) + 1;
+}
 
 export default class Towers {
   private grid: number[][];
@@ -34,6 +72,7 @@ export default class Towers {
   public get sHints() {
     return this.southHints.concat();
   }
+
   public getHints(face: HintFace) {
     switch(face) {
       case HintFace.NORTH:
@@ -50,7 +89,7 @@ export default class Towers {
   public marks: Possibilities[][] = [];
 
   public get n() {
-    return this.northHints.length;
+    return this.grid.length;
   }
 
   public marksRow(r: number) {
@@ -69,6 +108,7 @@ export default class Towers {
     this.grid = grid;
     this.marks = [];
     for (let i = 0; i < this.n; ++i) {
+      this.marks.push([]);
       for (let j = 0; j < this.n; ++j) {
         this.marks[i].push(new Set());
         if (this.grid[i][j] == -1) {
@@ -109,6 +149,23 @@ export default class Towers {
     }
 
     return new Towers(grid, wHints, nHints, eHints, sHints);
+  }
+
+  public restart() {
+    this.marks = [];
+    for (let i = 0; i < this.n; ++i) {
+      this.marks.push([]);
+      for (let j = 0; j < this.n; ++j) {
+        this.marks[i].push(new Set());
+        if (this.grid[i][j] == -1) {
+          for (let k = 0; k < this.n; ++k) {
+            this.marks[i][j].add(k);
+          }
+        } else {
+          this.marks[i][j].add(this.grid[i][j]);
+        }
+      }
+    }
   }
 
   public isReadyForValidation(): boolean {
@@ -167,6 +224,7 @@ export default class Towers {
   }
 
   public marksToString() {
+    const n = this.grid.length;
     const rows: string[] = [];
     let topRow = '┌';
     for (let i = 0; i < this.n - 1; ++i) {
@@ -175,7 +233,7 @@ export default class Towers {
     topRow += '─┐';
     rows.push(topRow);
 
-    for (let i = 0; i < this.solution.n; ++i) {
+    for (let i = 0; i < n; ++i) {
       let mid = '│' + this.marksRow(i).map(v => {
         if (v.size == 1) {
           return v.values().next().value + '│';
@@ -184,9 +242,9 @@ export default class Towers {
         }
       }).join('');
       rows.push(mid);
-      if (i != this.solution.n - 1) {
+      if (i != n - 1) {
         let row = '├';
-        for (let i = 0; i < this.solution.n - 1; ++i) {
+        for (let i = 0; i < n - 1; ++i) {
           row +='─┼';
         }
         row += '─┤';
@@ -195,7 +253,7 @@ export default class Towers {
     }
 
     let bottomRow = '└';
-    for (let i = 0; i < this.solution.n - 1; ++i) {
+    for (let i = 0; i < n - 1; ++i) {
       bottomRow +='─┴';
     }
     bottomRow += '─┘';

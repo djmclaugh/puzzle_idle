@@ -4,4 +4,5 @@ export default abstract class Bot {
   // Called whenever the bot should take its next step.
   public abstract tick(): boolean;
 
+  public logs: string[] = [];
 }
