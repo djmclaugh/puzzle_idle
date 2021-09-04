@@ -29,6 +29,7 @@ export default class TowersRowChecker extends Bot {
   public tick() {
     const n = this.p.n;
     const marks = this.p.marks;
+    const grid = this.p.grid;
     let didModify = false;
 
     if (this.beat == 1) {
@@ -57,9 +58,15 @@ export default class TowersRowChecker extends Bot {
       } else {
         // Find cells in the same row that still has that option.
         if (marks[this.row][this.column2].has(this.currentTarget)) {
-          this.logs.push(`Since cell (${this.column1 + 1}, ${this.row + 1}) must be value ${this.currentTarget + 1}, cell (${this.column2 + 1}, ${this.row + 1}) can't also be value ${this.currentTarget + 1} because both cells are in the same row.`);
-          marks[this.row][this.column2].delete(this.currentTarget);
-          didModify = true;
+          if (grid[this.row][this.column2] == -1) {
+            this.logs.push(`Since cell (${this.column1 + 1}, ${this.row + 1}) must be value ${this.currentTarget + 1}, cell (${this.column2 + 1}, ${this.row + 1}) can't also be value ${this.currentTarget + 1} because both cells are in the same row.`);
+            marks[this.row][this.column2].delete(this.currentTarget);
+            didModify = true;
+          } else if (grid[this.row][this.column1] == -1) {
+            this.logs.push(`Since cell (${this.column2 + 1}, ${this.row + 1}) must be value ${this.currentTarget + 1}, cell (${this.column1 + 1}, ${this.row + 1}) can't also be value ${this.currentTarget + 1} because both cells are in the same row.`);
+            marks[this.row][this.column1].delete(this.currentTarget);
+            didModify = true;
+          }
         }
         this.column2 += 1;
         if (this.column2 == this.column1) {

@@ -42,7 +42,7 @@ const App = {
     let bot3: Bot;
 
     Vue.onMounted(async () => {
-      data.currentPuzzle = await randomOfSize(5);
+      data.currentPuzzle = await randomOfSize(7);
       bot1 = new TowersRowChecker(data.currentPuzzle);
       bot2 = new TowersColumnChecker(data.currentPuzzle);
       bot3 = new ViewBoundsBot(data.currentPuzzle);
@@ -118,7 +118,7 @@ const App = {
             data.validating = false;
             if (data.isCorrect) {
               data.money += 5;
-              data.currentPuzzle = await randomOfSize(5),
+              data.currentPuzzle = await randomOfSize(7),
               bot1 = new TowersRowChecker(data.currentPuzzle);
               bot2 = new TowersColumnChecker(data.currentPuzzle);
               bot3 = new ViewBoundsBot(data.currentPuzzle);

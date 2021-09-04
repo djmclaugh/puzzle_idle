@@ -54,7 +54,7 @@ export function next(face: HintFace): HintFace {
 }
 
 export default class Towers {
-  private grid: number[][];
+  public grid: number[][];
   private westHints: number[];
   private northHints: number[];
   private eastHints: number[];

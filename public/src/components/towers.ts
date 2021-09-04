@@ -68,11 +68,15 @@ export default {
         };
         if (backgroundMaps.has(x, y)) {
           style['background-color'] = backgroundMaps.get(x, y);
+        } else if (puzzle.grid[y][x] != -1) {
+          style['background-color'] = "#dddddd";
         }
 
+        const canEdit = props.interactive && puzzle.grid[y][x] == -1;
+
         const cell = Vue.h(LatinSquareCellComponent, {
-          possibilities: puzzle.marks[Math.floor(i / n)][i % n],
-          range: props.interactive ? n : -1,
+          possibilities: puzzle.marks[y][x],
+          range: canEdit ? n : -1,
           style: style,
         });
         items.push(cell);
