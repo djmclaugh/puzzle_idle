@@ -153,3 +153,10 @@ canvas {
   justify-content: center;
   font-size: 30px;
 }
+
+.towers-hint-marked {
+  background: linear-gradient(to bottom right, transparent 45%, currentColor 48%, currentColor 52%, transparent 55%);
+  background-size: 30px 30px;
+  background-repeat: no-repeat;
+  background-position: center;
+}

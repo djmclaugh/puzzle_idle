@@ -60,6 +60,13 @@ export default class Towers {
   private eastHints: number[];
   private southHints: number[];
 
+  // The user can put a mark a hint to signify that it won't provide any further
+  // information.
+  public westHintMarked: boolean[];
+  public northHintMarked: boolean[];
+  public eastHintMarked: boolean[];
+  public southHintMarked: boolean[];
+
   public get wHints() {
     return this.westHints.concat();
   }
@@ -105,9 +112,20 @@ export default class Towers {
     this.northHints = nHints;
     this.eastHints = eHints;
     this.southHints = sHints;
+
+    this.westHintMarked = [];
+    this.northHintMarked = [];
+    this.eastHintMarked = [];
+    this.southHintMarked = [];
+
     this.grid = grid;
     this.marks = [];
     for (let i = 0; i < this.n; ++i) {
+      this.westHintMarked.push(false);
+      this.northHintMarked.push(false);
+      this.eastHintMarked.push(false);
+      this.southHintMarked.push(false);
+
       this.marks.push([]);
       for (let j = 0; j < this.n; ++j) {
         this.marks[i].push(new Set());
@@ -152,8 +170,16 @@ export default class Towers {
   }
 
   public restart() {
+    this.westHintMarked = [];
+    this.northHintMarked = [];
+    this.eastHintMarked = [];
+    this.southHintMarked = [];
     this.marks = [];
     for (let i = 0; i < this.n; ++i) {
+      this.westHintMarked.push(false);
+      this.northHintMarked.push(false);
+      this.eastHintMarked.push(false);
+      this.southHintMarked.push(false);
       this.marks.push([]);
       for (let j = 0; j < this.n; ++j) {
         this.marks[i].push(new Set());

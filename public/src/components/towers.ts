@@ -1,5 +1,6 @@
 import Vue from '../vue.js'
 import LatinSquareCellComponent from './latin_square_cell.js'
+import TowersHintCellComponent from './towers_hint_cell.js'
 import Towers from '../puzzles/towers/towers.js'
 import MultiKeyMap from '../util/multi_key_map.js'
 
@@ -23,10 +24,7 @@ interface TowersComponentProps {
 export default {
   props: ['puzzle', 'interactive', 'size', 'backgrounds'],
 
-  setup(props: TowersComponentProps): any {
-
-    const puzzle = props.puzzle;
-    const n = puzzle.n;
+  setup(props: TowersComponentProps): any {;
 
     function size() {
       return props.size ? props.size : TowersGridSize.REGULAR;
@@ -38,16 +36,20 @@ export default {
         backgroundMaps.set(background.cell[0], background.cell[1], background.colour);
       }
 
+      const items = [];
       const puzzle = props.puzzle;
       const n = puzzle.n;
-      const items = [];
 
       // Empty top left corner
       items.push(Vue.h('div'))
       for (let i = 0; i < n; ++i) {
-        items.push(Vue.h('div', {
-          class: 'towers-hint',
-        }, puzzle.nHints[i] == -1 ? "" : puzzle.nHints[i]));
+        items.push(Vue.h(TowersHintCellComponent, {
+          value: puzzle.nHints[i],
+          marked: puzzle.northHintMarked[i],
+          onClick: () => {
+            puzzle.northHintMarked[i] = !puzzle.northHintMarked[i];
+          },
+        }));
       }
       // Empty top rigth corner
       items.push(Vue.h('div'))
@@ -56,9 +58,13 @@ export default {
         const x = i % n;
         const y = Math.floor(i / n);
         if (x == 0) {
-          items.push(Vue.h('div', {
-            class: 'towers-hint',
-          }, puzzle.wHints[y] == -1 ? "" : puzzle.wHints[y]));
+          items.push(Vue.h(TowersHintCellComponent, {
+            value: puzzle.wHints[y],
+            marked: puzzle.westHintMarked[y],
+            onClick: () => {
+              puzzle.westHintMarked[y] = !puzzle.westHintMarked[y];
+            },
+          }));
         }
         const style: any = {
           'border-left': (x == 0 ? 2 : 1) + 'px solid',
@@ -81,18 +87,26 @@ export default {
         });
         items.push(cell);
         if (x == n - 1) {
-          items.push(Vue.h('div', {
-            class: 'towers-hint'
-          }, puzzle.eHints[y] == -1 ? "" : puzzle.eHints[y]));
+          items.push(Vue.h(TowersHintCellComponent, {
+            value: puzzle.eHints[y],
+            marked: puzzle.eastHintMarked[y],
+            onClick: () => {
+              puzzle.eastHintMarked[y] = !puzzle.eastHintMarked[y];
+            },
+          }));
         }
       }
 
       // Empty bottom left corner
       items.push(Vue.h('div'))
       for (let i = 0; i < n; ++i) {
-        items.push(Vue.h('div', {
-          class: 'towers-hint'
-        }, puzzle.sHints[i] == -1 ? "" : puzzle.sHints[i]));
+        items.push(Vue.h(TowersHintCellComponent, {
+          value: puzzle.sHints[i],
+          marked: puzzle.southHintMarked[i],
+          onClick: () => {
+            puzzle.southHintMarked[i] = !puzzle.southHintMarked[i];
+          },
+        }));
       }
       // Empty bottom rigth corner
       items.push(Vue.h('div'))

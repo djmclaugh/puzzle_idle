@@ -44,7 +44,7 @@ export default {
         const node = Vue.h('span', {
           class: 'sudoku-selection',
           style: {
-            opacity: (data.hover && props.range) > 0 ? 0.5 : 1,
+            opacity: data.hover && (props.range > 0) ? 0.5 : 1,
           },
         }, (data.p.values().next().value + 1).toString());
         items.push(node);
