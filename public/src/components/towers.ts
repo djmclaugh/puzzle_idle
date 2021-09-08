@@ -24,7 +24,7 @@ interface TowersComponentProps {
 export default {
   props: ['puzzle', 'interactive', 'size', 'backgrounds'],
 
-  setup(props: TowersComponentProps): any {;
+  setup(props: TowersComponentProps) {
 
     function size() {
       return props.size ? props.size : TowersGridSize.REGULAR;

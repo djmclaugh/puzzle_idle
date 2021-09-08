@@ -6,14 +6,13 @@ import Bot from './puzzles/bots/bot.js'
 import ViewBoundsBot from './puzzles/bots/view_bounds_bot.js'
 import TowersComponent from './components/towers.js'
 import TowersValidatorComponent from './components/towers_validator.js'
+import StatusComponentComponent from './components/status.js'
+import { currentStatus } from './data/status.js'
 import { randomOfSize } from './puzzles/towers/towers_loader.js'
 
 interface AppData {
-  money: number,
-  ram: number,
   currentPuzzle: Towers,
   validating: boolean,
-  validationSpeed: number,
   botSpeed: number,
   isDone: boolean,
   isCorrect: boolean,
@@ -26,12 +25,9 @@ randomOfSize(3);
 const App = {
   setup(): any {
     const data: AppData = Vue.reactive({
-      money: 0,
-      ram: 4,
       currentPuzzle: {},
       validating: false,
-      validationSpeed: 100,
-      botSpeed: 10,
+      botSpeed: 30,
       isDone: false,
       isCorrect: false,
       botLogs: [],
@@ -42,7 +38,7 @@ const App = {
     let bot3: Bot;
 
     Vue.onMounted(async () => {
-      data.currentPuzzle = await randomOfSize(5);
+      data.currentPuzzle = await randomOfSize(3);
       bot1 = new TowersRowChecker(data.currentPuzzle);
       bot2 = new TowersColumnChecker(data.currentPuzzle);
       bot3 = new ViewBoundsBot(data.currentPuzzle);
@@ -74,19 +70,7 @@ const App = {
 
     return () => {
       let items = [];
-      items.push(Vue.h('p', {}, `Current money: $${data.money}`));
-      items.push(Vue.h('p', {}, `RAM: ${data.ram} KB`));
-
-      items.push(Vue.h('p', {}, [
-        `Validation Speed: ${data.validationSpeed} steps per second. `,
-        Vue.h('button', {
-          onClick: () => {
-            data.money -= data.validationSpeed
-            data.validationSpeed += 1;
-          },
-          disabled: data.money < data.validationSpeed,
-        }, `Upgrade ($${data.validationSpeed})`)
-      ]));
+      items.push(Vue.h(StatusComponentComponent));
 
       const restartButton = Vue.h('button', {
         onClick: () => {
@@ -117,8 +101,8 @@ const App = {
           onClick: async () => {
             data.validating = false;
             if (data.isCorrect) {
-              data.money += 5;
-              data.currentPuzzle = await randomOfSize(5),
+              currentStatus.money += 5;
+              data.currentPuzzle = await randomOfSize(3),
               bot1 = new TowersRowChecker(data.currentPuzzle);
               bot2 = new TowersColumnChecker(data.currentPuzzle);
               bot3 = new ViewBoundsBot(data.currentPuzzle);
@@ -147,7 +131,7 @@ const App = {
       if (data.validating) {
         const validator = Vue.h(TowersValidatorComponent, {
           puzzle: data.currentPuzzle,
-          speed: data.validationSpeed,
+          speed: currentStatus.validationSpeed,
           onDone: (isCorrect: boolean) => {
             data.isDone = true;
             data.isCorrect = isCorrect;
