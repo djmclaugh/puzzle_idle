@@ -1,14 +1,31 @@
 import Vue from '../vue.js'
+import CPU from './cpu.js'
 
 export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
   public money: number = 0;
-  public usedRam: number = 0;
-  public maxRam: number = 20;
-  public cpuSpeed: number = 1;
-  public cpuCoresInUse: number = 0;
-  public cpuCores: number = 1;
+  public cpu: CPU = new CPU();
+
+  public get usedRam() {
+    return this.cpu.usedRam;
+  }
+
+  public get maxRam() {
+    return this.cpu.maxRam;
+  }
+
+  public get cpuSpeed() {
+    return this.cpu.speed;
+  }
+
+  public get cpuCoresInUse() {
+    return this.cpu.coresInUse;
+  }
+
+  public get cpuCores() {
+    return this.cpu.cores;
+  }
 
   public interfaceUpgradeCost(id: number): number {
     return Math.pow(this.interfaces[id], 2);
@@ -34,7 +51,7 @@ export class StatusData {
 
   public upgradeRam(): void {
     this.money -= this.ramUpgradeCost;
-    this.maxRam += 10;
+    this.cpu.maxRam += 10;
   }
 
   public get cpuSpeedUpgradeCost(): number {
@@ -47,7 +64,7 @@ export class StatusData {
 
   public upgradeCpuSpeed(): void {
     this.money -= this.cpuSpeedUpgradeCost;
-    this.cpuSpeed += 1;
+    this.cpu.speed += 1;
   }
 
   public get cpuCoresUpgradeCost(): number {
@@ -60,7 +77,7 @@ export class StatusData {
 
   public upgradeCpuCores(): void {
     this.money -= this.cpuCoresUpgradeCost;
-    this.cpuCores += 1;
+    this.cpu.cores += 1;
   }
 
   public get numberOfInterfacesUpgradeCost(): number {
@@ -86,4 +103,4 @@ export class StatusData {
   }
 }
 
-export const currentStatus: StatusData = Vue.reactive(new StatusData())
+export const currentStatus: StatusData = Vue.reactive(new StatusData());
