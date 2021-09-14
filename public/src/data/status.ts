@@ -1,18 +1,42 @@
 import Vue from '../vue.js'
 import CPU from './cpu.js'
+import RAM from './ram.js'
+
+const globalRam = new RAM();
+const globalCpu = new CPU(globalRam);
+
+function interfaceRamRequirements(size: number) {
+  let total = 0;
+  // One byte for the possibilities of each cell
+  // Note: if there are more then 8 possibilities, then it take more than one
+  // byte to store which possibility has been eliminated and which hasn't.
+  // TODO: figure out if I want to do anything about that
+  total +=  size * size;
+  // One byte for each potential hint
+  // Note: this can probably be lower
+  // TODO: figure out if I want to do antyhing about that
+  total += (size * size) + (4 * size);
+
+  return total;
+}
 
 export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
   public money: number = 0;
-  public cpu: CPU = new CPU();
+  public ram: RAM = globalRam
+  public cpu: CPU = globalCpu;
+
+  public constructor() {
+    this.ram.allocate("interface-0", interfaceRamRequirements(this.interfacesCurrentSize[0]));
+  }
 
   public get usedRam() {
-    return this.cpu.usedRam;
+    return this.ram.used;
   }
 
   public get maxRam() {
-    return this.cpu.maxRam;
+    return this.ram.max;
   }
 
   public get cpuSpeed() {
@@ -42,7 +66,8 @@ export class StatusData {
   }
 
   public get ramUpgradeCost(): number {
-    return Math.pow(this.maxRam, 2);
+    return 5;
+    //return Math.pow(this.maxRam, 2);
   }
 
   public canAffordRamUpgrade(): boolean {
@@ -51,7 +76,7 @@ export class StatusData {
 
   public upgradeRam(): void {
     this.money -= this.ramUpgradeCost;
-    this.cpu.maxRam += 10;
+    this.ram.max += 10;
   }
 
   public get cpuSpeedUpgradeCost(): number {

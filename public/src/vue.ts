@@ -6,4 +6,5 @@ export default {
   h: Vue.h,
   createApp: Vue.createApp,
   onMounted: Vue.onMounted,
+  onBeforeUnmount: Vue.onBeforeUnmount,
 }

@@ -49,6 +49,23 @@ export function isClockwise(face: HintFace): boolean {
   return face == HintFace.NORTH || face == HintFace.EAST;
 }
 
+export function getCoordinates(face: HintFace, hintIndex: number, index: number, n: number): [number, number] {
+  let x = hintIndex;
+  let y = index;
+  if (isReverse(face)) {
+    y = n - y - 1;
+  }
+  if (!isClockwise(face)) {
+    x = n - x - 1;
+  }
+  if (isHorizontal(face)) {
+    let temp = x;
+    x = y;
+    y = temp;
+  }
+  return [x, y];
+}
+
 export function next(face: HintFace): HintFace {
   return (face % 4) + 1;
 }
@@ -83,13 +100,13 @@ export default class Towers {
   public getHints(face: HintFace) {
     switch(face) {
       case HintFace.NORTH:
-        return this.nHints
+        return this.nHints.concat();
       case HintFace.EAST:
-        return this.eHints
+        return this.eHints.concat();
       case HintFace.SOUTH:
-        return this.sHints
+        return this.sHints.concat();
       case HintFace.WEST:
-        return this.wHints
+        return this.wHints.concat();
     }
   }
 
