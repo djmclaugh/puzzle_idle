@@ -5,6 +5,10 @@ export default class RAM {
   // Keeps track of what uses how much ram
   private allocation: Map<string, number> = new Map();
 
+  public get remaining(): number {
+    return this.max - this.used;
+  }
+
   public allocate(name: string, amount: number): boolean {
     if (amount > this.max - this.used) {
       return false;

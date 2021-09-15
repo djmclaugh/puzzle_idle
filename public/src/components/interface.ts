@@ -100,7 +100,7 @@ export default {
       if (data.validating) {
         const validator = Vue.h(TowersValidatorComponent, {
           puzzle: data.currentPuzzle,
-          speed: currentStatus.cpuSpeed,
+          interfaceId: props.interfaceId,
           onDone: (isCorrect: boolean) => {
             data.isDone = true;
             data.isCorrect = isCorrect;

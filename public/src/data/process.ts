@@ -1,9 +1,13 @@
 import Towers, {Possibilities, HintFace, getCoordinates, next, isClockwise} from '../puzzles/towers/towers.js'
 
-export default abstract class Process {
+export default abstract class Process<R> {
+  public readonly abstract processId: string;
   public readonly abstract ramRequirement: number;
+  public readonly abstract returnValue: R;
 
-  // Returns true if and only if the process is over.
+  /**
+   *  Returns true if and only if the process is over.
+   */
   public abstract tick(): boolean;
 }
 
@@ -15,7 +19,8 @@ export enum ValidationStep {
   DONE = 4,
 }
 
-export class ValidationProcess extends Process {
+export class ValidationProcess extends Process<boolean> {
+  public readonly processId: string;
   public readonly ramRequirement: number = 4;
 
   public step: ValidationStep = ValidationStep.NEW;
@@ -27,8 +32,13 @@ export class ValidationProcess extends Process {
   public beat: number = 0;
   private grid: number[][];
 
-  public constructor(private t: Towers) {
+  public get returnValue(): boolean {
+    return this.step == ValidationStep.DONE;
+  }
+
+  public constructor(private t: Towers, interfaceId: number) {
     super();
+    this.processId = "validation_" + interfaceId;
     this.grid = t.marks.map((row: Possibilities[]) => {
       return row.map((cell: Possibilities) => {
         return cell.values().next().value;

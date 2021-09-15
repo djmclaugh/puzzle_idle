@@ -2,8 +2,8 @@ import Vue from '../vue.js'
 import CPU from './cpu.js'
 import RAM from './ram.js'
 
-const globalRam = new RAM();
-const globalCpu = new CPU(globalRam);
+const globalRam = Vue.reactive(new RAM());
+const globalCpu = Vue.reactive(new CPU(globalRam));
 
 function interfaceRamRequirements(size: number) {
   let total = 0;
@@ -23,7 +23,7 @@ function interfaceRamRequirements(size: number) {
 export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
-  public money: number = 0;
+  public money: number = 100;
   public ram: RAM = globalRam
   public cpu: CPU = globalCpu;
 
