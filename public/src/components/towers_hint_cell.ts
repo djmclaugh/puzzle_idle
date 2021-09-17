@@ -22,7 +22,7 @@ export default {
       return Vue.h('div', {
         class: {
           'towers-hint': true,
-          'towers-hint-marked': props.marked,
+          'towers-hint-marked': props.marked && props.value != - 1,
         },
         style: {
           opacity: data.hover ? 0.5 : 1,

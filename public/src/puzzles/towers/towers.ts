@@ -116,12 +116,25 @@ export default class Towers {
     return this.grid.length;
   }
 
-  public marksRow(r: number) {
-    return this.marks.map(row => row[r]);
+  public marksCell(r: number, c: number) {
+    return this.marks[r][c];
   }
 
-  public marksColumn(c: number) {
-    return this.marks[c].concat();
+  public removeFromCell(r: number, c: number, value: number) {
+    this.marks[r][c].delete(value)
+  }
+
+  public addToCell(r: number, c: number, value: number) {
+    this.marks[r][c].add(value);
+  }
+
+  public setCell(r: number, c: number, value: number) {
+    this.addToCell(r, c, value);
+    for (let i = 0; i < this.grid.length; ++i) {
+      if (i != value) {
+        this.removeFromCell(r, c, i);
+      }
+    }
   }
 
   constructor(grid: number[][], wHints: number[], nHints: number[], eHints: number[], sHints: number[]) {
@@ -211,15 +224,19 @@ export default class Towers {
     }
   }
 
-  public isReadyForValidation(): boolean {
-    for (const column of this.marks) {
-      for (const cell of column) {
-        if (cell.size != 1) {
+  public get isReadyForValidation(): boolean {
+    for (let r = 0; r < this.n; ++r) {
+      for (let c = 0; c < this.n; ++c) {
+        if (this.marks[r][c].size != 1) {
           return false;
         }
       }
     }
     return true;
+  }
+
+  public solvedGrid(): number[][] {
+    return this.marks.map(row => row.map(cell => cell.values().next().value));
   }
 
   public toString() {
@@ -265,44 +282,4 @@ export default class Towers {
 
     return rows.join('\n');
   }
-
-  public marksToString() {
-    const n = this.grid.length;
-    const rows: string[] = [];
-    let topRow = '┌';
-    for (let i = 0; i < this.n - 1; ++i) {
-      topRow +='─┬';
-    }
-    topRow += '─┐';
-    rows.push(topRow);
-
-    for (let i = 0; i < n; ++i) {
-      let mid = '│' + this.marksRow(i).map(v => {
-        if (v.size == 1) {
-          return v.values().next().value + '│';
-        } else {
-          return '?' + '│';
-        }
-      }).join('');
-      rows.push(mid);
-      if (i != n - 1) {
-        let row = '├';
-        for (let i = 0; i < n - 1; ++i) {
-          row +='─┼';
-        }
-        row += '─┤';
-        rows.push(row);
-      }
-    }
-
-    let bottomRow = '└';
-    for (let i = 0; i < n - 1; ++i) {
-      bottomRow +='─┴';
-    }
-    bottomRow += '─┘';
-    rows.push(bottomRow);
-
-    return rows.join('\n');
-  }
-
 }

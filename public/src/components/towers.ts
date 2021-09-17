@@ -81,7 +81,7 @@ export default {
         const canEdit = props.interactive && puzzle.grid[y][x] == -1;
 
         const cell = Vue.h(LatinSquareCellComponent, {
-          possibilities: puzzle.marks[y][x],
+          possibilities: puzzle.marksCell(y, x),
           range: canEdit ? n : -1,
           style: style,
         });

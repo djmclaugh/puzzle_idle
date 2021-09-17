@@ -2,7 +2,7 @@ import Vue from '../vue.js'
 import TowersComponent, { TowersGridSize, Background } from './towers.js'
 import Towers from '../puzzles/towers/towers.js'
 import { HintFace, isVertical, getCoordinates, faceToString, isClockwise } from '../puzzles/towers/towers.js'
-import { ValidationProcess, ValidationStep } from '../data/process.js'
+import ValidationProcess, { ValidationStep } from '../data/processes/validation_process.js'
 import { currentStatus } from '../data/status.js'
 
 interface TowersValidatorComponentProps {
@@ -17,7 +17,7 @@ export default {
 
     const puzzle = props.puzzle;
     const n = puzzle.n;
-    const solution = puzzle.marks.map(row => row.map(cell => cell.values().next().value));
+    const solution = puzzle.solvedGrid();
 
     const p: ValidationProcess = Vue.reactive(new ValidationProcess(props.puzzle, props.interfaceId));
 
