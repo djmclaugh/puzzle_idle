@@ -23,7 +23,7 @@ function interfaceRamRequirements(size: number) {
 export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
-  public money: number = 100;
+  public money: number = 300;
   public ram: RAM = globalRam
   public cpu: CPU = globalCpu;
 
@@ -106,7 +106,7 @@ export class StatusData {
   }
 
   public get numberOfInterfacesUpgradeCost(): number {
-    return Math.pow(100, this.interfaces.length);
+    return Math.pow(10, this.interfaces.length);
   }
 
   public canAffordNumberOfInterfacesUpgrade(): boolean {
@@ -120,7 +120,7 @@ export class StatusData {
   }
 
   public puzzleReward(size: number): number {
-    return Math.pow(size, 3);
+    return Math.pow(size, size*size) / 16;
   }
 
   public puzzleCompleted(size: number): void {

@@ -38,8 +38,8 @@ export default class PriorityQueue<T> {
     const list = this.items.get(p)!;
     const item = list.shift()!;
     if (list.length == 0) {
-      this.items.delete(p);
       this.extractMax();
+      this.items.delete(p);
     }
 
     return item;
@@ -64,6 +64,7 @@ export default class PriorityQueue<T> {
         list.splice(index, 1);
         if (list.length == 0) {
           this.removeFromHeap(key);
+          this.items.delete(key);
         }
         return true;
       }
@@ -110,7 +111,7 @@ export default class PriorityQueue<T> {
   private removeFromHeap(value: number) {
     for (let i = 0; i < this.heap.length; ++i) {
       if (this.heap[i] == value) {
-        if (this.heap.length == 1) {
+        if (i == this.heap.length - 1) {
           this.heap.pop();
         } else {
           this.heap[i] = this.heap.pop()!;

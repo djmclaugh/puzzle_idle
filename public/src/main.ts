@@ -3,18 +3,25 @@ import StatusComponent from './components/status.js'
 import InterfaceComponent from './components/interface.js'
 import { currentStatus } from './data/status.js'
 
-interface AppData {}
+interface AppData {
+  currentInterface: number,
+}
 
 const App = {
   setup(): any {
-    const data: AppData = Vue.reactive({});
+    const data: AppData = Vue.reactive({
+      currentInterface: 0,
+    });
 
     return () => {
       let items = [];
       items.push(Vue.h(StatusComponent));
-      items.push(Vue.h(InterfaceComponent, {
-        interfaceId: 0,
-      }));
+      for (let i = 0; i < currentStatus.interfaces.length; ++i) {
+        items.push(Vue.h(InterfaceComponent, {
+          interfaceId: i,
+          isCurrent: i == data.currentInterface,
+        }));
+      }
 
       return Vue.h('div', {}, items);
     }

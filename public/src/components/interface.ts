@@ -5,10 +5,12 @@ import TowersValidatorComponent from '../components/towers_validator.js'
 import { currentStatus } from '../data/status.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 import RandomSelectionProcess from '../data/processes/random_selection_process.js'
+import ValidationProcess, { ValidationStep } from '../data/processes/validation_process.js'
 import LabeledCheckbox from './util/labeled_checkbox.js'
 
 interface InterfaceComponentProps {
   interfaceId: number,
+  isCurrent: boolean,
 }
 
 interface InterfaceComponentData {
@@ -17,14 +19,17 @@ interface InterfaceComponentData {
   autoValidate: boolean,
   autoCashIn: boolean,
   autoRestart: boolean,
+  autoRandom: boolean,
   isDone: boolean,
   isCorrect: boolean,
+  randomProcess: RandomSelectionProcess|null,
+  validationProcess: ValidationProcess|null,
 }
 
 let puzzleUUID: number = 0;
 
 export default {
-  props: ['interfaceId'],
+  props: ['interfaceId', 'isCurrent'],
   setup(props: InterfaceComponentProps): any {
     const data: InterfaceComponentData = Vue.reactive({
       currentPuzzle: {},
@@ -32,8 +37,10 @@ export default {
       autoValidate: true,
       autoCashIn: true,
       autoRestart: true,
+      autoRandom: true,
       isDone: false,
       isCorrect: false,
+      randomProcess: null,
     });
 
     let currentWatcherStopper: any = null;
@@ -46,6 +53,24 @@ export default {
       data.validating = true;
       data.isDone = false;
       data.isCorrect = false;
+      data.validationProcess = new ValidationProcess(data.currentPuzzle, props.interfaceId);
+      currentStatus.cpu.addProcess(data.validationProcess, 10, (isValid: boolean) => {
+        data.isDone = true;
+        data.isCorrect = isValid;
+        if (data.isCorrect && data.autoCashIn) {
+          cashIn();
+        }
+        if (!data.isCorrect && data.autoRestart) {
+          data.validating = false;
+          data.isCorrect = false;
+          data.isDone = false;
+          data.currentPuzzle.restart();
+          puzzleUUID += 1;
+          if (data.autoRandom) {
+            startRandomProcess();
+          }
+        }
+      });
     }
 
     async function cashIn() {
@@ -67,6 +92,19 @@ export default {
         }
       });
       puzzleUUID += 1;
+      if (data.autoRandom) {
+        startRandomProcess();
+      }
+    }
+
+    function startRandomProcess() {
+      if (data.randomProcess !== null) {
+        currentStatus.cpu.killProcess(data.randomProcess);
+      }
+      data.randomProcess = new RandomSelectionProcess(data.currentPuzzle, props.interfaceId);
+      currentStatus.cpu.addProcess(data.randomProcess, 1, () => {
+        data.randomProcess = null;
+      })
     }
 
     Vue.onMounted(async () => {
@@ -74,6 +112,9 @@ export default {
     })
 
     return () => {
+      if (!props.isCurrent) {
+        return Vue.h('div', {hidden: true});
+      }
       let items = [];
 
       const upgradeButton = Vue.h('button', {
@@ -89,6 +130,9 @@ export default {
         onClick: () => {
           data.currentPuzzle.restart();
           puzzleUUID += 1;
+          if (data.autoRandom) {
+            startRandomProcess();
+          }
         },
         disabled: data.validating,
       }, 'Restart');
@@ -149,39 +193,33 @@ export default {
       });
       items.push(autoRestart);
 
+      const autoRandom = Vue.h(LabeledCheckbox, {
+        value: data.autoRandom,
+        label: 'Auto Random Selection',
+        boxId: 'auto_randomselection_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoRandom = t.checked;
+        }
+      });
+      items.push(autoRandom);
+
       const towersProps: any = {
         key: 'puzzle-' + puzzleUUID,
         puzzle: data.currentPuzzle,
         interactive: true,
       }
       if (data.validating) {
-        towersProps.hidden = true;
-        towersProps.style = {
-          display: 'none',
-        }
+        towersProps.interactive = false;
+        towersProps.backgrounds = data.validationProcess!.getBackgrounds();
       }
       const p = Vue.h(TowersComponent, towersProps);
       items.push(p);
 
       if (data.validating) {
         const validator = Vue.h(TowersValidatorComponent, {
-          puzzle: data.currentPuzzle,
-          interfaceId: props.interfaceId,
-          onDone: (isCorrect: boolean) => {
-            data.isDone = true;
-            data.isCorrect = isCorrect;
-            if (data.isCorrect && data.autoCashIn) {
-              cashIn();
-            }
-            if (!data.isCorrect && data.autoRestart) {
-              data.validating = false;
-              data.isCorrect = false;
-              data.isDone = false;
-              data.currentPuzzle.restart();
-              puzzleUUID += 1;
-            }
-          }
-        })
+          process: data.validationProcess,
+        });
         items.push(validator);
       } else {
         // Nothing for now
