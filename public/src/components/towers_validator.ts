@@ -9,7 +9,6 @@ export default {
   props: ['process'],
 
   setup(props: TowersValidatorComponentProps): any {
-
     return () => {
       const items = [];
       for (const logSection of props.process.logs) {
@@ -20,6 +19,5 @@ export default {
       }
       return Vue.h('div', {}, items);
     };
-
   }
 }

@@ -13,7 +13,7 @@ interface LatinCellComponentData {
 export default {
   props: ['possibilities', 'range'],
 
-  setup(props: LatinCellComponentProps) {
+  setup(props: LatinCellComponentProps, {attrs, slots, emit}: any) {
 
     const data: LatinCellComponentData = Vue.reactive({
       p: props.possibilities,
@@ -26,14 +26,13 @@ export default {
       if (event.ctrlKey) {
         // Toggle this possibility
         if (data.p.has(possibility)) {
-          data.p.delete(possibility);
+          emit('remove', possibility);
         } else {
-          data.p.add(possibility);
+          emit('add', possibility);
         }
       } else {
         // Make this the only possibility
-        data.p.clear();
-        data.p.add(possibility);
+        emit('set', possibility);
       }
     }
 

@@ -120,7 +120,7 @@ export class StatusData {
   }
 
   public puzzleReward(size: number): number {
-    return Math.pow(size, size*size) / 16;
+    return Math.pow(size, size - 2);
   }
 
   public puzzleCompleted(size: number): void {

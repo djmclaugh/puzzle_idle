@@ -41,12 +41,28 @@ export default {
       isDone: false,
       isCorrect: false,
       randomProcess: null,
+      validationProcess: null,
     });
 
     let currentWatcherStopper: any = null;
 
     function size(): number {
       return currentStatus.interfacesCurrentSize[props.interfaceId];
+    }
+
+    function restart(): void {
+      if (data.randomProcess) {
+        currentStatus.cpu.killProcess(data.randomProcess);
+        data.randomProcess = null;
+      }
+      data.validating = false;
+      data.isCorrect = false;
+      data.isDone = false;
+      data.currentPuzzle.restart();
+      puzzleUUID += 1;
+      if (data.autoRandom) {
+        startRandomProcess();
+      }
     }
 
     function startValidate(): void {
@@ -61,14 +77,7 @@ export default {
           cashIn();
         }
         if (!data.isCorrect && data.autoRestart) {
-          data.validating = false;
-          data.isCorrect = false;
-          data.isDone = false;
-          data.currentPuzzle.restart();
-          puzzleUUID += 1;
-          if (data.autoRandom) {
-            startRandomProcess();
-          }
+          restart();
         }
       });
     }
@@ -102,7 +111,7 @@ export default {
         currentStatus.cpu.killProcess(data.randomProcess);
       }
       data.randomProcess = new RandomSelectionProcess(data.currentPuzzle, props.interfaceId);
-      currentStatus.cpu.addProcess(data.randomProcess, 1, () => {
+      currentStatus.cpu.addProcess(data.randomProcess, props.interfaceId, () => {
         data.randomProcess = null;
       })
     }
@@ -128,15 +137,19 @@ export default {
 
       const restartButton = Vue.h('button', {
         onClick: () => {
-          data.currentPuzzle.restart();
-          puzzleUUID += 1;
-          if (data.autoRandom) {
-            startRandomProcess();
-          }
+          restart();
         },
         disabled: data.validating,
       }, 'Restart');
       items.push(restartButton);
+
+      const undoButton = Vue.h('button', {
+        onClick: () => {
+          data.currentPuzzle.undo();
+        },
+        disabled: !data.currentPuzzle.history || data.currentPuzzle.history.length == 0,
+      }, 'Undo');
+      items.push(undoButton);
 
       const checkButton = Vue.h('button', {
         onClick: startValidate,

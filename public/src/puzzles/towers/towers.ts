@@ -13,6 +13,18 @@ export function view(values: number[]) {
 
 export type Possibilities = Set<number>;
 
+enum ActionType {
+  REMOVE_POSSIBILITY,
+  ADD_POSSIBILITY,
+};
+
+type Action = {
+  row: number,
+  column: number,
+  value: number,
+  type: ActionType,
+};
+
 export enum HintFace {
   WEST = 1,
   NORTH = 2,
@@ -84,6 +96,8 @@ export default class Towers {
   public eastHintMarked: boolean[];
   public southHintMarked: boolean[];
 
+  public history: Action[] = [];
+
   public get wHints() {
     return this.westHints.concat();
   }
@@ -110,7 +124,22 @@ export default class Towers {
     }
   }
 
-  public marks: Possibilities[][] = [];
+  private marks: Possibilities[][] = [];
+
+  public undo(): void {
+    const lastAction = this.history.pop();
+    if (!lastAction) {
+      return;
+    }
+    switch (lastAction.type) {
+      case ActionType.ADD_POSSIBILITY:
+        this.marks[lastAction.row][lastAction.column].delete(lastAction.value);
+        break;
+      case ActionType.REMOVE_POSSIBILITY:
+        this.marks[lastAction.row][lastAction.column].add(lastAction.value);
+        break;
+    }
+  }
 
   public get n() {
     return this.grid.length;
@@ -121,11 +150,26 @@ export default class Towers {
   }
 
   public removeFromCell(r: number, c: number, value: number) {
-    this.marks[r][c].delete(value)
+    if (this.marks[r][c].delete(value)) {
+      this.history.push({
+        row: r,
+        column: c,
+        value: value,
+        type: ActionType.REMOVE_POSSIBILITY,
+      })
+    }
   }
 
   public addToCell(r: number, c: number, value: number) {
-    this.marks[r][c].add(value);
+    if (!this.marks[r][c].has(value)) {
+      this.marks[r][c].add(value);
+      this.history.push({
+        row: r,
+        column: c,
+        value: value,
+        type: ActionType.ADD_POSSIBILITY,
+      })
+    }
   }
 
   public setCell(r: number, c: number, value: number) {
@@ -205,6 +249,7 @@ export default class Towers {
     this.eastHintMarked = [];
     this.southHintMarked = [];
     this.marks = [];
+    this.history = [];
     for (let i = 0; i < this.n; ++i) {
       this.westHintMarked.push(false);
       this.northHintMarked.push(false);

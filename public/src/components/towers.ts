@@ -84,6 +84,9 @@ export default {
           possibilities: puzzle.marksCell(y, x),
           range: canEdit ? n : -1,
           style: style,
+          onAdd: (value: number) => { puzzle.addToCell(y, x, value); },
+          onRemove: (value: number) => { puzzle.removeFromCell(y, x, value); },
+          onSet: (value: number) => { puzzle.setCell(y, x, value); },
         });
         items.push(cell);
         if (x == n - 1) {

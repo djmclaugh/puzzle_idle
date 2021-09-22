@@ -160,3 +160,20 @@ canvas {
   background-repeat: no-repeat;
   background-position: center;
 }
+
+.interface-selector {
+  border: solid;
+  width: 20px;
+  padding: 4px;
+  margin-left: 4px;
+  margin-right: 4px;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  background-color: #d0d0d0;
+}
+
+.interface-selector-selected {
+  background-color: #ffffff;
+
+}
