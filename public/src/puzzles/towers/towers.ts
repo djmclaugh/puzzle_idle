@@ -18,12 +18,14 @@ enum ActionType {
   ADD_POSSIBILITY,
 };
 
-type Action = {
+export type Action = {
   row: number,
   column: number,
   value: number,
   type: ActionType,
 };
+
+export type ActionCallback = (a: Action) => void;
 
 export enum HintFace {
   WEST = 1,
@@ -126,6 +128,23 @@ export default class Towers {
 
   private marks: Possibilities[][] = [];
 
+  private callbacks: Set<ActionCallback> = new Set();
+
+  private addAction(a: Action) {
+    this.history.push(a);
+    this.callbacks.forEach((c) => {
+      c(a);
+    });
+  }
+
+  public onAction(a: ActionCallback) {
+    this.callbacks.add(a);
+  }
+
+  public removeActionListener(a: ActionCallback) {
+    this.callbacks.delete(a);
+  }
+
   public undo(): void {
     const lastAction = this.history.pop();
     if (!lastAction) {
@@ -151,7 +170,7 @@ export default class Towers {
 
   public removeFromCell(r: number, c: number, value: number) {
     if (this.marks[r][c].delete(value)) {
-      this.history.push({
+      this.addAction({
         row: r,
         column: c,
         value: value,
@@ -163,7 +182,7 @@ export default class Towers {
   public addToCell(r: number, c: number, value: number) {
     if (!this.marks[r][c].has(value)) {
       this.marks[r][c].add(value);
-      this.history.push({
+      this.addAction({
         row: r,
         column: c,
         value: value,

@@ -1,11 +1,14 @@
 import Vue from '../vue.js'
-import Towers from '../puzzles/towers/towers.js'
+import Towers, {HintFace, Action} from '../puzzles/towers/towers.js'
 import TowersComponent from '../components/towers.js'
 import TowersValidatorComponent from '../components/towers_validator.js'
 import { currentStatus } from '../data/status.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
+import Process from '../data/process.js'
 import RandomSelectionProcess from '../data/processes/random_selection_process.js'
-import ValidationProcess, { ValidationStep } from '../data/processes/validation_process.js'
+import SimpleViewProcess from '../data/processes/simple_view_process.js'
+import RemovalProcess from '../data/processes/removal_process.js'
+import ValidationProcess from '../data/processes/validation_process.js'
 import LabeledCheckbox from './util/labeled_checkbox.js'
 
 interface InterfaceComponentProps {
@@ -19,11 +22,14 @@ interface InterfaceComponentData {
   autoValidate: boolean,
   autoCashIn: boolean,
   autoRestart: boolean,
+  autoView: boolean,
+  autoUnique: boolean,
   autoRandom: boolean,
   isDone: boolean,
   isCorrect: boolean,
   randomProcess: RandomSelectionProcess|null,
   validationProcess: ValidationProcess|null,
+  activeProcesses: Set<Process<any>>
 }
 
 let puzzleUUID: number = 0;
@@ -37,46 +43,62 @@ export default {
       autoValidate: true,
       autoCashIn: true,
       autoRestart: true,
-      autoRandom: true,
+      autoView: true,
+      autoUnique: true,
+      autoRandom: false,
       isDone: false,
       isCorrect: false,
       randomProcess: null,
       validationProcess: null,
+      activeProcesses: new Set(),
     });
-
-    let currentWatcherStopper: any = null;
 
     function size(): number {
       return currentStatus.interfacesCurrentSize[props.interfaceId];
     }
 
     function restart(): void {
-      if (data.randomProcess) {
-        currentStatus.cpu.killProcess(data.randomProcess);
-        data.randomProcess = null;
-      }
+      data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
+      data.activeProcesses.clear();
+      data.randomProcess = null;
+
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
       data.currentPuzzle.restart();
       puzzleUUID += 1;
-      if (data.autoRandom) {
+      if (data.autoView) {
+        for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+          for (let i = 0; i < data.currentPuzzle.n; ++i) {
+            const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
+              data.activeProcesses.add(p);
+            }
+          }
+        }
+      } else if (data.autoRandom) {
         startRandomProcess();
       }
     }
 
     function startValidate(): void {
+      data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
+      data.activeProcesses.clear();
+      data.randomProcess = null;
+
       data.validating = true;
       data.isDone = false;
       data.isCorrect = false;
       data.validationProcess = new ValidationProcess(data.currentPuzzle, props.interfaceId);
+      data.activeProcesses.add(data.validationProcess);
       currentStatus.cpu.addProcess(data.validationProcess, 10, (isValid: boolean) => {
         data.isDone = true;
         data.isCorrect = isValid;
+        data.activeProcesses.delete(data.validationProcess!);
+        data.validationProcess = null;
         if (data.isCorrect && data.autoCashIn) {
           cashIn();
-        }
-        if (!data.isCorrect && data.autoRestart) {
+        } else if (!data.isCorrect && data.autoRestart) {
           restart();
         }
       });
@@ -91,17 +113,49 @@ export default {
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
+
+      data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
+      data.activeProcesses.clear();
+      data.randomProcess = null;
+
       data.currentPuzzle = await randomOfSize(size());
-      if (currentWatcherStopper) {
-        currentWatcherStopper();
-      }
-      currentWatcherStopper = Vue.watch(data.currentPuzzle, (puzzle: Towers) => {
-        if (puzzle.isReadyForValidation && data.autoValidate && !data.validating) {
+      data.currentPuzzle.onAction((a: Action) => {
+        if (data.autoUnique) {
+          const cell = data.currentPuzzle.marksCell(a.row, a.column);
+          if (cell.size == 1) {
+            const v: number = cell.values().next().value;
+            for (let i = 0; i < data.currentPuzzle.n; ++i) {
+              if (i != a.column) {
+                const p = new RemovalProcess(data.currentPuzzle, a.row, i, v, props.interfaceId);
+                if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p); })) {
+                  data.activeProcesses.add(p);
+                }
+              }
+              if (i != a.row) {
+                const p = new RemovalProcess(data.currentPuzzle, i, a.column, v, props.interfaceId);
+                if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p); })) {
+                  data.activeProcesses.add(p);
+                }
+              }
+            }
+          }
+        }
+        if (data.currentPuzzle.isReadyForValidation && data.autoValidate && !data.validating) {
           startValidate();
         }
       });
+
       puzzleUUID += 1;
-      if (data.autoRandom) {
+      if (data.autoView) {
+        for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+          for (let i = 0; i < data.currentPuzzle.n; ++i) {
+            const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
+              data.activeProcesses.add(p);
+            }
+          }
+        }
+      } else if (data.autoRandom) {
         startRandomProcess();
       }
     }
@@ -111,7 +165,9 @@ export default {
         currentStatus.cpu.killProcess(data.randomProcess);
       }
       data.randomProcess = new RandomSelectionProcess(data.currentPuzzle, props.interfaceId);
+      data.activeProcesses.add(data.randomProcess);
       currentStatus.cpu.addProcess(data.randomProcess, props.interfaceId, () => {
+        data.activeProcesses.delete(data.randomProcess!)
         data.randomProcess = null;
       })
     }
@@ -162,6 +218,10 @@ export default {
         const stopButton = Vue.h('button', {
           onClick: async () => {
             data.validating = false;
+            if (data.validationProcess) {
+              data.activeProcesses.delete(data.validationProcess);
+              currentStatus.cpu.killProcess(data.validationProcess);
+            }
             if (data.isCorrect) {
               await cashIn();
             }
@@ -206,6 +266,28 @@ export default {
       });
       items.push(autoRestart);
 
+      const autoView = Vue.h(LabeledCheckbox, {
+        value: data.autoView,
+        label: 'Auto View Process',
+        boxId: 'auto_view_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoView = t.checked;
+        }
+      });
+      items.push(autoView);
+
+      const autoUnique = Vue.h(LabeledCheckbox, {
+        value: data.autoUnique,
+        label: 'Automatically remove possibility once found in same row/column',
+        boxId: 'auto_unique_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoUnique = t.checked;
+        }
+      });
+      items.push(autoUnique);
+
       const autoRandom = Vue.h(LabeledCheckbox, {
         value: data.autoRandom,
         label: 'Auto Random Selection',
@@ -222,14 +304,19 @@ export default {
         puzzle: data.currentPuzzle,
         interactive: true,
       }
-      if (data.validating) {
+      if (data.validationProcess) {
         towersProps.interactive = false;
-        towersProps.backgrounds = data.validationProcess!.getBackgrounds();
+        towersProps.backgrounds = data.validationProcess.getBackgrounds();
       }
       const p = Vue.h(TowersComponent, towersProps);
       items.push(p);
 
-      if (data.validating) {
+      data.activeProcesses.forEach((p) => {
+        const line = Vue.h('p', {}, p.processId);
+        items.push(line);
+      })
+
+      if (data.validationProcess) {
         const validator = Vue.h(TowersValidatorComponent, {
           process: data.validationProcess,
         });

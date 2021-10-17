@@ -35,12 +35,14 @@ export default class CPU {
     }, 1000 / this._speed);
   }
 
-  public addProcess<R>(p: Process<R>, priority: number, c: callback) {
+  public addProcess<R>(p: Process<R>, priority: number, c: callback): boolean {
     if (this.callbacks.has(p.processId)) {
-      throw new Error("Each process must have a unique id");
+      console.log(`Not adding process ${p.processId} since process with same name already in queue`);
+      return false;
     }
     this.queue.addItem(p, priority);
     this.callbacks.set(p.processId, c);
+    return true;
   }
 
   public killProcess(p: Process<any>) {
