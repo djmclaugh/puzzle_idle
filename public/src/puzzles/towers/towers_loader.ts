@@ -8,7 +8,7 @@ export async function randomOfSize(size: number): Promise<Towers> {
   await loadTowers(size);
   const towers = LOADED_TOWERS.get(size)!;
   const t = towers[Math.floor(Math.random() * towers.length)];
-  return t;
+  return t.copy();
 }
 
 async function loadTowers(size: number): Promise<void> {

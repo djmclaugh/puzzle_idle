@@ -37,7 +37,7 @@ export default class CPU {
 
   public addProcess<R>(p: Process<R>, priority: number, c: callback): boolean {
     if (this.callbacks.has(p.processId)) {
-      console.log(`Not adding process ${p.processId} since process with same name already in queue`);
+      //console.log(`Not adding process ${p.processId} since process with same name already in queue`);
       return false;
     }
     this.queue.addItem(p, priority);

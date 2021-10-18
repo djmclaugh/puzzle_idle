@@ -233,6 +233,10 @@ export default class Towers {
     }
   }
 
+  public copy(): Towers {
+    return new Towers(this.grid, this.wHints, this.northHints, this.eastHints, this.southHints);
+  }
+
   public static fromString(s: string): Towers {
     const rows = s.split("\n");
     const wHints: number[] = [];

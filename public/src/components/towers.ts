@@ -4,11 +4,6 @@ import TowersHintCellComponent from './towers_hint_cell.js'
 import Towers from '../puzzles/towers/towers.js'
 import MultiKeyMap from '../util/multi_key_map.js'
 
-export enum TowersGridSize {
-  SMALL,
-  REGULAR,
-}
-
 export interface Background {
   cell: [number, number],
   colour: string,
@@ -17,7 +12,6 @@ export interface Background {
 interface TowersComponentProps {
   puzzle: Towers,
   interactive: boolean,
-  size?: TowersGridSize,
   backgrounds?: Background[],
 }
 
@@ -25,10 +19,6 @@ export default {
   props: ['puzzle', 'interactive', 'size', 'backgrounds'],
 
   setup(props: TowersComponentProps) {
-
-    function size() {
-      return props.size ? props.size : TowersGridSize.REGULAR;
-    }
 
     return () => {
       const backgroundMaps: MultiKeyMap<number, number, string> = new MultiKeyMap();

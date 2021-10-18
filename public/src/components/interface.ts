@@ -2,6 +2,7 @@ import Vue from '../vue.js'
 import Towers, {HintFace, Action} from '../puzzles/towers/towers.js'
 import TowersComponent from '../components/towers.js'
 import TowersValidatorComponent from '../components/towers_validator.js'
+import InterfaceStatusComponent, {InterfaceHandlers} from '../components/interface_status.js'
 import { currentStatus } from '../data/status.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 import Process from '../data/process.js'
@@ -182,53 +183,31 @@ export default {
       }
       let items = [];
 
-      const upgradeButton = Vue.h('button', {
-        onClick: async () => {
-          currentStatus.upgradeInterface(props.interfaceId);
-          await assignNewPuzzle();
-        },
-        disabled: data.validating || !currentStatus.canAffordInterfaceUpgrade(props.interfaceId)
-      }, `Upgrade ($${currentStatus.interfaceUpgradeCost(props.interfaceId)})`);
-      items.push(upgradeButton);
-
-      const restartButton = Vue.h('button', {
-        onClick: () => {
-          restart();
-        },
-        disabled: data.validating,
-      }, 'Restart');
-      items.push(restartButton);
-
-      const undoButton = Vue.h('button', {
-        onClick: () => {
-          data.currentPuzzle.undo();
-        },
-        disabled: !data.currentPuzzle.history || data.currentPuzzle.history.length == 0,
-      }, 'Undo');
-      items.push(undoButton);
-
-      const checkButton = Vue.h('button', {
-        onClick: startValidate,
-        disabled: !(data.currentPuzzle instanceof Towers) || data.validating || !data.currentPuzzle.isReadyForValidation,
-      }, 'Validate');
-      items.push(checkButton);
-
-      if (data.validating) {
-        let message = data.isDone ? (data.isCorrect ? `Cash In (+$${currentStatus.puzzleReward(size())})` : 'Return to edit mode') : 'Cancel';
-        const stopButton = Vue.h('button', {
-          onClick: async () => {
-            data.validating = false;
-            if (data.validationProcess) {
-              data.activeProcesses.delete(data.validationProcess);
-              currentStatus.cpu.killProcess(data.validationProcess);
-            }
-            if (data.isCorrect) {
-              await cashIn();
-            }
-          },
-        }, message);
-        items.push(stopButton);
+      const interfaceProps: any = {
+        interfaceId: props.interfaceId,
+        isValidating: data.validating,
+        isDone: data.isDone,
+        isCorrect: data.isCorrect,
+        puzzle: data.currentPuzzle,
       }
+      interfaceProps[InterfaceHandlers.UPGRADE] = async () => {
+        currentStatus.upgradeInterface(props.interfaceId);
+        await assignNewPuzzle();
+      }
+      interfaceProps[InterfaceHandlers.RESTART] = restart
+      interfaceProps[InterfaceHandlers.START_VALIDATE] = startValidate
+      interfaceProps[InterfaceHandlers.STOP_VALIDATE] = async () => {
+        data.validating = false;
+        if (data.validationProcess) {
+          data.activeProcesses.delete(data.validationProcess);
+          currentStatus.cpu.killProcess(data.validationProcess);
+        }
+        if (data.isCorrect) {
+          await cashIn();
+        }
+      }
+      const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
+      items.push(interfaceStatus);
 
       items.push(Vue.h('br'));
       items.push(Vue.h('br'));
