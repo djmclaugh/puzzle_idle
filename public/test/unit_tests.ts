@@ -1,4 +1,3 @@
-import * as LatinSquareTest from './puzzles/latin_square_test.js'
 import * as TowersTest from './puzzles/towers_test.js'
 import * as PriorityQueueTest from './util/priority_queue_test.js'
 
