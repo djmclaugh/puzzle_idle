@@ -12,6 +12,11 @@ export function view(values: number[]) {
 }
 
 export type Possibilities = Set<number>;
+export type Triple = {
+  row: number,
+  col: number,
+  val: number,
+};
 
 export enum ActionType {
   REMOVE_POSSIBILITY,
@@ -336,28 +341,8 @@ export default class Towers {
   }
 
   public restart() {
-    this.westHintMarked = [];
-    this.northHintMarked = [];
-    this.eastHintMarked = [];
-    this.southHintMarked = [];
-    this.marks = [];
-    this.history = [];
-    for (let i = 0; i < this.n; ++i) {
-      this.westHintMarked.push(false);
-      this.northHintMarked.push(false);
-      this.eastHintMarked.push(false);
-      this.southHintMarked.push(false);
-      this.marks.push([]);
-      for (let j = 0; j < this.n; ++j) {
-        this.marks[i].push(new Set());
-        if (this.grid[i][j] == -1) {
-          for (let k = 0; k < this.n; ++k) {
-            this.marks[i][j].add(k);
-          }
-        } else {
-          this.marks[i][j].add(this.grid[i][j]);
-        }
-      }
+    while (this.history.length > 0) {
+      this.undo();
     }
   }
 

@@ -82,8 +82,9 @@ export default class CPU {
       this.activeProcesses.delete(p);
       this.ram.deallocate(p.processId);
       if (this.callbacks.has(p.processId)) {
-        this.callbacks.get(p.processId)!(p.returnValue);
+        const callback = this.callbacks.get(p.processId)!;
         this.callbacks.delete(p.processId);
+        callback(p.returnValue);
       }
     }
   }

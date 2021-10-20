@@ -8,6 +8,7 @@ export default class RandomSelectionProcess extends Process<void> {
   public row: number = 0;
   public column: number = 0;
   public readonly returnValue: void = undefined;
+  public readonly logs = [];
 
   public beat: number = 0;
 

@@ -6,7 +6,7 @@ import InterfaceStatusComponent, {InterfaceHandlers} from '../components/interfa
 import { currentStatus } from '../data/status.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 import Process from '../data/process.js'
-import RandomSelectionProcess from '../data/processes/random_selection_process.js'
+import RandomRemovalProcess from '../data/processes/random_removal_process.js'
 import SimpleViewProcess from '../data/processes/simple_view_process.js'
 import RemovalProcess from '../data/processes/removal_process.js'
 import ValidationProcess from '../data/processes/validation_process.js'
@@ -26,12 +26,10 @@ interface InterfaceComponentData {
   autoView: boolean,
   autoUnique: boolean,
   autoRandom: boolean,
-  systematicSolve: boolean,
-  systematicSolveAttempt: number,
-  systematicSolveCounter: number,
+  autoRevertOnContradiction: boolean,
+  inGuessMode: boolean,
   isDone: boolean,
   isCorrect: boolean,
-  randomProcess: RandomSelectionProcess|null,
   validationProcess: ValidationProcess|null,
   activeProcesses: Set<Process<any>>
 }
@@ -44,18 +42,16 @@ export default {
     const data: InterfaceComponentData = Vue.reactive({
       currentPuzzle: {},
       validating: false,
-      autoValidate: true,
-      autoCashIn: true,
-      autoRestart: true,
-      autoView: true,
-      autoUnique: true,
+      autoValidate: false,
+      autoCashIn: false,
+      autoRestart: false,
+      autoView: false,
+      autoUnique: false,
       autoRandom: false,
-      systematicSolve: false,
-      systematicSolveAttemp: 0,
-      systematicSolveCounter: 0,
+      autoRevertOnContradiction: false,
+      inGuessMode: false,
       isDone: false,
       isCorrect: false,
-      randomProcess: null,
       validationProcess: null,
       activeProcesses: new Set(),
     });
@@ -64,16 +60,19 @@ export default {
       return currentStatus.interfacesCurrentSize[props.interfaceId];
     }
 
-    function restart(): void {
+    function stopAllProcesses() {
       data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
       data.activeProcesses.clear();
-      data.randomProcess = null;
+      data.validationProcess = null;
+    }
 
+    function restart(): void {
+      stopAllProcesses()
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
+      data.inGuessMode = false;
       data.currentPuzzle.restart();
-      puzzleUUID += 1;
       if (data.autoView) {
         for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
           for (let i = 0; i < data.currentPuzzle.n; ++i) {
@@ -83,16 +82,34 @@ export default {
             }
           }
         }
-      } else if (data.autoRandom) {
-        startRandomProcess();
+      } else {
+        startRandomRemovalProcessIfNeeded();
+      }
+    }
+
+    function revert(): void {
+      stopAllProcesses()
+      data.validating = false;
+      data.isCorrect = false;
+      data.isDone = false;
+      data.currentPuzzle.restoreLatestSnapshot();
+      data.inGuessMode = false;
+      if (data.currentPuzzle.history.length == 0 && data.autoView) {
+        for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+          for (let i = 0; i < data.currentPuzzle.n; ++i) {
+            const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
+              data.activeProcesses.add(p);
+            }
+          }
+        }
+      } else {
+        startRandomRemovalProcessIfNeeded();
       }
     }
 
     function startValidate(): void {
-      data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
-      data.activeProcesses.clear();
-      data.randomProcess = null;
-
+      stopAllProcesses();
       data.validating = true;
       data.isDone = false;
       data.isCorrect = false;
@@ -102,13 +119,32 @@ export default {
         data.isDone = true;
         data.isCorrect = isValid;
         data.activeProcesses.delete(data.validationProcess!);
-        data.validationProcess = null;
         if (data.isCorrect && data.autoCashIn) {
           cashIn();
         } else if (!data.isCorrect && data.autoRestart) {
-          restart();
+          revert();
         }
       });
+    }
+
+    function startRandomRemovalProcessIfNeeded() {
+      if (data.autoRandom && data.activeProcesses.size == 0 && !data.currentPuzzle.isReadyForValidation && !data.currentPuzzle.hasContradiction) {
+        if (!data.inGuessMode) {
+          data.currentPuzzle.takeSnapshot();
+          data.inGuessMode = true;
+        }
+        const p = new RandomRemovalProcess(data.currentPuzzle, props.interfaceId);
+        if (currentStatus.cpu.addProcess(p, 5, onProcessOver(p))) {
+          data.activeProcesses.add(p);
+        }
+      }
+    }
+
+    function onProcessOver<R>(process: Process<R>) {
+      return () => {
+        data.activeProcesses.delete(process);
+        startRandomRemovalProcessIfNeeded();
+      }
     }
 
     async function cashIn() {
@@ -120,25 +156,19 @@ export default {
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
+      data.inGuessMode = false;
 
-      data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
-      data.activeProcesses.clear();
-      data.randomProcess = null;
+      stopAllProcesses();
 
       data.currentPuzzle = await randomOfSize(size());
       data.currentPuzzle.onAction((a: Action) => {
         if (data.currentPuzzle.hasContradiction) {
-          data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
-          data.activeProcesses.clear();
-          data.randomProcess = null;
-          if (data.systematicSolve) {
-            data.systematicSolveAttemp += 1;
+          stopAllProcesses();
+          if (data.inGuessMode && data.autoRevertOnContradiction) {
             data.currentPuzzle.restoreLatestSnapshot();
-            const p = new SystematicProcess(data.currentPuzzle, a.row, i, v, props.interfaceId);
-            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p); })) {
-              data.activeProcesses.add(p);
-            }
+            data.inGuessMode = false;
           }
+          startRandomRemovalProcessIfNeeded();
           return;
         }
         if (data.autoUnique && a.type == ActionType.REMOVE_POSSIBILITY) {
@@ -148,13 +178,13 @@ export default {
             for (let i = 0; i < data.currentPuzzle.n; ++i) {
               if (i != a.column) {
                 const p = new RemovalProcess(data.currentPuzzle, a.row, i, v, props.interfaceId);
-                if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p); })) {
+                if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
                   data.activeProcesses.add(p);
                 }
               }
               if (i != a.row) {
                 const p = new RemovalProcess(data.currentPuzzle, i, a.column, v, props.interfaceId);
-                if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p); })) {
+                if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
                   data.activeProcesses.add(p);
                 }
               }
@@ -171,26 +201,14 @@ export default {
         for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
           for (let i = 0; i < data.currentPuzzle.n; ++i) {
             const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
-            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
+            if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
               data.activeProcesses.add(p);
             }
           }
         }
-      } else if (data.autoRandom) {
-        startRandomProcess();
+      } else {
+        startRandomRemovalProcessIfNeeded();
       }
-    }
-
-    function startRandomProcess() {
-      if (data.randomProcess !== null) {
-        currentStatus.cpu.killProcess(data.randomProcess);
-      }
-      data.randomProcess = new RandomSelectionProcess(data.currentPuzzle, props.interfaceId);
-      data.activeProcesses.add(data.randomProcess);
-      currentStatus.cpu.addProcess(data.randomProcess, props.interfaceId, () => {
-        data.activeProcesses.delete(data.randomProcess!)
-        data.randomProcess = null;
-      })
     }
 
     Vue.onMounted(async () => {
@@ -205,6 +223,7 @@ export default {
 
       const interfaceProps: any = {
         interfaceId: props.interfaceId,
+        inGuessMode: data.inGuessMode,
         isValidating: data.validating,
         isDone: data.isDone,
         isCorrect: data.isCorrect,
@@ -214,17 +233,33 @@ export default {
         currentStatus.upgradeInterface(props.interfaceId);
         await assignNewPuzzle();
       }
-      interfaceProps[InterfaceHandlers.RESTART] = restart
-      interfaceProps[InterfaceHandlers.START_VALIDATE] = startValidate
+      interfaceProps[InterfaceHandlers.RESTART] = restart;
+      interfaceProps[InterfaceHandlers.START_VALIDATE] = startValidate;
       interfaceProps[InterfaceHandlers.STOP_VALIDATE] = async () => {
         data.validating = false;
         if (data.validationProcess) {
           data.activeProcesses.delete(data.validationProcess);
           currentStatus.cpu.killProcess(data.validationProcess);
+          data.validationProcess = null;
         }
         if (data.isCorrect) {
           await cashIn();
         }
+      }
+      interfaceProps[InterfaceHandlers.UNDO] = () => {
+        data.currentPuzzle.undo();
+        // If we "undo"ed past the guess mode snapshot, exit guess mode.
+        if (data.inGuessMode && data.currentPuzzle.snapshots.length == 0) {
+          data.inGuessMode = false;
+        }
+      }
+      interfaceProps[InterfaceHandlers.GUESS_MODE] = () => {
+        if (data.inGuessMode) {
+          data.currentPuzzle.restoreLatestSnapshot();
+        } else {
+          data.currentPuzzle.takeSnapshot();
+        }
+        data.inGuessMode = !data.inGuessMode;
       }
       const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
       items.push(interfaceStatus);
@@ -256,7 +291,7 @@ export default {
 
       const autoRestart = Vue.h(LabeledCheckbox, {
         value: data.autoRestart,
-        label: 'Auto Restart',
+        label: 'Auto Revert On Failed Validation',
         boxId: 'auto_restart_checkbox',
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
@@ -264,6 +299,17 @@ export default {
         }
       });
       items.push(autoRestart);
+
+      const autoRevertOnContradiction = Vue.h(LabeledCheckbox, {
+        value: data.autoRevertOnContradiction,
+        label: 'Auto Revert On Contradiciton',
+        boxId: 'auto_revert_on_contradiction_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoRevertOnContradiction = t.checked;
+        }
+      });
+      items.push(autoRevertOnContradiction);
 
       const autoView = Vue.h(LabeledCheckbox, {
         value: data.autoView,
@@ -294,6 +340,7 @@ export default {
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
           data.autoRandom = t.checked;
+          startRandomRemovalProcessIfNeeded();
         }
       });
       items.push(autoRandom);

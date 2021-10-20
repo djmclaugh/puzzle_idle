@@ -12,6 +12,7 @@ export enum InterfaceEvents {
   UNDO = "undo",
   START_VALIDATE = "start_validate",
   STOP_VALIDATE = "stop_validate",
+  GUESS_MODE = "guess_mode",
 }
 
 export const InterfaceHandlers = {
@@ -20,10 +21,12 @@ export const InterfaceHandlers = {
   UNDO: eventToHandler(InterfaceEvents.UNDO),
   START_VALIDATE: eventToHandler(InterfaceEvents.START_VALIDATE),
   STOP_VALIDATE: eventToHandler(InterfaceEvents.STOP_VALIDATE),
+  GUESS_MODE: eventToHandler(InterfaceEvents.GUESS_MODE),
 }
 
 interface InterfaceStatusComponentProps {
   interfaceId: number,
+  inGuessMode: boolean,
   isValidating: boolean,
   isDone: boolean,
   isCorrect: boolean,
@@ -31,7 +34,7 @@ interface InterfaceStatusComponentProps {
 }
 
 export default {
-  props: ['interfaceId', 'isCurrent', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
+  props: ['interfaceId', 'inGuessMode', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
   setup(props: InterfaceStatusComponentProps, {attrs, slots, emit}: any): any {
     function size(): number {
       return currentStatus.interfacesCurrentSize[props.interfaceId];
@@ -55,10 +58,16 @@ export default {
       items.push(restartButton);
 
       const undoButton = Vue.h('button', {
-        onClick: () => { props.puzzle.undo(); },
+        onClick: () => { emit(InterfaceEvents.UNDO); },
         disabled: !props.puzzle.history || props.puzzle.history.length == 0 || props.isValidating,
       }, 'Undo');
       items.push(undoButton);
+
+      const guessModeButton = Vue.h('button', {
+        onClick: () => { emit(InterfaceEvents.GUESS_MODE); },
+        disabled: props.isValidating,
+      }, props.inGuessMode ? 'Revert Guesses' : 'Enter Guess Mode');
+      items.push(guessModeButton);
 
       const checkButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.START_VALIDATE); },
