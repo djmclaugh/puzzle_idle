@@ -13,17 +13,27 @@ export function view(values: number[]) {
 
 export type Possibilities = Set<number>;
 
-enum ActionType {
+export enum ActionType {
   REMOVE_POSSIBILITY,
   ADD_POSSIBILITY,
+  REMOVE_HINT,
+  ADD_HINT
 };
 
-export type Action = {
+export type CellAction = {
   row: number,
   column: number,
   value: number,
-  type: ActionType,
+  type: ActionType.REMOVE_POSSIBILITY|ActionType.ADD_POSSIBILITY,
 };
+
+export type HintAction = {
+  face: HintFace,
+  index: number,
+  type: ActionType.REMOVE_HINT|ActionType.ADD_HINT,
+};
+
+export type Action = CellAction|HintAction;
 
 export type ActionCallback = (a: Action) => void;
 
@@ -99,6 +109,7 @@ export default class Towers {
   public southHintMarked: boolean[];
 
   public history: Action[] = [];
+  public snapshots: number[] = [];
 
   public get wHints() {
     return this.westHints.concat();
@@ -157,7 +168,30 @@ export default class Towers {
       case ActionType.REMOVE_POSSIBILITY:
         this.marks[lastAction.row][lastAction.column].add(lastAction.value);
         break;
+      case ActionType.ADD_HINT:
+        this.setHint(lastAction.face, lastAction.index, true);
+        break;
+      case ActionType.REMOVE_HINT:
+        this.setHint(lastAction.face, lastAction.index, false);
+        break;
     }
+    while (this.history.length < this.snapshots[this.snapshots.length - 1]) {
+      this.snapshots.pop();
+    }
+  }
+
+  public takeSnapshot(): void {
+    this.snapshots.push(this.history.length);
+  }
+
+  public restoreLatestSnapshot(): void {
+    if (this.snapshots.length == 0) {
+      this.restart();
+    }
+    while (this.history.length > this.snapshots[this.snapshots.length - 1]) {
+      this.undo();
+    }
+    this.snapshots.pop();
   }
 
   public get n() {
@@ -197,6 +231,41 @@ export default class Towers {
       if (i != value) {
         this.removeFromCell(r, c, i);
       }
+    }
+  }
+
+  public markHint(f: HintFace, i: number) {
+    this.setHint(f, i, true);
+    this.addAction({
+      face: f,
+      index: i,
+      type: ActionType.REMOVE_HINT
+    });
+  }
+
+  public unmarkHint(f: HintFace, i: number) {
+    this.setHint(f, i, false);
+    this.addAction({
+      face: f,
+      index: i,
+      type: ActionType.ADD_HINT
+    });
+  }
+
+  private setHint(f: HintFace, i: number, value: boolean) {
+    switch(f) {
+      case HintFace.NORTH:
+        this.northHintMarked[i] = value;
+        break;
+      case HintFace.EAST:
+        this.eastHintMarked[i] = value;
+        break;
+      case HintFace.SOUTH:
+        this.southHintMarked[i] = value;
+        break;
+      case HintFace.WEST:
+        this.westHintMarked[i] = value;
+        break;
     }
   }
 
@@ -301,6 +370,17 @@ export default class Towers {
       }
     }
     return true;
+  }
+
+  public get hasContradiction(): boolean {
+    for (let r = 0; r < this.n; ++r) {
+      for (let c = 0; c < this.n; ++c) {
+        if (this.marks[r][c].size == 0) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public solvedGrid(): number[][] {

@@ -1,5 +1,5 @@
 import Vue from '../vue.js'
-import Towers, {HintFace, Action} from '../puzzles/towers/towers.js'
+import Towers, {HintFace, Action, ActionType} from '../puzzles/towers/towers.js'
 import TowersComponent from '../components/towers.js'
 import TowersValidatorComponent from '../components/towers_validator.js'
 import InterfaceStatusComponent, {InterfaceHandlers} from '../components/interface_status.js'
@@ -26,6 +26,9 @@ interface InterfaceComponentData {
   autoView: boolean,
   autoUnique: boolean,
   autoRandom: boolean,
+  systematicSolve: boolean,
+  systematicSolveAttempt: number,
+  systematicSolveCounter: number,
   isDone: boolean,
   isCorrect: boolean,
   randomProcess: RandomSelectionProcess|null,
@@ -47,6 +50,9 @@ export default {
       autoView: true,
       autoUnique: true,
       autoRandom: false,
+      systematicSolve: false,
+      systematicSolveAttemp: 0,
+      systematicSolveCounter: 0,
       isDone: false,
       isCorrect: false,
       randomProcess: null,
@@ -121,7 +127,21 @@ export default {
 
       data.currentPuzzle = await randomOfSize(size());
       data.currentPuzzle.onAction((a: Action) => {
-        if (data.autoUnique) {
+        if (data.currentPuzzle.hasContradiction) {
+          data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
+          data.activeProcesses.clear();
+          data.randomProcess = null;
+          if (data.systematicSolve) {
+            data.systematicSolveAttemp += 1;
+            data.currentPuzzle.restoreLatestSnapshot();
+            const p = new SystematicProcess(data.currentPuzzle, a.row, i, v, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p); })) {
+              data.activeProcesses.add(p);
+            }
+          }
+          return;
+        }
+        if (data.autoUnique && a.type == ActionType.REMOVE_POSSIBILITY) {
           const cell = data.currentPuzzle.marksCell(a.row, a.column);
           if (cell.size == 1) {
             const v: number = cell.values().next().value;
