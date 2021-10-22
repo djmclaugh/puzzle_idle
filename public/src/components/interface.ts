@@ -8,6 +8,8 @@ import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 import Process from '../data/process.js'
 import RandomRemovalProcess from '../data/processes/random_removal_process.js'
 import SimpleViewProcess from '../data/processes/simple_view_process.js'
+import OnlyChoiceInColumnProcess from '../data/processes/check_only_choice_in_column_process.js'
+import OnlyChoiceInRowProcess from '../data/processes/check_only_choice_in_row_process.js'
 import RemovalProcess from '../data/processes/removal_process.js'
 import ValidationProcess from '../data/processes/validation_process.js'
 import LabeledCheckbox from './util/labeled_checkbox.js'
@@ -25,6 +27,7 @@ interface InterfaceComponentData {
   autoRestart: boolean,
   autoView: boolean,
   autoUnique: boolean,
+  autoSweep: boolean, // Need to find better name...
   autoRandom: boolean,
   autoRevertOnContradiction: boolean,
   inGuessMode: boolean,
@@ -42,17 +45,17 @@ export default {
     const data: InterfaceComponentData = Vue.reactive({
       currentPuzzle: {},
       validating: false,
-      autoValidate: false,
-      autoCashIn: false,
-      autoRestart: false,
-      autoView: false,
-      autoUnique: false,
-      autoRandom: false,
-      autoRevertOnContradiction: false,
+      autoValidate: true,
+      autoCashIn: true,
+      autoRestart: true,
+      autoView: true,
+      autoUnique: true,
+      autoRandom: true,
+      autoRevertOnContradiction: true,
+      autoSweep: true,
       inGuessMode: false,
       isDone: false,
       isCorrect: false,
-      validationProcess: null,
       activeProcesses: new Set(),
     });
 
@@ -73,18 +76,8 @@ export default {
       data.isDone = false;
       data.inGuessMode = false;
       data.currentPuzzle.restart();
-      if (data.autoView) {
-        for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-          for (let i = 0; i < data.currentPuzzle.n; ++i) {
-            const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
-            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
-              data.activeProcesses.add(p);
-            }
-          }
-        }
-      } else {
-        startRandomRemovalProcessIfNeeded();
-      }
+      startInitialRemovalProcessIfNeeded();
+      startRandomRemovalProcessIfNeeded();
     }
 
     function revert(): void {
@@ -94,18 +87,8 @@ export default {
       data.isDone = false;
       data.currentPuzzle.restoreLatestSnapshot();
       data.inGuessMode = false;
-      if (data.currentPuzzle.history.length == 0 && data.autoView) {
-        for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-          for (let i = 0; i < data.currentPuzzle.n; ++i) {
-            const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
-            if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
-              data.activeProcesses.add(p);
-            }
-          }
-        }
-      } else {
-        startRandomRemovalProcessIfNeeded();
-      }
+      startInitialRemovalProcessIfNeeded();
+      startRandomRemovalProcessIfNeeded();
     }
 
     function startValidate(): void {
@@ -125,6 +108,45 @@ export default {
           revert();
         }
       });
+    }
+
+    function startInitialRemovalProcessIfNeeded() {
+      if (data.currentPuzzle.history.length == 0) {
+        if (data.autoView) {
+          for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+            for (let i = 0; i < data.currentPuzzle.n; ++i) {
+              const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
+              if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
+                data.activeProcesses.add(p);
+              }
+            }
+          }
+        }
+        if (data.autoUnique) {
+          for (let row = 0; row < data.currentPuzzle.n; ++row) {
+            for (let col = 0; col < data.currentPuzzle.n; ++col) {
+              const possibilities = data.currentPuzzle.marksCell(row, col);
+              if (possibilities.size == 1) {
+                const v: number = possibilities.values().next().value;
+                for (let i = 0; i < data.currentPuzzle.n; ++i) {
+                  if (i != row) {
+                    const p = new RemovalProcess(data.currentPuzzle, i, col, v, props.interfaceId);
+                    if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+                      data.activeProcesses.add(p);
+                    }
+                  }
+                  if (i != col) {
+                    const p = new RemovalProcess(data.currentPuzzle, row, i, v, props.interfaceId);
+                    if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+                      data.activeProcesses.add(p);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     function startRandomRemovalProcessIfNeeded() {
@@ -191,24 +213,24 @@ export default {
             }
           }
         }
+        if (data.autoSweep && a.type == ActionType.REMOVE_POSSIBILITY) {
+          const colP = new OnlyChoiceInColumnProcess(data.currentPuzzle, a.column, a.value, props.interfaceId);
+          if (currentStatus.cpu.addProcess(colP, 9, onProcessOver(colP))) {
+            data.activeProcesses.add(colP);
+          }
+          const rowP = new OnlyChoiceInRowProcess(data.currentPuzzle, a.row, a.value, props.interfaceId);
+          if (currentStatus.cpu.addProcess(rowP, 9, onProcessOver(rowP))) {
+            data.activeProcesses.add(rowP);
+          }
+        }
         if (data.currentPuzzle.isReadyForValidation && data.autoValidate && !data.validating) {
           startValidate();
         }
       });
 
       puzzleUUID += 1;
-      if (data.autoView) {
-        for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-          for (let i = 0; i < data.currentPuzzle.n; ++i) {
-            const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
-            if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
-              data.activeProcesses.add(p);
-            }
-          }
-        }
-      } else {
-        startRandomRemovalProcessIfNeeded();
-      }
+      startInitialRemovalProcessIfNeeded();
+      startRandomRemovalProcessIfNeeded();
     }
 
     Vue.onMounted(async () => {
@@ -332,6 +354,17 @@ export default {
         }
       });
       items.push(autoUnique);
+
+      const autoSweep = Vue.h(LabeledCheckbox, {
+        value: data.autoSweep,
+        label: 'Automatically check if only one cell in a row/column can be a certain value',
+        boxId: 'auto_sweep_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoSweep = t.checked;
+        }
+      });
+      items.push(autoSweep);
 
       const autoRandom = Vue.h(LabeledCheckbox, {
         value: data.autoRandom,

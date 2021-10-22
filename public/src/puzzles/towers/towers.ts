@@ -116,29 +116,29 @@ export default class Towers {
   public history: Action[] = [];
   public snapshots: number[] = [];
 
-  public get wHints() {
-    return this.westHints.concat();
-  }
-  public get nHints() {
-    return this.northHints.concat();
-  }
-  public get eHints() {
-    return this.eastHints.concat();
-  }
-  public get sHints() {
-    return this.southHints.concat();
-  }
-
   public getHints(face: HintFace) {
     switch(face) {
       case HintFace.NORTH:
-        return this.nHints.concat();
+        return this.northHints.concat();
       case HintFace.EAST:
-        return this.eHints.concat();
+        return this.eastHints.concat();
       case HintFace.SOUTH:
-        return this.sHints.concat();
+        return this.southHints.concat();
       case HintFace.WEST:
-        return this.wHints.concat();
+        return this.westHints.concat();
+    }
+  }
+
+  public getHintsMarked(face: HintFace) {
+    switch(face) {
+      case HintFace.NORTH:
+        return this.northHintMarked.concat();
+      case HintFace.EAST:
+        return this.eastHintMarked.concat();
+      case HintFace.SOUTH:
+        return this.southHintMarked.concat();
+      case HintFace.WEST:
+        return this.westHintMarked.concat();
     }
   }
 
@@ -239,6 +239,14 @@ export default class Towers {
     }
   }
 
+  public toggleHint(f: HintFace, i: number) {
+    if (this.getHintsMarked(f)[i]) {
+      this.unmarkHint(f, i);
+    } else {
+      this.markHint(f, i);
+    }
+  }
+
   public markHint(f: HintFace, i: number) {
     this.setHint(f, i, true);
     this.addAction({
@@ -308,7 +316,13 @@ export default class Towers {
   }
 
   public copy(): Towers {
-    return new Towers(this.grid, this.wHints, this.northHints, this.eastHints, this.southHints);
+    return new Towers(
+      this.grid,
+      this.getHints(HintFace.WEST),
+      this.getHints(HintFace.NORTH),
+      this.getHints(HintFace.EAST),
+      this.getHints(HintFace.SOUTH)
+    );
   }
 
   public static fromString(s: string): Towers {

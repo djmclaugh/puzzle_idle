@@ -1,7 +1,7 @@
 import Vue from '../vue.js'
 import LatinSquareCellComponent from './latin_square_cell.js'
 import TowersHintCellComponent from './towers_hint_cell.js'
-import Towers from '../puzzles/towers/towers.js'
+import Towers, { HintFace } from '../puzzles/towers/towers.js'
 import MultiKeyMap from '../util/multi_key_map.js'
 
 export interface Background {
@@ -34,10 +34,10 @@ export default {
       items.push(Vue.h('div'))
       for (let i = 0; i < n; ++i) {
         items.push(Vue.h(TowersHintCellComponent, {
-          value: puzzle.nHints[i],
+          value: puzzle.getHints(HintFace.NORTH)[i],
           marked: puzzle.northHintMarked[i],
           onClick: () => {
-            puzzle.northHintMarked[i] = !puzzle.northHintMarked[i];
+            puzzle.toggleHint(HintFace.NORTH, i);
           },
         }));
       }
@@ -49,10 +49,10 @@ export default {
         const y = Math.floor(i / n);
         if (x == 0) {
           items.push(Vue.h(TowersHintCellComponent, {
-            value: puzzle.wHints[y],
+            value: puzzle.getHints(HintFace.WEST)[y],
             marked: puzzle.westHintMarked[y],
             onClick: () => {
-              puzzle.westHintMarked[y] = !puzzle.westHintMarked[y];
+              puzzle.toggleHint(HintFace.WEST, y);
             },
           }));
         }
@@ -81,10 +81,10 @@ export default {
         items.push(cell);
         if (x == n - 1) {
           items.push(Vue.h(TowersHintCellComponent, {
-            value: puzzle.eHints[y],
+            value: puzzle.getHints(HintFace.EAST)[y],
             marked: puzzle.eastHintMarked[y],
             onClick: () => {
-              puzzle.eastHintMarked[y] = !puzzle.eastHintMarked[y];
+              puzzle.toggleHint(HintFace.EAST, y);
             },
           }));
         }
@@ -94,10 +94,10 @@ export default {
       items.push(Vue.h('div'))
       for (let i = 0; i < n; ++i) {
         items.push(Vue.h(TowersHintCellComponent, {
-          value: puzzle.sHints[i],
+          value: puzzle.getHints(HintFace.SOUTH)[i],
           marked: puzzle.southHintMarked[i],
           onClick: () => {
-            puzzle.southHintMarked[i] = !puzzle.southHintMarked[i];
+            puzzle.toggleHint(HintFace.SOUTH, i);
           },
         }));
       }
