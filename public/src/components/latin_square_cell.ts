@@ -3,6 +3,7 @@ import Vue from '../vue.js'
 interface LatinCellComponentProps {
   possibilities: Set<number>,
   range: number,
+  highlight: number|undefined,
 }
 
 interface LatinCellComponentData {
@@ -11,7 +12,7 @@ interface LatinCellComponentData {
 }
 
 export default {
-  props: ['possibilities', 'range'],
+  props: ['possibilities', 'range', 'highlight'],
 
   setup(props: LatinCellComponentProps, {attrs, slots, emit}: any) {
 
@@ -52,9 +53,18 @@ export default {
       const possibilityNodes = [];
       for (let i = 0; i < props.range; ++i) {
         const node = Vue.h('div', {
-          class: ['sudoku-possibility', {'crossed-out': !data.p.has(i)}],
+          class: ['sudoku-possibility', {
+            'crossed-out': !data.p.has(i),
+            'possibility-highlight': data.p.has(i) && props.highlight !== undefined && props.highlight == i,
+          }],
           key: i.toString(),
           onClick: onClick,
+          onMouseover: () => {
+            if (data.p.has(i)) {
+              emit('updateHighlight', i);
+            }
+          },
+          onMouseout: () => { emit('updateHighlight', undefined); },
         }, (i+1).toString());
         possibilityNodes.push(node);
       }

@@ -15,10 +15,18 @@ interface TowersComponentProps {
   backgrounds?: Background[],
 }
 
+interface TowersComponentData {
+  highlight: number|undefined,
+}
+
 export default {
   props: ['puzzle', 'interactive', 'size', 'backgrounds'],
 
   setup(props: TowersComponentProps) {
+
+    const data: TowersComponentData = Vue.reactive({
+      highlight: undefined
+    })
 
     return () => {
       const backgroundMaps: MultiKeyMap<number, number, string> = new MultiKeyMap();
@@ -73,10 +81,14 @@ export default {
         const cell = Vue.h(LatinSquareCellComponent, {
           possibilities: puzzle.marksCell(y, x),
           range: canEdit ? n : -1,
+          highlight: data.highlight,
           style: style,
           onAdd: (value: number) => { puzzle.addToCell(y, x, value); },
           onRemove: (value: number) => { puzzle.removeFromCell(y, x, value); },
           onSet: (value: number) => { puzzle.setCell(y, x, value); },
+          onUpdateHighlight: (value: number|undefined) => {
+            data.highlight = value;
+          }
         });
         items.push(cell);
         if (x == n - 1) {

@@ -124,6 +124,10 @@ canvas {
   background-color: #e0e0e0;
 }
 
+.possibility-highlight {
+  background-color: #e0e0c0;
+}
+
 .crossed-out {
   background-color: #ffa0a0;
   opacity: 0.2;
