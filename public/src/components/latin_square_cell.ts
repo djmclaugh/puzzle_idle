@@ -24,7 +24,10 @@ export default {
     function onClick(event: MouseEvent) {
       const target: HTMLDivElement = event.target! as HTMLDivElement;
       const possibility = Number.parseInt(target.textContent!) - 1;
-      if (event.ctrlKey) {
+      if (event.shiftKey) {
+        // Make guess
+        emit('guess', possibility);
+      } else if (event.ctrlKey) {
         // Toggle this possibility
         if (data.p.has(possibility)) {
           emit('remove', possibility);

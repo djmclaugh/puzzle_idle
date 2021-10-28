@@ -1,9 +1,13 @@
 import Vue from '../vue.js'
-import Towers from '../puzzles/towers/towers.js'
+import Towers, {GuessInfo} from '../puzzles/towers/towers.js'
 import { currentStatus } from '../data/status.js'
 
 function eventToHandler(event: string): string {
   return 'on' + event[0].toUpperCase() + event.substr(1);
+}
+
+function guessToString(g: GuessInfo) {
+  return `${g.guess.val + 1} at (${g.guess.col + 1}, ${g.guess.row + 1})`;
 }
 
 export enum InterfaceEvents {
@@ -12,7 +16,8 @@ export enum InterfaceEvents {
   UNDO = "undo",
   START_VALIDATE = "start_validate",
   STOP_VALIDATE = "stop_validate",
-  GUESS_MODE = "guess_mode",
+  ABANDON_GUESS = "abandon_guess",
+  MARK_GUESS_AS_IMPOSSIBLE = "mark_guess_as_impossible",
 }
 
 export const InterfaceHandlers = {
@@ -21,12 +26,13 @@ export const InterfaceHandlers = {
   UNDO: eventToHandler(InterfaceEvents.UNDO),
   START_VALIDATE: eventToHandler(InterfaceEvents.START_VALIDATE),
   STOP_VALIDATE: eventToHandler(InterfaceEvents.STOP_VALIDATE),
-  GUESS_MODE: eventToHandler(InterfaceEvents.GUESS_MODE),
+  ABANDON_GUESS: eventToHandler(InterfaceEvents.ABANDON_GUESS),
+  MARK_GUESS_AS_IMPOSSIBLE: eventToHandler(InterfaceEvents.MARK_GUESS_AS_IMPOSSIBLE),
 }
 
 interface InterfaceStatusComponentProps {
   interfaceId: number,
-  inGuessMode: boolean,
+  guesses: GuessInfo[],
   isValidating: boolean,
   isDone: boolean,
   isCorrect: boolean,
@@ -34,7 +40,7 @@ interface InterfaceStatusComponentProps {
 }
 
 export default {
-  props: ['interfaceId', 'inGuessMode', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
+  props: ['interfaceId', 'guesses', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
   setup(props: InterfaceStatusComponentProps, {attrs, slots, emit}: any): any {
     function size(): number {
       return currentStatus.interfacesCurrentSize[props.interfaceId];
@@ -63,11 +69,17 @@ export default {
       }, 'Undo');
       items.push(undoButton);
 
-      const guessModeButton = Vue.h('button', {
-        onClick: () => { emit(InterfaceEvents.GUESS_MODE); },
-        disabled: props.isValidating,
-      }, props.inGuessMode ? 'Revert Guesses' : 'Enter Guess Mode');
-      items.push(guessModeButton);
+      const abandonGuessButton = Vue.h('button', {
+        onClick: () => { emit(InterfaceEvents.ABANDON_GUESS); },
+        disabled: props.guesses === undefined || props.guesses.length == 0,
+      }, 'Abandon Guess');
+      items.push(abandonGuessButton);
+
+      const markGuessAsImpossibleButton = Vue.h('button', {
+        onClick: () => { emit(InterfaceEvents.MARK_GUESS_AS_IMPOSSIBLE); },
+        disabled: props.guesses === undefined || props.guesses.length == 0,
+      }, 'Remove Guess');
+      items.push(markGuessAsImpossibleButton);
 
       const checkButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.START_VALIDATE); },
@@ -81,6 +93,11 @@ export default {
           onClick: () => { emit(InterfaceEvents.STOP_VALIDATE); },
         }, message);
         items.push(stopButton);
+      }
+
+      if (props.guesses !== undefined && props.guesses.length > 0) {
+        items.push(Vue.h('br'));
+        items.push(Vue.h('p', 'Guesses: ' + props.guesses.map(g => guessToString(g)).join(", ")))
       }
 
       return Vue.h('div', {}, items);

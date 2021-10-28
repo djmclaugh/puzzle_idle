@@ -85,6 +85,7 @@ export default {
           style: style,
           onAdd: (value: number) => { puzzle.addToCell(y, x, value); },
           onRemove: (value: number) => { puzzle.removeFromCell(y, x, value); },
+          onGuess: (value: number) => { puzzle.takeGuess({row: y, col: x, val: value}); },
           onSet: (value: number) => { puzzle.setCell(y, x, value); },
           onUpdateHighlight: (value: number|undefined) => {
             data.highlight = value;

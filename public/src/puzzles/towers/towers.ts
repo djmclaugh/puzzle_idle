@@ -18,6 +18,11 @@ export type Triple = {
   val: number,
 };
 
+export type GuessInfo = {
+  guess: Triple,
+  when: number,
+};
+
 export enum ActionType {
   REMOVE_POSSIBILITY,
   ADD_POSSIBILITY,
@@ -114,7 +119,13 @@ export default class Towers {
   public southHintMarked: boolean[];
 
   public history: Action[] = [];
-  public snapshots: number[] = [];
+  public guesses: GuessInfo[] = [];
+  public get lastGuess(): GuessInfo|undefined {
+    if (this.guesses.length == 0) {
+      return undefined;
+    }
+    return this.guesses[this.guesses.length - 1];
+  }
 
   public getHints(face: HintFace) {
     switch(face) {
@@ -180,23 +191,40 @@ export default class Towers {
         this.setHint(lastAction.face, lastAction.index, false);
         break;
     }
-    while (this.history.length < this.snapshots[this.snapshots.length - 1]) {
-      this.snapshots.pop();
+    while (this.lastGuess && this.history.length <= this.lastGuess.when) {
+      this.guesses.pop();
     }
   }
 
-  public takeSnapshot(): void {
-    this.snapshots.push(this.history.length);
+  public takeGuess(triple: Triple): void {
+    this.guesses.push({
+      guess: triple,
+      when: this.history.length,
+    })
+    this.setCell(triple.row, triple.col, triple.val);
   }
 
-  public restoreLatestSnapshot(): void {
-    if (this.snapshots.length == 0) {
-      this.restart();
+  public abandonGuess(): void {
+    const g = this.lastGuess;
+    if (g === undefined) {
+      // Do nothing
+      return;
     }
-    while (this.history.length > this.snapshots[this.snapshots.length - 1]) {
+    while (this.history.length > g.when) {
       this.undo();
     }
-    this.snapshots.pop();
+  }
+
+  public markGuessAsImpossible(): void {
+    const g = this.lastGuess;
+    if (g === undefined) {
+      // Do nothing
+      return;
+    }
+    while (this.history.length > g.when) {
+      this.undo();
+    }
+    this.removeFromCell(g.guess.row, g.guess.col, g.guess.val);
   }
 
   public get n() {

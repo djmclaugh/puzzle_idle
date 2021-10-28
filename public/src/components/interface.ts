@@ -6,7 +6,7 @@ import InterfaceStatusComponent, {InterfaceHandlers} from '../components/interfa
 import { currentStatus } from '../data/status.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 import Process from '../data/process.js'
-import RandomRemovalProcess from '../data/processes/random_removal_process.js'
+import RandomGuessProcess from '../data/processes/random_guess_process.js'
 import SimpleViewProcess from '../data/processes/simple_view_process.js'
 import OnlyChoiceInColumnProcess from '../data/processes/check_only_choice_in_column_process.js'
 import OnlyChoiceInRowProcess from '../data/processes/check_only_choice_in_row_process.js'
@@ -30,7 +30,6 @@ interface InterfaceComponentData {
   autoSweep: boolean, // Need to find better name...
   autoRandom: boolean,
   autoRevertOnContradiction: boolean,
-  inGuessMode: boolean,
   isDone: boolean,
   isCorrect: boolean,
   validationProcess: ValidationProcess|null,
@@ -53,7 +52,6 @@ export default {
       autoRandom: false,
       autoRevertOnContradiction: false,
       autoSweep: false,
-      inGuessMode: false,
       isDone: false,
       isCorrect: false,
       activeProcesses: new Set(),
@@ -74,21 +72,25 @@ export default {
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
-      data.inGuessMode = false;
       data.currentPuzzle.restart();
       startInitialRemovalProcessIfNeeded();
-      startRandomRemovalProcessIfNeeded();
+      startRandomGuessProcessIfNeeded();
     }
 
-    function revert(): void {
+    function revert(markGuessAsImpossible: boolean): void {
       stopAllProcesses()
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
-      data.currentPuzzle.restoreLatestSnapshot();
-      data.inGuessMode = false;
+      if (data.currentPuzzle.guesses.length == 0) {
+        data.currentPuzzle.restart();
+      } else if (markGuessAsImpossible) {
+        data.currentPuzzle.markGuessAsImpossible();
+      } else {
+        data.currentPuzzle.abandonGuess();
+      }
       startInitialRemovalProcessIfNeeded();
-      startRandomRemovalProcessIfNeeded();
+      startRandomGuessProcessIfNeeded();
     }
 
     function startValidate(): void {
@@ -105,7 +107,7 @@ export default {
         if (data.isCorrect && data.autoCashIn) {
           cashIn();
         } else if (!data.isCorrect && data.autoRestart) {
-          revert();
+          revert(true);
         }
       });
     }
@@ -149,13 +151,9 @@ export default {
       }
     }
 
-    function startRandomRemovalProcessIfNeeded() {
+    function startRandomGuessProcessIfNeeded() {
       if (data.autoRandom && data.activeProcesses.size == 0 && !data.currentPuzzle.isReadyForValidation && !data.currentPuzzle.hasContradiction) {
-        if (!data.inGuessMode) {
-          data.currentPuzzle.takeSnapshot();
-          data.inGuessMode = true;
-        }
-        const p = new RandomRemovalProcess(data.currentPuzzle, props.interfaceId);
+        const p = new RandomGuessProcess(data.currentPuzzle, props.interfaceId);
         if (currentStatus.cpu.addProcess(p, 5, onProcessOver(p))) {
           data.activeProcesses.add(p);
         }
@@ -165,7 +163,7 @@ export default {
     function onProcessOver<R>(process: Process<R>) {
       return () => {
         data.activeProcesses.delete(process);
-        startRandomRemovalProcessIfNeeded();
+        startRandomGuessProcessIfNeeded();
       }
     }
 
@@ -178,7 +176,6 @@ export default {
       data.validating = false;
       data.isCorrect = false;
       data.isDone = false;
-      data.inGuessMode = false;
 
       stopAllProcesses();
 
@@ -186,11 +183,10 @@ export default {
       data.currentPuzzle.onAction((a: Action) => {
         if (data.currentPuzzle.hasContradiction) {
           stopAllProcesses();
-          if (data.inGuessMode && data.autoRevertOnContradiction) {
-            data.currentPuzzle.restoreLatestSnapshot();
-            data.inGuessMode = false;
+          if (data.autoRevertOnContradiction) {
+            data.currentPuzzle.markGuessAsImpossible();
           }
-          startRandomRemovalProcessIfNeeded();
+          startRandomGuessProcessIfNeeded();
           return;
         }
         if (data.autoUnique && a.type == ActionType.REMOVE_POSSIBILITY) {
@@ -230,7 +226,7 @@ export default {
 
       puzzleUUID += 1;
       startInitialRemovalProcessIfNeeded();
-      startRandomRemovalProcessIfNeeded();
+      startRandomGuessProcessIfNeeded();
     }
 
     Vue.onMounted(async () => {
@@ -245,7 +241,7 @@ export default {
 
       const interfaceProps: any = {
         interfaceId: props.interfaceId,
-        inGuessMode: data.inGuessMode,
+        guesses: data.currentPuzzle.guesses,
         isValidating: data.validating,
         isDone: data.isDone,
         isCorrect: data.isCorrect,
@@ -270,18 +266,12 @@ export default {
       }
       interfaceProps[InterfaceHandlers.UNDO] = () => {
         data.currentPuzzle.undo();
-        // If we "undo"ed past the guess mode snapshot, exit guess mode.
-        if (data.inGuessMode && data.currentPuzzle.snapshots.length == 0) {
-          data.inGuessMode = false;
-        }
       }
-      interfaceProps[InterfaceHandlers.GUESS_MODE] = () => {
-        if (data.inGuessMode) {
-          data.currentPuzzle.restoreLatestSnapshot();
-        } else {
-          data.currentPuzzle.takeSnapshot();
-        }
-        data.inGuessMode = !data.inGuessMode;
+      interfaceProps[InterfaceHandlers.ABANDON_GUESS] = () => {
+        data.currentPuzzle.abandonGuess();
+      }
+      interfaceProps[InterfaceHandlers.MARK_GUESS_AS_IMPOSSIBLE] = () => {
+        data.currentPuzzle.markGuessAsImpossible();
       }
       const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
       items.push(interfaceStatus);
@@ -335,7 +325,7 @@ export default {
 
       const autoView = Vue.h(LabeledCheckbox, {
         value: data.autoView,
-        label: 'Auto View Process',
+        label: 'Automatically remove possibilities that block the view too early (simple)',
         boxId: 'auto_view_checkbox',
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
@@ -368,12 +358,12 @@ export default {
 
       const autoRandom = Vue.h(LabeledCheckbox, {
         value: data.autoRandom,
-        label: 'Auto Random Selection',
+        label: 'Auto Random Guess When Stuck',
         boxId: 'auto_randomselection_checkbox',
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
           data.autoRandom = t.checked;
-          startRandomRemovalProcessIfNeeded();
+          startRandomGuessProcessIfNeeded();
         }
       });
       items.push(autoRandom);
