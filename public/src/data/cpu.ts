@@ -5,10 +5,10 @@ import RAM from './ram.js'
 type callback = (returnValue: any) => void;
 
 export default class CPU {
-  private _speed: number = 1;
+  private _speed: number = 1000;
   public cores: number = 1;
 
-  private intervalID: number;
+  private intervalID: number = 0;
   private activeProcesses: Set<Process<any>> = new Set();
   private queue: PriorityQueue<Process<any>> = new PriorityQueue();
   private callbacks: Map<string, callback> = new Map();
@@ -24,15 +24,18 @@ export default class CPU {
   public set speed(newSpeed: number) {
     this._speed = newSpeed;
     clearInterval(this.intervalID);
+    // If the speed is more than 120Hz, reduce the time interval and increase
+    // the number of tick per time interval.
+    const ticksPerInterval = Math.ceil(this._speed / 120);
     this.intervalID = setInterval(() => {
-      this.onTick()
-    }, 1000 / this._speed);
+      for (let i = 0; i < ticksPerInterval; ++i) {
+        this.onTick();
+      }
+    }, ticksPerInterval * 1000 / this._speed);
   }
 
   public constructor(private ram: RAM) {
-    this.intervalID = setInterval(() => {
-      this.onTick()
-    }, 1000 / this._speed);
+    this.speed = this._speed;
   }
 
   public addProcess<R>(p: Process<R>, priority: number, c: callback): boolean {
