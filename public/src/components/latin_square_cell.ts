@@ -3,7 +3,11 @@ import Vue from '../vue.js'
 interface LatinCellComponentProps {
   possibilities: Set<number>,
   range: number,
-  highlight: number|undefined,
+  highlight: {
+    red: Set<number>,
+    yellow: Set<number>,
+    green: Set<number>,
+  },
 }
 
 interface LatinCellComponentData {
@@ -24,7 +28,9 @@ export default {
     function onClick(event: MouseEvent) {
       const target: HTMLDivElement = event.target! as HTMLDivElement;
       const possibility = Number.parseInt(target.textContent!) - 1;
-      if (event.shiftKey) {
+      if (event.altKey) {
+        emit('implication', [possibility, event.ctrlKey]);
+      } else if (event.shiftKey) {
         // Make guess
         emit('guess', possibility);
       } else if (event.ctrlKey) {
@@ -55,11 +61,27 @@ export default {
 
       const possibilityNodes = [];
       for (let i = 0; i < props.range; ++i) {
+        const style: any[] = [];
+        if (data.p.has(i)) {
+          if (props.highlight.yellow.has(i)) {
+            style.push({backgroundColor: "#ffffe0"});
+          }
+          if (props.highlight.red.has(i)) {
+            if (props.highlight.green.has(i)) {
+              style.push({backgroundColor: "#303030"});
+            } else {
+              style.push({backgroundColor: "#e0c0c0"});
+            }
+          } else if (props.highlight.green.has(i)) {
+            style.push({backgroundColor: "#c0e0c0"});
+          }
+
+        }
         const node = Vue.h('div', {
           class: ['sudoku-possibility', {
             'crossed-out': !data.p.has(i),
-            'possibility-highlight': data.p.has(i) && props.highlight !== undefined && props.highlight == i,
           }],
+          style: style,
           key: i.toString(),
           onClick: onClick,
           onMouseover: () => {

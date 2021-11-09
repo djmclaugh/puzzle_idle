@@ -1,3 +1,5 @@
+import ImplicationsTracker from './implications_tracker.js'
+
 // Returns how many towers can be seen.
 export function view(values: number[]) {
   let seen = 0;
@@ -27,7 +29,9 @@ export enum ActionType {
   REMOVE_POSSIBILITY,
   ADD_POSSIBILITY,
   REMOVE_HINT,
-  ADD_HINT
+  ADD_HINT,
+  ADD_IMPLICATION,
+  REMOVE_IMPLICATION,
 };
 
 export type CellAction = {
@@ -43,7 +47,13 @@ export type HintAction = {
   type: ActionType.REMOVE_HINT|ActionType.ADD_HINT,
 };
 
-export type Action = CellAction|HintAction;
+export type ImplicationAction = {
+  antecedent: [Triple, boolean],
+  consequent: [Triple, boolean],
+  type: ActionType.ADD_IMPLICATION|ActionType.REMOVE_IMPLICATION,
+};
+
+export type Action = CellAction|HintAction|ImplicationAction;
 
 export type ActionCallback = (a: Action) => void;
 
@@ -126,6 +136,7 @@ export default class Towers {
     }
     return this.guesses[this.guesses.length - 1];
   }
+  public implications;
 
   public getHints(face: HintFace) {
     switch(face) {
@@ -159,6 +170,34 @@ export default class Towers {
 
   private addAction(a: Action) {
     this.history.push(a);
+    if (a.type == ActionType.REMOVE_POSSIBILITY) {
+      const removalImplications = this.implications.getImplicationsFromNodeRemoval({
+        row: a.row,
+        col: a.column,
+        val: a.value,
+      });
+      for (const t of removalImplications[0]) {
+        this.setCell(t.row, t.col, t.val);
+      }
+      for (const t of removalImplications[1]) {
+        this.removeFromCell(t.row, t.col, t.val);
+      }
+      const m = this.marks[a.row][a.column];
+      if (m.size == 1) {
+        const value = m.values().next().value;
+        const implications = this.implications.getImplicationsFromNodeSet({
+          row: a.row,
+          col: a.column,
+          val: value,
+        });
+        for (const t of implications[0]) {
+          this.setCell(t.row, t.col, t.val);
+        }
+        for (const t of implications[1]) {
+          this.removeFromCell(t.row, t.col, t.val);
+        }
+      }
+    }
     this.callbacks.forEach((c) => {
       c(a);
     });
@@ -190,6 +229,35 @@ export default class Towers {
       case ActionType.REMOVE_HINT:
         this.setHint(lastAction.face, lastAction.index, false);
         break;
+      case ActionType.ADD_IMPLICATION:
+        if (lastAction.antecedent[1] && lastAction.consequent[1]) {
+          this.implications.removeImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        }
+        if (!lastAction.antecedent[1] && !lastAction.consequent[1]) {
+          this.implications.removeImplication(lastAction.consequent[0], lastAction.antecedent[0]);
+        }
+        if (lastAction.antecedent[1] && !lastAction.consequent[1]) {
+          this.implications.removeOnToOffImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        }
+        if (!lastAction.antecedent[1] && lastAction.consequent[1]) {
+          this.implications.removeOffToOnImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        }
+        break;
+      case ActionType.REMOVE_IMPLICATION: {
+        if (lastAction.antecedent[1] && lastAction.consequent[1]) {
+          this.implications.addImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        }
+        if (!lastAction.antecedent[1] && !lastAction.consequent[1]) {
+          this.implications.addImplication(lastAction.consequent[0], lastAction.antecedent[0]);
+        }
+        if (lastAction.antecedent[1] && !lastAction.consequent[1]) {
+          this.implications.addOnToOffImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        }
+        if (!lastAction.antecedent[1] && lastAction.consequent[1]) {
+          this.implications.addOffToOnImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        }
+        break;
+      }
     }
     while (this.lastGuess && this.history.length <= this.lastGuess.when) {
       this.guesses.pop();
@@ -310,6 +378,36 @@ export default class Towers {
     }
   }
 
+  public addImplication(a: Triple, c: Triple) {
+    if (this.implications.addImplication(a, c)) {
+      this.addAction({
+        antecedent: [a, true],
+        consequent: [c, true],
+        type: ActionType.ADD_IMPLICATION
+      });
+    }
+  }
+
+  public addOnToOffImplication(a: Triple, c: Triple) {
+    if (this.implications.addOnToOffImplication(a, c)) {
+      this.addAction({
+        antecedent: [a, true],
+        consequent: [c, false],
+        type: ActionType.ADD_IMPLICATION
+      });
+    }
+  }
+
+  public addOffToOnImplication(a: Triple, c: Triple) {
+    if (this.implications.addOffToOnImplication(a, c)) {
+      this.addAction({
+        antecedent: [a, false],
+        consequent: [c, true],
+        type: ActionType.ADD_IMPLICATION
+      });
+    }
+  }
+
   constructor(grid: number[][], wHints: number[], nHints: number[], eHints: number[], sHints: number[]) {
     this.westHints = wHints;
     this.northHints = nHints;
@@ -341,6 +439,7 @@ export default class Towers {
         }
       }
     }
+    this.implications = new ImplicationsTracker(this.n);
   }
 
   public copy(): Towers {

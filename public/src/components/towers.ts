@@ -1,8 +1,8 @@
 import Vue from '../vue.js'
 import LatinSquareCellComponent from './latin_square_cell.js'
 import TowersHintCellComponent from './towers_hint_cell.js'
-import Towers, { HintFace } from '../puzzles/towers/towers.js'
-import MultiKeyMap from '../util/multi_key_map.js'
+import Towers, { HintFace, Triple } from '../puzzles/towers/towers.js'
+import { DoubleKeyMap } from '../util/multi_key_map.js'
 
 export interface Background {
   cell: [number, number],
@@ -16,7 +16,9 @@ interface TowersComponentProps {
 }
 
 interface TowersComponentData {
-  highlight: number|undefined,
+  hoveredValue: Triple|null,
+  implicationSource: Triple|null,
+  implicationSourceNegated: boolean,
 }
 
 export default {
@@ -25,11 +27,13 @@ export default {
   setup(props: TowersComponentProps) {
 
     const data: TowersComponentData = Vue.reactive({
-      highlight: undefined
+      hoveredValue: null,
+      implicationSource: null,
+      implicationSourceNegated: false,
     })
 
     return () => {
-      const backgroundMaps: MultiKeyMap<number, number, string> = new MultiKeyMap();
+      const backgroundMaps: DoubleKeyMap<number, number, string> = new DoubleKeyMap();
       for (const background of props.backgrounds || []) {
         backgroundMaps.set(background.cell[0], background.cell[1], background.colour);
       }
@@ -37,6 +41,24 @@ export default {
       const items = [];
       const puzzle = props.puzzle;
       const n = puzzle.n;
+
+      let onImplications: DoubleKeyMap<number, number, number[]> = new DoubleKeyMap();
+      let offImplications: DoubleKeyMap<number, number, number[]> = new DoubleKeyMap();
+      if (data.hoveredValue) {
+        const [on, off] = props.puzzle.implications.getImplicationsFromNodeSet(data.hoveredValue);
+        for (const t of on) {
+          if (!onImplications.has(t.row, t.col)) {
+            onImplications.set(t.row, t.col, []);
+          }
+          onImplications.get(t.row, t.col)!.push(t.val);
+        }
+        for (const t of off) {
+          if (!offImplications.has(t.row, t.col)) {
+            offImplications.set(t.row, t.col, []);
+          }
+          offImplications.get(t.row, t.col)!.push(t.val);
+        }
+      }
 
       // Empty top left corner
       items.push(Vue.h('div'))
@@ -55,6 +77,16 @@ export default {
       for (let i = 0; i < n * n; ++i) {
         const x = i % n;
         const y = Math.floor(i / n);
+
+        const highlight = {
+          red: new Set(offImplications.get(y, x) || []),
+          yellow: new Set(),
+          green: new Set(onImplications.get(y, x) || []),
+        }
+        if (data.hoveredValue !== null) {
+          highlight.yellow.add(data.hoveredValue.val);
+        }
+
         if (x == 0) {
           items.push(Vue.h(TowersHintCellComponent, {
             value: puzzle.getHints(HintFace.WEST)[y],
@@ -81,14 +113,65 @@ export default {
         const cell = Vue.h(LatinSquareCellComponent, {
           possibilities: puzzle.marksCell(y, x),
           range: canEdit ? n : -1,
-          highlight: data.highlight,
+          highlight: highlight,
           style: style,
           onAdd: (value: number) => { puzzle.addToCell(y, x, value); },
           onRemove: (value: number) => { puzzle.removeFromCell(y, x, value); },
           onGuess: (value: number) => { puzzle.takeGuess({row: y, col: x, val: value}); },
-          onSet: (value: number) => { puzzle.setCell(y, x, value); },
+          onSet: (value: number) => {
+            if (data.implicationSource === null) {
+              puzzle.setCell(y, x, value);
+            } else {
+              data.implicationSource = null;
+            }
+          },
+          onImplication: ([value, negated]: [number, boolean]) => {
+            if (data.implicationSource === null) {
+              data.implicationSource = {
+                row: y,
+                col: x,
+                val: value,
+              };
+              data.implicationSourceNegated = negated;
+            } else {
+              if (!data.implicationSourceNegated && !negated) {
+                puzzle.addImplication(data.implicationSource, {
+                  row: y,
+                  col: x,
+                  val: value,
+                });
+              }
+              if (data.implicationSourceNegated && negated) {
+                puzzle.addImplication({
+                  row: y,
+                  col: x,
+                  val: value,
+                }, data.implicationSource);
+              }
+              if (!data.implicationSourceNegated && negated) {
+                puzzle.addOnToOffImplication(data.implicationSource, {
+                  row: y,
+                  col: x,
+                  val: value,
+                });
+              }
+              if (data.implicationSourceNegated && !negated) {
+                puzzle.addOffToOnImplication(data.implicationSource, {
+                  row: y,
+                  col: x,
+                  val: value,
+                });
+              }
+
+              data.implicationSource = null;
+            }
+          },
           onUpdateHighlight: (value: number|undefined) => {
-            data.highlight = value;
+            if (value === undefined) {
+              data.hoveredValue = null;
+            } else {
+              data.hoveredValue = {row: y, col: x, val: value};
+            }
           }
         });
         items.push(cell);
