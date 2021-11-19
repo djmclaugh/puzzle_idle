@@ -385,6 +385,22 @@ export default class Towers {
         consequent: [c, true],
         type: ActionType.ADD_IMPLICATION
       });
+      // const [setImplicators, removeImplicators] = this.implications.getImplicatorSet(
+      //   new Set([a]),
+      //   new Set([c]),
+      //   new Set([a]),
+      //   new Set([c])
+      // );
+      // for (const n of setImplicators) {
+      //   if (this.implications.impliesContradiction(n)) {
+      //     this.removeFromCell(n.row, n.col, n.val);
+      //   }
+      // }
+      // for (const n of removeImplicators) {
+      //   if (this.implications.removalImpliesContradiction(n)) {
+      //     this.setCell(n.row, n.col, n.val);
+      //   }
+      // }
     }
   }
 
@@ -395,6 +411,22 @@ export default class Towers {
         consequent: [c, false],
         type: ActionType.ADD_IMPLICATION
       });
+      // const [setImplicators, removeImplicators] = this.implications.getImplicatorSet(
+      //   new Set([a, c]),
+      //   new Set(),
+      //   new Set([a, c]),
+      //   new Set()
+      // );
+      // for (const n of setImplicators) {
+      //   if (this.implications.impliesContradiction(n)) {
+      //     this.removeFromCell(n.row, n.col, n.val);
+      //   }
+      // }
+      // for (const n of removeImplicators) {
+      //   if (this.implications.removalImpliesContradiction(n)) {
+      //     this.setCell(n.row, n.col, n.val);
+      //   }
+      // }
     }
   }
 
@@ -405,6 +437,22 @@ export default class Towers {
         consequent: [c, true],
         type: ActionType.ADD_IMPLICATION
       });
+      // const [setImplicators, removeImplicators] = this.implications.getImplicatorSet(
+      //   new Set(),
+      //   new Set([a, c]),
+      //   new Set(),
+      //   new Set([a, c])
+      // );
+      // for (const n of setImplicators) {
+      //   if (this.implications.impliesContradiction(n)) {
+      //     this.removeFromCell(n.row, n.col, n.val);
+      //   }
+      // }
+      // for (const n of removeImplicators) {
+      //   if (this.implications.removalImpliesContradiction(n)) {
+      //     this.setCell(n.row, n.col, n.val);
+      //   }
+      // }
     }
   }
 

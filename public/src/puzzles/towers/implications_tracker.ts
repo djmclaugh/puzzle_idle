@@ -1,55 +1,56 @@
 import { Triple } from './towers.js'
 import { TripleKeyMap } from '../../util/multi_key_map.js'
 
-export default class ImplicationsTracker {
-  private ifOnThenOn: TripleKeyMap<number, number, number, Set<Triple>> = new TripleKeyMap();
-  private ifOnThenOff: TripleKeyMap<number, number, number, Set<Triple>> = new TripleKeyMap();
-  private ifOffThenOn: TripleKeyMap<number, number, number, Set<Triple>> = new TripleKeyMap();
-  private ifOffThenOff: TripleKeyMap<number, number, number, Set<Triple>> = new TripleKeyMap();
+type ImplicationMap = TripleKeyMap<number, number, number, Set<Triple>>;
 
-  private getOnOn(t: Triple) {
-    return this.ifOnThenOn.get(t.row, t.col, t.val);
+function getOrSetIfUndefined(t: Triple, map: ImplicationMap): Set<Triple> {
+  let s: Set<Triple>|undefined = map.get(t.row, t.col, t.val);
+  if (s === undefined) {
+    s = new Set();
+    map.set(t.row, t.col, t.val, s);
   }
-  private getOnOff(t: Triple) {
-    return this.ifOnThenOff.get(t.row, t.col, t.val);
+  return s;
+}
+
+export default class ImplicationsTracker {
+  private ifOnThenOn: ImplicationMap = new TripleKeyMap();
+  private ifOnThenOff: ImplicationMap = new TripleKeyMap();
+  private ifOffThenOn: ImplicationMap = new TripleKeyMap();
+  private ifOffThenOff: ImplicationMap = new TripleKeyMap();
+
+  private getOnOn(t: Triple): Set<Triple> {
+    return getOrSetIfUndefined(t, this.ifOnThenOn);
   }
-  private getOffOn(t: Triple) {
-    return this.ifOffThenOn.get(t.row, t.col, t.val);
+  private getOnOff(t: Triple): Set<Triple> {
+    return getOrSetIfUndefined(t, this.ifOnThenOff);
   }
-  private getOffOff(t: Triple) {
-    return this.ifOffThenOff.get(t.row, t.col, t.val);
+  private getOffOn(t: Triple): Set<Triple> {
+    return getOrSetIfUndefined(t, this.ifOffThenOn);
+  }
+  private getOffOff(t: Triple): Set<Triple> {
+    return getOrSetIfUndefined(t, this.ifOffThenOff);
   }
 
   constructor(size: number) {
-    for (let i = 0; i < size; ++i) {
-      for (let j = 0; j < size; ++j) {
-        for (let k = 0; k < size; ++k) {
-          this.ifOnThenOn.set(i, j, k, new Set());
-          this.ifOffThenOn.set(i, j, k, new Set());
-          this.ifOnThenOff.set(i, j, k, new Set());
-          this.ifOffThenOff.set(i, j, k, new Set());
-        }
-      }
-    }
-
-    for (let i = 0; i < size; ++i) {
-      for (let j = 0; j < size; ++j) {
-        for (let k = 0; k < size; ++k) {
-          const t = {row: i, col: j, val: k};
-          for (let x = 0; x < size; ++x) {
-            if (x != t.row) {
-              this.addOnToOffImplication(t, {row: x, col: t.col, val: t.val});
-            }
-            if (x != t.col) {
-              this.addOnToOffImplication(t, {row: t.row, col: x, val: t.val});
-            }
-            if (x != t.val) {
-              this.addOnToOffImplication(t, {row: t.row, col: t.col, val: x});
-            }
-          }
-        }
-      }
-    }
+    // Uncomment to auto apply latin square uniqueness implications
+    // for (let i = 0; i < size; ++i) {
+    //   for (let j = 0; j < size; ++j) {
+    //     for (let k = 0; k < size; ++k) {
+    //       const t = {row: i, col: j, val: k};
+    //       for (let x = 0; x < size; ++x) {
+    //         if (x != t.row) {
+    //           this.addOnToOffImplication(t, {row: x, col: t.col, val: t.val});
+    //         }
+    //         if (x != t.col) {
+    //           this.addOnToOffImplication(t, {row: t.row, col: x, val: t.val});
+    //         }
+    //         if (x != t.val) {
+    //           this.addOnToOffImplication(t, {row: t.row, col: t.col, val: x});
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   // Adds the implication a -> c.
@@ -173,5 +174,73 @@ export default class ImplicationsTracker {
     } else {
       return this.getImplicationSet(added, removed, nodesAlreadyFound, nodesAlreadyRemoved);
     }
+  }
+
+  // setImplicators: Nodes that imply the desired outcome if set
+  // removeImplicators: Nodes that imply the desired outcome if removed
+  public getImplicatorSet(newSetImplicators: Set<Triple>, newRemoveImplicators: Set<Triple>, setImplicators: Set<Triple>, removeImplicators: Set<Triple>): [Set<Triple>, Set<Triple>] {
+    const setImplicatorsAdded: Set<Triple> = new Set();
+    const removeImplicatorsAdded: Set<Triple> = new Set();
+    for (const n of newSetImplicators) {
+      for (const m of this.getOffOn(n)!) {
+        // If n is off, then m must be on.
+        // This means that if m is off, n must be on as desired.
+        if (!removeImplicators.has(m)) {
+          removeImplicators.add(m);
+          removeImplicatorsAdded.add(m);
+        }
+      }
+      for (const m of this.getOffOff(n)!) {
+        // If n is off, then m must be off.
+        // This means that if m is on, n must be on as desired.
+        if (!setImplicators.has(m)) {
+          setImplicators.add(m);
+          setImplicatorsAdded.add(m);
+        }
+      }
+    }
+    for (const n of newRemoveImplicators) {
+      for (const m of this.getOnOn(n)!) {
+        // If n is on, then m must be on.
+        // This means that if m is off, n must be off as desired.
+        if (!removeImplicators.has(m)) {
+          removeImplicators.add(m);
+          removeImplicatorsAdded.add(m);
+        }
+      }
+      for (const m of this.getOnOff(n)!) {
+        // If n is on, then m must be off.
+        // This means that if m is on, n must be off as desired.
+        if (!setImplicators.has(m)) {
+          setImplicators.add(m);
+          setImplicatorsAdded.add(m);
+        }
+      }
+    }
+    if (removeImplicatorsAdded.size == 0 && setImplicatorsAdded.size == 0) {
+      return [setImplicators, removeImplicators];
+    } else {
+      return this.getImplicationSet(setImplicatorsAdded, removeImplicatorsAdded, setImplicators, removeImplicators);
+    }
+  }
+
+  public impliesContradiction(node: Triple): boolean {
+    const [nodesToSet, nodesToRemove] = this.getImplicationsFromNodeSet(node);
+    for (const n of nodesToSet) {
+      if (nodesToRemove.has(n)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public removalImpliesContradiction(node: Triple): boolean {
+    const [nodesToSet, nodesToRemove] = this.getImplicationsFromNodeRemoval(node);
+    for (const n of nodesToSet) {
+      if (nodesToRemove.has(n)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -116,10 +116,14 @@ export default {
           highlight: highlight,
           style: style,
           onAdd: (value: number) => { puzzle.addToCell(y, x, value); },
-          onRemove: (value: number) => { puzzle.removeFromCell(y, x, value); },
+          onRemove: (value: number) => {
+            puzzle.removeFromCell(y, x, value);
+            data.hoveredValue = null;
+          },
           onGuess: (value: number) => { puzzle.takeGuess({row: y, col: x, val: value}); },
           onSet: (value: number) => {
             if (data.implicationSource === null) {
+              console.log()
               puzzle.setCell(y, x, value);
             } else {
               data.implicationSource = null;

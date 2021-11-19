@@ -5,7 +5,7 @@ import RAM from './ram.js'
 type callback = (returnValue: any) => void;
 
 export default class CPU {
-  private _speed: number = 1000;
+  private _speed: number = 100;
   public cores: number = 1;
 
   private intervalID: number = 0;

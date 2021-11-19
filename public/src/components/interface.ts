@@ -29,6 +29,7 @@ interface InterfaceComponentData {
   autoUnique: boolean,
   autoSweep: boolean, // Need to find better name...
   autoRandom: boolean,
+  autoImply: boolean,
   autoRevertOnContradiction: boolean,
   isDone: boolean,
   isCorrect: boolean,
@@ -50,6 +51,7 @@ export default {
       autoView: false,
       autoUnique: false,
       autoRandom: false,
+      autoImply: true,
       autoRevertOnContradiction: false,
       autoSweep: false,
       isDone: false,
@@ -110,6 +112,18 @@ export default {
           revert(true);
         }
       });
+    }
+
+    async function stopValidate() {
+      data.validating = false;
+      if (data.validationProcess) {
+        data.activeProcesses.delete(data.validationProcess);
+        currentStatus.cpu.killProcess(data.validationProcess);
+        data.validationProcess = null;
+      }
+      if (data.isCorrect) {
+        await cashIn();
+      }
     }
 
     function startInitialRemovalProcessIfNeeded() {
@@ -219,6 +233,23 @@ export default {
             data.activeProcesses.add(rowP);
           }
         }
+        if (data.autoImply && a.type == ActionType.REMOVE_POSSIBILITY) {
+          const cell = data.currentPuzzle.marksCell(a.row, a.column);
+          if (cell.size == 2) {
+            const iter = cell.values();
+            const t1 = {
+              row: a.row,
+              col: a.column,
+              val: iter.next().value,
+            };
+            const t2 = {
+              row: a.row,
+              col: a.column,
+              val: iter.next().value,
+            }
+            data.currentPuzzle.addOffToOnImplication(t1, t2)
+          }
+        }
         if (data.currentPuzzle.isReadyForValidation && data.autoValidate && !data.validating) {
           startValidate();
         }
@@ -253,24 +284,18 @@ export default {
       }
       interfaceProps[InterfaceHandlers.RESTART] = restart;
       interfaceProps[InterfaceHandlers.START_VALIDATE] = startValidate;
-      interfaceProps[InterfaceHandlers.STOP_VALIDATE] = async () => {
-        data.validating = false;
-        if (data.validationProcess) {
-          data.activeProcesses.delete(data.validationProcess);
-          currentStatus.cpu.killProcess(data.validationProcess);
-          data.validationProcess = null;
-        }
-        if (data.isCorrect) {
-          await cashIn();
-        }
-      }
+      interfaceProps[InterfaceHandlers.STOP_VALIDATE] = stopValidate;
       interfaceProps[InterfaceHandlers.UNDO] = () => {
         data.currentPuzzle.undo();
       }
       interfaceProps[InterfaceHandlers.ABANDON_GUESS] = () => {
+        stopValidate();
+        stopAllProcesses();
         data.currentPuzzle.abandonGuess();
       }
       interfaceProps[InterfaceHandlers.MARK_GUESS_AS_IMPOSSIBLE] = () => {
+        stopValidate();
+        stopAllProcesses();
         data.currentPuzzle.markGuessAsImpossible();
       }
       const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
