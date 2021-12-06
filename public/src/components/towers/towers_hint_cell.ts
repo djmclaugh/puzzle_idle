@@ -1,4 +1,4 @@
-import Vue from '../vue.js'
+import Vue from '../../vue.js'
 
 interface TowersHintCellComponentProps {
   value: number,

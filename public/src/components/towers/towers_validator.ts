@@ -1,5 +1,5 @@
-import Vue from '../vue.js'
-import ValidationProcess from '../data/processes/validation_process.js'
+import Vue from '../../vue.js'
+import ValidationProcess from '../../data/processes/validation_process.js'
 
 interface TowersValidatorComponentProps {
   process: ValidationProcess,

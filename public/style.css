@@ -8,6 +8,34 @@ canvas {
   border: solid;
 }
 
+.loopy-grid {
+  margin: 8px;
+  display: grid;
+  gap: 0px;
+  user-select: none;
+}
+
+.loopy-grid-5 {
+  width: 400px;
+  height: 400px;
+  grid-template-columns: 0.1fr 1fr 0.1fr 1fr 0.1fr 1fr 0.1fr 1fr 0.1fr 1fr 0.1fr;
+  grid-template-rows: 0.1fr 1fr 0.1fr 1fr 0.1fr 1fr 0.1fr 1fr 0.1fr 1fr 0.1fr;
+}
+
+.dot {
+  background-color: #000000;
+  border-radius: 50%;
+}
+
+.loopy-hint {
+  height: 100%;
+  width: 100%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .towers-grid {
   margin: 8px;
   display: grid;

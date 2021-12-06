@@ -1,21 +1,21 @@
-import Vue from '../vue.js'
-import Towers, {HintFace, Action, ActionType} from '../puzzles/towers/towers.js'
-import TowersComponent from '../components/towers.js'
-import TowersValidatorComponent from '../components/towers_validator.js'
-import InterfaceStatusComponent, {InterfaceHandlers} from '../components/interface_status.js'
-import { currentStatus } from '../data/status.js'
-import { randomOfSize } from '../puzzles/towers/towers_loader.js'
-import Process from '../data/process.js'
-import RandomGuessProcess from '../data/processes/random_guess_process.js'
-import AddUniquenessImplicationsProcess from '../data/processes/add_uniqueness_implications_process.js'
-import SimpleViewProcess from '../data/processes/simple_view_process.js'
-import OnlyChoiceInColumnProcess from '../data/processes/check_only_choice_in_column_process.js'
-import OnlyChoiceInRowProcess from '../data/processes/check_only_choice_in_row_process.js'
-import RemovalProcess from '../data/processes/removal_process.js'
-import ValidationProcess from '../data/processes/validation_process.js'
-import FollowSetImplicationsProcess from '../data/processes/follow_set_implications_process.js'
-import FollowRemovalImplicationsProcess from '../data/processes/follow_removal_implications_process.js'
-import LabeledCheckbox from './util/labeled_checkbox.js'
+import Vue from '../../vue.js'
+import Towers, {HintFace, Action, ActionType} from '../../puzzles/towers/towers.js'
+import TowersComponent from './towers.js'
+import TowersValidatorComponent from './towers_validator.js'
+import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.js'
+import { currentStatus } from '../../data/status.js'
+import { randomOfSize } from '../../puzzles/towers/towers_loader.js'
+import Process from '../../data/process.js'
+import RandomGuessProcess from '../../data/processes/random_guess_process.js'
+import AddUniquenessImplicationsProcess from '../../data/processes/add_uniqueness_implications_process.js'
+import SimpleViewProcess from '../../data/processes/simple_view_process.js'
+import OnlyChoiceInColumnProcess from '../../data/processes/check_only_choice_in_column_process.js'
+import OnlyChoiceInRowProcess from '../../data/processes/check_only_choice_in_row_process.js'
+import RemovalProcess from '../../data/processes/removal_process.js'
+import ValidationProcess from '../../data/processes/validation_process.js'
+import FollowSetImplicationsProcess from '../../data/processes/follow_set_implications_process.js'
+import FollowRemovalImplicationsProcess from '../../data/processes/follow_removal_implications_process.js'
+import LabeledCheckbox from './../util/labeled_checkbox.js'
 
 interface InterfaceComponentProps {
   interfaceId: number,
@@ -492,6 +492,6 @@ export default {
       }
 
       return Vue.h('div', {}, items);
-    }
+    };
   }
-};
+}

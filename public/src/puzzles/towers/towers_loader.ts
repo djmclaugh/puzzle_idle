@@ -27,6 +27,8 @@ async function loadTowers(size: number): Promise<void> {
     data += utf8Decoder.decode(result.value);
   }
   let puzzles = data.split("-----\n");
+  // The text file ends with the delimiter, so remove the empty string at the
+  // end of the array
   puzzles.pop();
   // Remove difficulty rating for now
   puzzles = puzzles.map(p => {

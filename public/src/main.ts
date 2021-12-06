@@ -1,6 +1,7 @@
 import Vue from './vue.js'
 import StatusComponent from './components/status.js'
-import InterfaceComponent from './components/interface.js'
+import LoopyInterface from './components/loopy/loopy_interface.js'
+import TowersInterface from './components/towers/towers_interface.js'
 import { currentStatus } from './data/status.js'
 
 interface AppData {
@@ -33,7 +34,7 @@ const App = {
       items.push(Vue.h('br'));
 
       for (let i = 0; i < currentStatus.interfaces.length; ++i) {
-        items.push(Vue.h(InterfaceComponent, {
+        items.push(Vue.h(LoopyInterface, {
           key: i,
           interfaceId: i,
           isCurrent: i == data.currentInterface,
