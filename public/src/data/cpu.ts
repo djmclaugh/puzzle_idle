@@ -75,7 +75,14 @@ export default class CPU {
     // Run each active process
     const toRemove: Set<Process<any>> = new Set();
     for (let p of this.activeProcesses) {
-      if (p.tick()) {
+      const startTimestamp = Date.now();
+      const isDone = p.tick();
+      const endTimestamp = Date.now();
+      const duration = endTimestamp - startTimestamp;
+      if (endTimestamp - startTimestamp > 10) {
+        console.log(`Warning: Tick from process ${p.processId} took ${duration}ms.`)
+      }
+      if (isDone) {
         toRemove.add(p)
       }
     }

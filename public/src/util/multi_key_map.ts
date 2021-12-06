@@ -25,6 +25,14 @@ export class DoubleKeyMap<K1, K2, V> {
     innerMap.set(k2, v);
     return this;
   }
+
+  forEach(f: (v: V, key1: K1, key2: K2, map: DoubleKeyMap<K1, K2, V>) => void) {
+    this.map.forEach((innerMap, k1) => {
+      innerMap.forEach((value, k2) => {
+        f(value, k1, k2, this);
+      });
+    });
+  }
 }
 
 export class TripleKeyMap<K1, K2, K3, V> {

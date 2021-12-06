@@ -1,5 +1,5 @@
 import Process from '../process.js'
-import Towers, {Possibilities} from '../../puzzles/towers/towers.js'
+import Towers from '../../puzzles/towers/towers.js'
 
 export default class OnlyChoiceInColumnProcess extends Process<void> {
   public readonly processId: string;
@@ -31,7 +31,7 @@ export default class OnlyChoiceInColumnProcess extends Process<void> {
     const n = this.t.n;
     if (this.beat == 0) {
       // Check if value is in this cells possibilities.
-      const p: Possibilities = this.t.marksCell(this.row, this.col);
+      const p: Set<number> = this.t.marksCell(this.row, this.col);
       if (p.has(this.value)) {
         if (this.rowFound == -1) {
           this.rowFound = this.row;

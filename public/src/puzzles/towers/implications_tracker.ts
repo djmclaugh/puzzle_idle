@@ -1,4 +1,4 @@
-import { Triple } from './towers.js'
+import { Triple } from './triple_collection.js'
 import { TripleKeyMap } from '../../util/multi_key_map.js'
 
 type ImplicationMap = TripleKeyMap<number, number, number, Set<Triple>>;

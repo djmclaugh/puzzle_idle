@@ -7,11 +7,14 @@ import { currentStatus } from '../data/status.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 import Process from '../data/process.js'
 import RandomGuessProcess from '../data/processes/random_guess_process.js'
+import AddUniquenessImplicationsProcess from '../data/processes/add_uniqueness_implications_process.js'
 import SimpleViewProcess from '../data/processes/simple_view_process.js'
 import OnlyChoiceInColumnProcess from '../data/processes/check_only_choice_in_column_process.js'
 import OnlyChoiceInRowProcess from '../data/processes/check_only_choice_in_row_process.js'
 import RemovalProcess from '../data/processes/removal_process.js'
 import ValidationProcess from '../data/processes/validation_process.js'
+import FollowSetImplicationsProcess from '../data/processes/follow_set_implications_process.js'
+import FollowRemovalImplicationsProcess from '../data/processes/follow_removal_implications_process.js'
 import LabeledCheckbox from './util/labeled_checkbox.js'
 
 interface InterfaceComponentProps {
@@ -27,9 +30,11 @@ interface InterfaceComponentData {
   autoRestart: boolean,
   autoView: boolean,
   autoUnique: boolean,
+  autoUniqueImplications: boolean,
   autoSweep: boolean, // Need to find better name...
   autoRandom: boolean,
   autoImply: boolean,
+  autoFollowImply: boolean,
   autoRevertOnContradiction: boolean,
   isDone: boolean,
   isCorrect: boolean,
@@ -50,8 +55,10 @@ export default {
       autoRestart: false,
       autoView: false,
       autoUnique: false,
+      autoUniqueImplications: true,
       autoRandom: false,
       autoImply: true,
+      autoFollowImply: true,
       autoRevertOnContradiction: false,
       autoSweep: false,
       isDone: false,
@@ -67,6 +74,9 @@ export default {
       data.activeProcesses.forEach(p => currentStatus.cpu.killProcess(p));
       data.activeProcesses.clear();
       data.validationProcess = null;
+      data.validating = false;
+      data.isDone = false;
+      data.isCorrect = false;
     }
 
     function restart(): void {
@@ -132,7 +142,7 @@ export default {
           for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
             for (let i = 0; i < data.currentPuzzle.n; ++i) {
               const p = new SimpleViewProcess(data.currentPuzzle, face, i, props.interfaceId);
-              if (currentStatus.cpu.addProcess(p, 9, () => { data.activeProcesses.delete(p) })) {
+              if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
                 data.activeProcesses.add(p);
               }
             }
@@ -160,6 +170,12 @@ export default {
                 }
               }
             }
+          }
+        }
+        if (data.autoUniqueImplications) {
+          const p = new AddUniquenessImplicationsProcess(data.currentPuzzle, props.interfaceId);
+          if (currentStatus.cpu.addProcess(p, 5, onProcessOver(p))) {
+            data.activeProcesses.add(p);
           }
         }
       }
@@ -203,6 +219,30 @@ export default {
           startRandomGuessProcessIfNeeded();
           return;
         }
+        if (data.validating) {
+          // Puzzle is full, no need to add new processes.
+          return;
+        }
+        if (data.autoFollowImply && a.type == ActionType.REMOVE_POSSIBILITY) {
+          const cell = data.currentPuzzle.marksCell(a.row, a.column);
+          if (cell.size == 1) {
+            const v: number = cell.values().next().value;
+            const triple = {
+              row: a.row,
+              col: a.column,
+              val: v
+            }
+            const p = new FollowSetImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+              data.activeProcesses.add(p);
+            }
+          }
+          const triple = { row: a.row, col: a.column, val: a.value }
+          const p = new FollowRemovalImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
+          if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+            data.activeProcesses.add(p);
+          }
+        }
         if (data.autoUnique && a.type == ActionType.REMOVE_POSSIBILITY) {
           const cell = data.currentPuzzle.marksCell(a.row, a.column);
           if (cell.size == 1) {
@@ -234,9 +274,9 @@ export default {
           }
         }
         if (data.autoImply && a.type == ActionType.REMOVE_POSSIBILITY) {
-          const cell = data.currentPuzzle.marksCell(a.row, a.column);
-          if (cell.size == 2) {
-            const iter = cell.values();
+          const rowCol = data.currentPuzzle.marks.getWithRowCol(a.row, a.column);
+          if (rowCol.size == 2) {
+            const iter = rowCol.values();
             const t1 = {
               row: a.row,
               col: a.column,
@@ -246,6 +286,38 @@ export default {
               row: a.row,
               col: a.column,
               val: iter.next().value,
+            }
+            data.currentPuzzle.addOffToOnImplication(t1, t2)
+          }
+
+          const rowVal = data.currentPuzzle.marks.getWithRowVal(a.row, a.value);
+          if (rowVal.size == 2) {
+            const iter = rowVal.values();
+            const t1 = {
+              row: a.row,
+              col: iter.next().value,
+              val: a.value,
+            };
+            const t2 = {
+              row: a.row,
+              col: iter.next().value,
+              val: a.value,
+            }
+            data.currentPuzzle.addOffToOnImplication(t1, t2)
+          }
+
+          const colVal = data.currentPuzzle.marks.getWithColVal(a.column, a.value);
+          if (colVal.size == 2) {
+            const iter = colVal.values();
+            const t1 = {
+              row: iter.next().value,
+              col: a.column,
+              val: a.value,
+            };
+            const t2 = {
+              row: iter.next().value,
+              col: a.column,
+              val: a.value,
             }
             data.currentPuzzle.addOffToOnImplication(t1, t2)
           }

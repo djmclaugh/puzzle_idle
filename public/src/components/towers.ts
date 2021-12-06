@@ -1,7 +1,8 @@
 import Vue from '../vue.js'
 import LatinSquareCellComponent from './latin_square_cell.js'
 import TowersHintCellComponent from './towers_hint_cell.js'
-import Towers, { HintFace, Triple } from '../puzzles/towers/towers.js'
+import { Triple } from '../puzzles/towers/triple_collection.js'
+import Towers, { HintFace } from '../puzzles/towers/towers.js'
 import { DoubleKeyMap } from '../util/multi_key_map.js'
 
 export interface Background {
@@ -123,7 +124,6 @@ export default {
           onGuess: (value: number) => { puzzle.takeGuess({row: y, col: x, val: value}); },
           onSet: (value: number) => {
             if (data.implicationSource === null) {
-              console.log()
               puzzle.setCell(y, x, value);
             } else {
               data.implicationSource = null;

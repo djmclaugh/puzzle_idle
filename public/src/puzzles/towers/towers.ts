@@ -1,3 +1,4 @@
+import { Triple, TripleCollection } from './triple_collection.js'
 import ImplicationsTracker from './implications_tracker.js'
 
 // Returns how many towers can be seen.
@@ -12,13 +13,6 @@ export function view(values: number[]) {
   }
   return seen;
 }
-
-export type Possibilities = Set<number>;
-export type Triple = {
-  row: number,
-  col: number,
-  val: number,
-};
 
 export type GuessInfo = {
   guess: Triple,
@@ -164,43 +158,44 @@ export default class Towers {
     }
   }
 
-  private marks: Possibilities[][] = [];
+  public marks: TripleCollection;
 
   private callbacks: Set<ActionCallback> = new Set();
 
   private addAction(a: Action) {
     this.history.push(a);
-    if (a.type == ActionType.REMOVE_POSSIBILITY) {
-      const removalImplications = this.implications.getImplicationsFromNodeRemoval({
-        row: a.row,
-        col: a.column,
-        val: a.value,
-      });
-      for (const t of removalImplications[0]) {
-        this.setCell(t.row, t.col, t.val);
-      }
-      for (const t of removalImplications[1]) {
-        this.removeFromCell(t.row, t.col, t.val);
-      }
-      const m = this.marks[a.row][a.column];
-      if (m.size == 1) {
-        const value = m.values().next().value;
-        const implications = this.implications.getImplicationsFromNodeSet({
-          row: a.row,
-          col: a.column,
-          val: value,
-        });
-        for (const t of implications[0]) {
-          this.setCell(t.row, t.col, t.val);
-        }
-        for (const t of implications[1]) {
-          this.removeFromCell(t.row, t.col, t.val);
-        }
-      }
-    }
     this.callbacks.forEach((c) => {
       c(a);
     });
+    // Make this a process instead of automatically doing it.
+    // if (a.type == ActionType.REMOVE_POSSIBILITY) {
+    //   const removalImplications = this.implications.getImplicationsFromNodeRemoval({
+    //     row: a.row,
+    //     col: a.column,
+    //     val: a.value,
+    //   });
+    //   for (const t of removalImplications[0]) {
+    //     this.removeAllBut(t.row, t.col, t.val);
+    //   }
+    //   for (const t of removalImplications[1]) {
+    //     this.removeFromCell(t.row, t.col, t.val);
+    //   }
+    //   const m = this.marks.getWithRowCol(a.row, a.column);
+    //   if (m.size == 1) {
+    //     const value = m.values().next().value;
+    //     const implications = this.implications.getImplicationsFromNodeSet({
+    //       row: a.row,
+    //       col: a.column,
+    //       val: value,
+    //     });
+    //     for (const t of implications[0]) {
+    //       this.removeAllBut(t.row, t.col, t.val);
+    //     }
+    //     for (const t of implications[1]) {
+    //       this.removeFromCell(t.row, t.col, t.val);
+    //     }
+    //   }
+    // }
   }
 
   public onAction(a: ActionCallback) {
@@ -218,10 +213,18 @@ export default class Towers {
     }
     switch (lastAction.type) {
       case ActionType.ADD_POSSIBILITY:
-        this.marks[lastAction.row][lastAction.column].delete(lastAction.value);
+        this.marks.delete({
+          row: lastAction.row,
+          col: lastAction.column,
+          val: lastAction.value,
+        });
         break;
       case ActionType.REMOVE_POSSIBILITY:
-        this.marks[lastAction.row][lastAction.column].add(lastAction.value);
+        this.marks.add({
+          row: lastAction.row,
+          col: lastAction.column,
+          val: lastAction.value,
+        });
         break;
       case ActionType.ADD_HINT:
         this.setHint(lastAction.face, lastAction.index, true);
@@ -300,11 +303,11 @@ export default class Towers {
   }
 
   public marksCell(r: number, c: number) {
-    return this.marks[r][c];
+    return this.marks.getWithRowCol(r, c);
   }
 
   public removeFromCell(r: number, c: number, value: number) {
-    if (this.marks[r][c].delete(value)) {
+    if (this.marks.delete({row: r, col: c, val: value})) {
       this.addAction({
         row: r,
         column: c,
@@ -315,8 +318,9 @@ export default class Towers {
   }
 
   public addToCell(r: number, c: number, value: number) {
-    if (!this.marks[r][c].has(value)) {
-      this.marks[r][c].add(value);
+    const t = {row: r, col: c, val: value};
+    if (!this.marks.has(t)) {
+      this.marks.add(t);
       this.addAction({
         row: r,
         column: c,
@@ -326,13 +330,17 @@ export default class Towers {
     }
   }
 
-  public setCell(r: number, c: number, value: number) {
-    this.addToCell(r, c, value);
+  public removeAllBut(r: number, c: number, value: number) {
     for (let i = 0; i < this.grid.length; ++i) {
       if (i != value) {
         this.removeFromCell(r, c, i);
       }
     }
+  }
+
+  public setCell(r: number, c: number, value: number) {
+    this.addToCell(r, c, value);
+    this.removeAllBut(r, c, value);
   }
 
   public toggleHint(f: HintFace, i: number) {
@@ -468,22 +476,20 @@ export default class Towers {
     this.southHintMarked = [];
 
     this.grid = grid;
-    this.marks = [];
+    this.marks = new TripleCollection(this.grid.length);
     for (let i = 0; i < this.n; ++i) {
       this.westHintMarked.push(false);
       this.northHintMarked.push(false);
       this.eastHintMarked.push(false);
       this.southHintMarked.push(false);
 
-      this.marks.push([]);
       for (let j = 0; j < this.n; ++j) {
-        this.marks[i].push(new Set());
-        if (this.grid[i][j] == -1) {
+        if (this.grid[i][j] != -1) {
           for (let k = 0; k < this.n; ++k) {
-            this.marks[i][j].add(k);
+            if (k != this.grid[i][j]) {
+              this.marks.delete({row: i, col: j, val: k});
+            }
           }
-        } else {
-          this.marks[i][j].add(this.grid[i][j]);
         }
       }
     }
@@ -538,7 +544,7 @@ export default class Towers {
   public get isReadyForValidation(): boolean {
     for (let r = 0; r < this.n; ++r) {
       for (let c = 0; c < this.n; ++c) {
-        if (this.marks[r][c].size != 1) {
+        if (this.marks.getWithRowCol(r, c).size != 1) {
           return false;
         }
       }
@@ -549,7 +555,7 @@ export default class Towers {
   public get hasContradiction(): boolean {
     for (let r = 0; r < this.n; ++r) {
       for (let c = 0; c < this.n; ++c) {
-        if (this.marks[r][c].size == 0) {
+        if (this.marks.getWithRowCol(r, c).size == 0) {
           return true;
         }
       }
@@ -558,7 +564,14 @@ export default class Towers {
   }
 
   public solvedGrid(): number[][] {
-    return this.marks.map(row => row.map(cell => cell.values().next().value));
+    const solved: number[][] = [];
+    for (let i = 0; i < this.n; ++i) {
+      solved.push([]);
+      for (let j = 0; j < this.n; ++j) {
+        solved[i].push(this.marks.getWithRowCol(i, j).values().next().value);
+      }
+    }
+    return solved;
   }
 
   public toString() {

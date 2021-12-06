@@ -1,5 +1,6 @@
 import Process from '../process.js'
-import Towers, {Possibilities, Triple} from '../../puzzles/towers/towers.js'
+import { Triple } from '../../puzzles/towers/triple_collection.js'
+import Towers from '../../puzzles/towers/towers.js'
 
 export default class RandomRemovalProcess extends Process<Triple> {
   public readonly processId: string;
@@ -19,25 +20,11 @@ export default class RandomRemovalProcess extends Process<Triple> {
     col: 0,
     valIndex: 0,
   };
-  public choice = {
-    row: -1,
-    col: -1,
-    valIndex: -1,
-  };;
-  public encounters = 0;
+  public encounters: Set<Triple> = new Set();
+  public choice: Triple|undefined
 
   public get returnValue(): Triple|undefined {
-    if (this.current.row >= this.t.n) {
-      const p: Possibilities = this.t.marksCell(this.choice.row, this.choice.col);
-      const sorted = Array.from(p).sort();
-      return {
-        row: this.choice.row,
-        col: this.choice.col,
-        val: sorted[this.choice.valIndex],
-      }
-    } else {
-      return undefined;
-    }
+    return this.choice;
   }
 
   public beat: number = 0;
@@ -50,20 +37,21 @@ export default class RandomRemovalProcess extends Process<Triple> {
   public tick(): boolean {
     const n = this.t.n;
     if (this.beat == 0) {
-      // Update choice
-      const p: Possibilities = this.t.marksCell(this.current.row, this.current.col);
-      const sorted = Array.from(p).sort();
-      if (sorted.length > 1) {
-        this.encounters += 1;
-        if (Math.random() < 1 / this.encounters) {
-          Object.assign(this.choice, this.current);
-        }
+      const p: Set<number> = this.t.marksCell(this.current.row, this.current.col);
+      if (p.size > 1) {
+        p.forEach(val => {
+          this.encounters.add({
+            row: this.current.row,
+            col: this.current.col,
+            val: val,
+          });
+        });
       } else {
         // Do nothing
       }
     } else {
       // Update indices
-      let p: Possibilities = this.t.marksCell(this.current.row, this.current.col);
+      let p: Set<number> = this.t.marksCell(this.current.row, this.current.col);
       this.current.valIndex += 1;
       if (this.current.valIndex >= p.size) {
         this.current.valIndex = 0;
@@ -74,12 +62,22 @@ export default class RandomRemovalProcess extends Process<Triple> {
         this.current.row += 1;
       }
       if (this.current.row >= n) {
-        p = this.t.marksCell(this.choice.row, this.choice.col);
-        const sorted = Array.from(p).sort();
+        const l = Array.from(this.encounters);
+        let index = Math.floor(Math.random() * l.length);
+        // double check that this encounter is still available.
+        while (!this.t.marks.has(l[index])) {
+          l.splice(index, 1);
+          // If no choices remain, then the grid is full.
+          if (l.length == 0) {
+            return true;
+          }
+          index = Math.floor(Math.random() * l.length);
+        }
+        this.choice = l[index];
         this.t.removeFromCell(
-          this.choice.row,
-          this.choice.col,
-          sorted[this.choice.valIndex]
+          this.choice!.row,
+          this.choice!.col,
+          this.choice!.val,
         );
         return true;
       }
