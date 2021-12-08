@@ -1,6 +1,6 @@
-import Process from '../process.js'
-import { Triple } from '../../puzzles/towers/triple_collection.js'
-import Towers from '../../puzzles/towers/towers.js'
+import Process from '../../process.js'
+import { Triple } from '../../../puzzles/towers/triple_collection.js'
+import Towers from '../../../puzzles/towers/towers.js'
 
 export default class RandomRemovalProcess extends Process<Triple> {
   public readonly processId: string;

@@ -1,6 +1,6 @@
-import Process from '../process.js'
-import { Triple } from '../../puzzles/towers/triple_collection.js'
-import Towers from '../../puzzles/towers/towers.js'
+import Process from '../../process.js'
+import { Triple } from '../../../puzzles/towers/triple_collection.js'
+import Towers from '../../../puzzles/towers/towers.js'
 
 export default class FollowRemovalImplicationsProcess extends Process<void> {
   public readonly processId: string;

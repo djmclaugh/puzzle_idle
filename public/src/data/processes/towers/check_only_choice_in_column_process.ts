@@ -1,7 +1,7 @@
-import Process from '../process.js'
-import Towers from '../../puzzles/towers/towers.js'
+import Process from '../../process.js'
+import Towers from '../../../puzzles/towers/towers.js'
 
-export default class OnlyChoiceInRowProcess extends Process<void> {
+export default class OnlyChoiceInColumnProcess extends Process<void> {
   public readonly processId: string;
   /**
    * Need to keep track of current column.
@@ -11,8 +11,8 @@ export default class OnlyChoiceInRowProcess extends Process<void> {
     return 2;
   }
 
-  public col: number = 0;
-  public colFound: number = -1;
+  public row: number = 0;
+  public rowFound: number = -1;
 
   public returnValue: void = undefined;
 
@@ -22,9 +22,9 @@ export default class OnlyChoiceInRowProcess extends Process<void> {
    * Checks if the provided row only has one cell that can be the provided value.
    * If so, set that cell to that value.
    */
-  public constructor(private t: Towers, private row: number, private value: number, interfaceId: number) {
+  public constructor(private t: Towers, private col: number, private value: number, interfaceId: number) {
     super();
-    this.processId = "only_choice_in_row_" + row + "_" + value +"_" + interfaceId;
+    this.processId = "only_choice_in_column_" + col + "_" + value +"_" + interfaceId;
   }
 
   public tick(): boolean {
@@ -33,8 +33,8 @@ export default class OnlyChoiceInRowProcess extends Process<void> {
       // Check if value is in this cells possibilities.
       const p: Set<number> = this.t.marksCell(this.row, this.col);
       if (p.has(this.value)) {
-        if (this.colFound == -1) {
-          this.colFound = this.col;
+        if (this.rowFound == -1) {
+          this.rowFound = this.row;
         } else {
           // Found two cells that can be the given value, no infference can be
           // made.
@@ -43,11 +43,11 @@ export default class OnlyChoiceInRowProcess extends Process<void> {
       }
     } else {
       // Update indices
-      this.col += 1;
-      if (this.col >= n) {
-        // Reached the end of the row.
-        if (this.colFound != -1) {
-          this.t.setCell(this.row, this.colFound, this.value);
+      this.row += 1;
+      if (this.row >= n) {
+        // Reached the end of the column.
+        if (this.rowFound != -1) {
+          this.t.setCell(this.rowFound, this.col, this.value);
         }
         return true;
       }
