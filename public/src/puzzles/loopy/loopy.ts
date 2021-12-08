@@ -35,6 +35,22 @@ export default class Loopy {
     return this.hints.length;
   }
 
+  public getHEdge(row: number, column: number) {
+    return this.hEdges[row][column]
+  }
+
+  public getVEdge(row: number, column: number) {
+    return this.vEdges[row][column]
+  }
+
+  public setHEdge(row: number, column: number, state: EdgeState) {
+    this.hEdges[row][column] = state
+  }
+
+  public setVEdge(row: number, column: number, state: EdgeState) {
+    this.vEdges[row][column] = state
+  }
+
   public getHint(row: number, column: number): Hint {
     return this.hints[row][column];
   }
