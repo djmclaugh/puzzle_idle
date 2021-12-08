@@ -51,6 +51,26 @@ export default class Loopy {
     this.vEdges[row][column] = state
   }
 
+  // Returns [top, right, bottom, left]
+  public getEdgesForCell(row: number, column: number): EdgeState[] {
+    return [
+      this.hEdges[row][column],
+      this.vEdges[row][column + 1],
+      this.hEdges[row + 1][column],
+      this.vEdges[row][column],
+    ];
+  }
+
+  // Returns [top, right, bottom, left]
+  public getEdgesForNode(row: number, column: number): EdgeState[] {
+    return [
+      row == 0 ? EdgeState.OFF : this.vEdges[row - 1][column],
+      column == this.n ? EdgeState.OFF : this.hEdges[row][column],
+      row == this.n ? EdgeState.OFF : this.vEdges[row][column],
+      column == 0 ? EdgeState.OFF : this.hEdges[row][column - 1],
+    ];
+  }
+
   public getHint(row: number, column: number): Hint {
     return this.hints[row][column];
   }

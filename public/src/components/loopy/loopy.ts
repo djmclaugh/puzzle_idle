@@ -26,12 +26,12 @@ export default {
       }
       const inner = Vue.h('div', {class: classes})
       return Vue.h('div', {
-        class: ['loopy-edge-container'],
+        class: ['loopy-edge-container', 'loopy-h-edge-container'],
         onClick: (e: MouseEvent) => {
           if (e.ctrlKey) {
-            props.puzzle.setHEdge(row, column, (state + 1) % 3);
+            props.puzzle.setHEdge(row, column, state == EdgeState.OFF ? EdgeState.UNKNOWN : EdgeState.OFF);
           } else {
-            props.puzzle.setHEdge(row, column, (state + 2) % 3);
+            props.puzzle.setHEdge(row, column, state == EdgeState.ON ? EdgeState.UNKNOWN : EdgeState.ON);
           }
         },
       }, inner);
@@ -53,12 +53,12 @@ export default {
       }
       const inner = Vue.h('div', {class: classes})
       return Vue.h('div', {
-        class: ['loopy-edge-container'],
+        class: ['loopy-edge-container', 'loopy-v-edge-container'],
         onClick: (e: MouseEvent) => {
           if (e.ctrlKey) {
-            props.puzzle.setVEdge(row, column, (state + 1) % 3);
+            props.puzzle.setVEdge(row, column, state == EdgeState.OFF ? EdgeState.UNKNOWN : EdgeState.OFF);
           } else {
-            props.puzzle.setVEdge(row, column, (state + 2) % 3);
+            props.puzzle.setVEdge(row, column, state == EdgeState.ON ? EdgeState.UNKNOWN : EdgeState.ON);
           }
         },
       }, inner);
