@@ -54,7 +54,7 @@ export default class ValidationProcess extends Process<boolean> {
             this.logs[0].push('-- No hint in that cell ✔️');
           } else {
             let numEdges = this.p.getEdgesForCell(this.row, this.column)
-                                 .filter(s => s === EdgeState.ON)
+                                 .filter(e => e.ON)
                                  .length;
             if (numEdges == hint) {
               this.logs[0].push(`-- Cell touches exactly ${hint} edges ✔️`);
@@ -90,7 +90,7 @@ export default class ValidationProcess extends Process<boolean> {
       case ValidationStep.LOOP: {
         if (this.beat == 0) {
           if (this.currentNode == null) {
-            if (this.p.getEdgesForNode(this.row, this.column).indexOf(EdgeState.ON) == -1) {
+            if (this.p.getEdgesForNode(this.row, this.column).find(e => e.ON) === undefined) {
               this.logs[1].push(`------ Not on loop.`);
             } else {
               this.currentNode = new Node(this.row, this.column);
@@ -101,7 +101,7 @@ export default class ValidationProcess extends Process<boolean> {
             }
           } else {
             const edges = this.p.getEdgesForNode(this.currentNode.row, this.currentNode.column);
-            const numEdges = edges.filter(s => s == EdgeState.ON).length;
+            const numEdges = edges.filter(e => e.ON).length;
             if (numEdges == 2) {
               this.logs[1].push(`---- Yes! ✔️`);
             } else {
@@ -109,13 +109,13 @@ export default class ValidationProcess extends Process<boolean> {
               return true;
             }
             if (this.previousNode == null) {
-              if (edges[0] == EdgeState.ON) {
+              if (edges[0].ON) {
                 this.previousNode = this.currentNode.up();
-              } else if (edges[1] == EdgeState.ON) {
+              } else if (edges[1].ON) {
                 this.previousNode = this.currentNode.right();
-              } else if (edges[2] == EdgeState.ON) {
+              } else if (edges[2].ON) {
                 this.previousNode = this.currentNode.down();
-              } else if (edges[3] == EdgeState.ON) {
+              } else if (edges[3].ON) {
                 this.previousNode = this.currentNode.left();
               }
             }
@@ -137,13 +137,13 @@ export default class ValidationProcess extends Process<boolean> {
             const edges = this.p.getEdgesForNode(this.currentNode.row, this.currentNode.column);
             const hash = this.previousNode!.hash();
             this.previousNode = this.currentNode;
-            if (edges[0] == EdgeState.ON && this.currentNode.up().hash() != hash) {
+            if (edges[0].ON && this.currentNode.up().hash() != hash) {
               this.currentNode = this.currentNode.up();
-            } else if (edges[1] == EdgeState.ON && this.currentNode.right().hash() != hash) {
+            } else if (edges[1].ON && this.currentNode.right().hash() != hash) {
               this.currentNode = this.currentNode.right();
-            } else if (edges[2] == EdgeState.ON && this.currentNode.down().hash() != hash) {
+            } else if (edges[2].ON && this.currentNode.down().hash() != hash) {
               this.currentNode = this.currentNode.down();
-            } else if (edges[3] == EdgeState.ON && this.currentNode.left().hash() != hash) {
+            } else if (edges[3].ON && this.currentNode.left().hash() != hash) {
               this.currentNode = this.currentNode.left();
             } else {
               throw new Error("This should never happen");
@@ -166,7 +166,7 @@ export default class ValidationProcess extends Process<boolean> {
       }
       case ValidationStep.UNIQUE: {
         if (this.beat == 0) {
-          if (this.p.getEdgesForNode(this.row, this.column).indexOf(EdgeState.ON) != -1) {
+          if (this.p.getEdgesForNode(this.row, this.column).find(e => e.ON) === undefined) {
             this.logs[2].push(`---- No edges ✔️`);
           } else if (this.nodesFound.has(new Node(this.row, this.column).hash())){
             this.logs[2].push(`---- On loop ✔️`);

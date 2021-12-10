@@ -1,3 +1,5 @@
+import { EdgeType } from './loopy.js'
+
 export default class Node {
   public constructor(public row: number, public column: number) {
 
@@ -19,5 +21,14 @@ export default class Node {
   }
   public left(): Node {
     return new Node(this.row, this.column - 1);
+  }
+
+  public static fromEdge(type: EdgeType, row: number, column: number): [Node, Node] {
+    switch (type) {
+      case EdgeType.Vertical:
+        return [new Node(row, column), new Node(row + 1, column)];
+      case EdgeType.Horizontal:
+        return [new Node(row, column), new Node(row, column + 1)];
+    }
   }
 }

@@ -2,21 +2,16 @@ import Puzzle from '../puzzle.js'
 
 export type Hint = (number|undefined);
 
-export enum EdgeState {
-  OFF,
-  ON,
-  UNKNOWN,
+export type EdgeState = {
+  ON: boolean,
+  OFF: boolean,
 }
 
-function stateToString(e: EdgeState) {
-  switch (e) {
-    case EdgeState.UNKNOWN:
-      return "UNKNOWN"
-    case EdgeState.ON:
-      return "ON"
-    case EdgeState.OFF:
-      return "OFF"
-  }
+function UNKOWN(): EdgeState {
+  return  {ON: false, OFF: false};
+}
+function OFF(): EdgeState {
+  return {ON: false, OFF: true};
 }
 
 export enum EdgeType {
@@ -24,7 +19,7 @@ export enum EdgeType {
   Vertical,
 }
 
-function typeToString(e: EdgeType) {
+function edgeTypeToString(e: EdgeType) {
   switch (e) {
     case EdgeType.Horizontal:
       return "Horizontal"
@@ -33,17 +28,30 @@ function typeToString(e: EdgeType) {
   }
 }
 
+export enum ActionType {
+  ToggleOFF,
+  ToggleON,
+}
+
+function actionTypeToString(a: ActionType) {
+  switch (a) {
+    case ActionType.ToggleOFF:
+      return "OFF"
+    case ActionType.ToggleON:
+      return "ON"
+  }
+}
+
 export class Action {
   public constructor(
     public edgeType: EdgeType,
     public row: number,
     public column: number,
-    public from: EdgeState,
-    public state: EdgeState,
+    public type: ActionType,
   ) {}
 
   public toString() {
-    return `${typeToString(this.edgeType)} edge at column ${this.column} and row ${this.row} set to ${stateToString(this.state)}.`;
+    return `${edgeTypeToString(this.edgeType)} edge at column ${this.column} and row ${this.row} set to ${actionTypeToString(this.type)}.`;
   }
 }
 
@@ -60,14 +68,14 @@ export default class Loopy extends Puzzle<Action> {
     for (let i = 0; i < this.n; ++i) {
       const row = [];
       for (let j = 0; j < this.n + 1; ++j) {
-        row.push(EdgeState.UNKNOWN);
+        row.push(UNKOWN());
       }
       this.vEdges.push(row)
     }
     for (let i = 0; i < this.n + 1; ++i) {
       const row = [];
       for (let j = 0; j < this.n; ++j) {
-        row.push(EdgeState.UNKNOWN);
+        row.push(UNKOWN());
       }
       this.hEdges.push(row)
     }
@@ -85,16 +93,45 @@ export default class Loopy extends Puzzle<Action> {
     return this.vEdges[row][column];
   }
 
-  public setHEdge(row: number, column: number, state: EdgeState) {
-    const was = this.hEdges[row][column];
-    this.hEdges[row][column] = state;
-    this.addAction(new Action(EdgeType.Horizontal, row, column, was, state));
+  private applyAction(a: Action) {
+    const grid = a.edgeType == EdgeType.Horizontal ? this.hEdges : this.vEdges;
+    const edge = grid[a.row][a.column];
+    switch (a.type) {
+      case ActionType.ToggleOFF:
+        edge.OFF = !edge.OFF;
+        break;
+      case ActionType.ToggleON:
+        edge.ON = !edge.ON;
+        break;
+    }
   }
 
-  public setVEdge(row: number, column: number, state: EdgeState) {
-    const was = this.vEdges[row][column];
-    this.vEdges[row][column] = state;
-    this.addAction(new Action(EdgeType.Vertical, row, column, was, state));
+  public toggleEdge(edgeType: EdgeType, row: number, column: number, type: ActionType) {
+    const a: Action = new Action(edgeType, row, column, type);
+    this.applyAction(a);
+    this.addAction(a);
+  }
+
+  public setEdgeON(edgeType: EdgeType, row: number, column: number) {
+    const grid = edgeType == EdgeType.Horizontal ? this.hEdges : this.vEdges;
+    if (grid[row][column].ON) {
+      // Already ON, do nothing
+      return;
+    }
+    const a: Action = new Action(edgeType, row, column, ActionType.ToggleON);
+    this.applyAction(a);
+    this.addAction(a);
+  }
+
+  public setEdgeOFF(edgeType: EdgeType, row: number, column: number) {
+    const grid = edgeType == EdgeType.Horizontal ? this.hEdges : this.vEdges;
+    if (grid[row][column].OFF) {
+      // Already OFF, do nothing
+      return;
+    }
+    const a: Action = new Action(edgeType, row, column, ActionType.ToggleOFF);
+    this.applyAction(a);
+    this.addAction(a);
   }
 
   // Returns [top, right, bottom, left]
@@ -107,13 +144,15 @@ export default class Loopy extends Puzzle<Action> {
     ];
   }
 
-  // Returns [top, right, bottom, left]
+  /**
+   * Returns [top, right, bottom, left]
+   */
   public getEdgesForNode(row: number, column: number): EdgeState[] {
     return [
-      row == 0 ? EdgeState.OFF : this.vEdges[row - 1][column],
-      column == this.n ? EdgeState.OFF : this.hEdges[row][column],
-      row == this.n ? EdgeState.OFF : this.vEdges[row][column],
-      column == 0 ? EdgeState.OFF : this.hEdges[row][column - 1],
+      row == 0 ? OFF() : this.vEdges[row - 1][column],
+      column == this.n ? OFF() : this.hEdges[row][column],
+      row == this.n ? OFF() : this.vEdges[row][column],
+      column == 0 ? OFF() : this.hEdges[row][column - 1],
     ];
   }
 
@@ -126,14 +165,7 @@ export default class Loopy extends Puzzle<Action> {
     if (a === undefined) {
       return;
     }
-    switch (a.edgeType) {
-      case EdgeType.Vertical:
-        this.vEdges[a.row][a.column] = a.from;
-        break;
-      case EdgeType.Horizontal:
-        this.hEdges[a.row][a.column] = a.from;
-        break;
-    }
+    this.applyAction(a);
     if (this.lastGuess !== undefined && this.history.length <= this.lastGuess) {
       this.guesses.pop();
     }
@@ -148,15 +180,8 @@ export default class Loopy extends Puzzle<Action> {
     const a = this.history[g];
     this.abandonGuess();
 
-    let otherState = a.state == EdgeState.OFF ? EdgeState.ON : EdgeState.OFF;
-    switch (a.edgeType) {
-      case EdgeType.Vertical:
-        this.setVEdge(a.row, a.column, otherState);
-        break;
-      case EdgeType.Horizontal:
-        this.setHEdge(a.row, a.column, otherState);
-        break;
-    }
+    let otherType = a.type == ActionType.ToggleOFF ? ActionType.ToggleON : ActionType.ToggleOFF;
+    this.toggleEdge(a.edgeType, a.row, a.column, otherType);
   }
 
   public copy(): Loopy {
@@ -166,15 +191,29 @@ export default class Loopy extends Puzzle<Action> {
   public isReadyForValidation(): boolean {
     for (let i = 0; i < this.n; ++i) {
       for (let j = 0; j < this.n + 1; ++j) {
-        if (this.hEdges[j][i] == EdgeState.UNKNOWN) {
+        if (this.hEdges[j][i].OFF == this.hEdges[j][i].ON) {
           return false;
         }
-        if (this.vEdges[i][j] == EdgeState.UNKNOWN) {
+        if (this.vEdges[i][j].OFF == this.vEdges[i][j].ON) {
           return false;
         }
       }
     }
     return true;
+  }
+
+  public hasContradiction(): boolean {
+    for (let i = 0; i < this.n; ++i) {
+      for (let j = 0; j < this.n + 1; ++j) {
+        if (this.hEdges[j][i].OFF && this.hEdges[j][i].ON) {
+          return true;
+        }
+        if (this.vEdges[j][i].OFF && this.vEdges[j][i].ON) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public static fromString(s: string): Loopy {

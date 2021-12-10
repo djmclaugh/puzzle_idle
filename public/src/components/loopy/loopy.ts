@@ -1,5 +1,5 @@
 import Vue from '../../vue.js'
-import Loopy, {EdgeState} from '../../puzzles/loopy/loopy.js'
+import Loopy, {EdgeState, EdgeType, ActionType} from '../../puzzles/loopy/loopy.js'
 
 interface LoopyComponentProps {
   puzzle: Loopy,
@@ -13,26 +13,21 @@ export default {
     function hEdge(row: number, column: number): any {
       const state = props.puzzle.getHEdge(row, column);
       const classes = ['loopy-h-edge'];
-      switch (state) {
-        case EdgeState.UNKNOWN:
-          classes.push('loopy-h-edge-unknown');
-          break;
-        case EdgeState.ON:
-          classes.push('loopy-edge-on');
-          break;
-        case EdgeState.OFF:
-          classes.push('loopy-edge-off');
-          break;
+      if (!state.OFF && !state.ON)
+        classes.push('loopy-h-edge-unknown');
+      else if (!state.OFF && state.ON) {
+        classes.push('loopy-edge-on');
+      } else if (state.OFF && !state.ON) {
+        classes.push('loopy-edge-off');
+      } else {
+        classes.push('loopy-h-edge-contradiction');
       }
       const inner = Vue.h('div', {class: classes})
       return Vue.h('div', {
         class: ['loopy-edge-container', 'loopy-h-edge-container'],
         onClick: (e: MouseEvent) => {
-          if (e.ctrlKey) {
-            props.puzzle.setHEdge(row, column, state == EdgeState.OFF ? EdgeState.UNKNOWN : EdgeState.OFF);
-          } else {
-            props.puzzle.setHEdge(row, column, state == EdgeState.ON ? EdgeState.UNKNOWN : EdgeState.ON);
-          }
+          const type = e.ctrlKey ? ActionType.ToggleOFF : ActionType.ToggleON;
+          props.puzzle.toggleEdge(EdgeType.Horizontal, row, column, type);
         },
       }, inner);
     }
@@ -40,26 +35,21 @@ export default {
     function vEdge(row: number, column: number): any {
       const state = props.puzzle.getVEdge(row, column);
       const classes = ['loopy-v-edge'];
-      switch (state) {
-        case EdgeState.UNKNOWN:
-          classes.push('loopy-v-edge-unknown');
-          break;
-        case EdgeState.ON:
-          classes.push('loopy-edge-on');
-          break;
-        case EdgeState.OFF:
-          classes.push('loopy-edge-off');
-          break;
+      if (!state.OFF && !state.ON)
+        classes.push('loopy-v-edge-unknown');
+      else if (!state.OFF && state.ON) {
+        classes.push('loopy-edge-on');
+      } else if (state.OFF && !state.ON) {
+        classes.push('loopy-edge-off');
+      } else {
+        classes.push('loopy-v-edge-contradiction');
       }
       const inner = Vue.h('div', {class: classes})
       return Vue.h('div', {
         class: ['loopy-edge-container', 'loopy-v-edge-container'],
         onClick: (e: MouseEvent) => {
-          if (e.ctrlKey) {
-            props.puzzle.setVEdge(row, column, state == EdgeState.OFF ? EdgeState.UNKNOWN : EdgeState.OFF);
-          } else {
-            props.puzzle.setVEdge(row, column, state == EdgeState.ON ? EdgeState.UNKNOWN : EdgeState.ON);
-          }
+          const type = e.ctrlKey ? ActionType.ToggleOFF : ActionType.ToggleON;
+          props.puzzle.toggleEdge(EdgeType.Vertical, row, column, type);
         },
       }, inner);
     }

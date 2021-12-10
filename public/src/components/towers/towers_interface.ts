@@ -347,6 +347,7 @@ export default {
       interfaceProps[InterfaceHandlers.START_VALIDATE] = startValidate;
       interfaceProps[InterfaceHandlers.STOP_VALIDATE] = stopValidate;
       interfaceProps[InterfaceHandlers.UNDO] = () => {
+        stopAllProcesses();
         data.currentPuzzle.undo();
       };
       interfaceProps[InterfaceHandlers.ABANDON_GUESS] = () => {
