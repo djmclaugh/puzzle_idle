@@ -55,7 +55,7 @@ export default {
       autoRestart: false,
       autoView: false,
       autoUnique: false,
-      autoUniqueImplications: true,
+      autoUniqueImplications: false,
       autoRandom: false,
       autoImply: true,
       autoFollowImply: true,
@@ -202,6 +202,77 @@ export default {
       await assignNewPuzzle()
     }
 
+    function onPossibilitySet(row: number, col: number, val: number) {
+      if (data.autoFollowImply) {
+        const triple = { row: row, col: col, val: val };
+        const p = new FollowSetImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
+        if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+          data.activeProcesses.add(p);
+        }
+      }
+      if (data.autoUnique) {
+        for (let i = 0; i < data.currentPuzzle.n; ++i) {
+          if (i != col) {
+            const p = new RemovalProcess(data.currentPuzzle, row, i, val, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+              data.activeProcesses.add(p);
+            }
+          }
+          if (i != row) {
+            const p = new RemovalProcess(data.currentPuzzle, i, col, val, props.interfaceId);
+            if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+              data.activeProcesses.add(p);
+            }
+          }
+        }
+      }
+    }
+
+    function onPossibilityRemoved(row: number, col: number, val: number) {
+      if (data.autoFollowImply) {
+        const triple = { row: row, col: col, val: val };
+        const p = new FollowRemovalImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
+        if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+          data.activeProcesses.add(p);
+        }
+      }
+      if (data.autoSweep) {
+        const colP = new OnlyChoiceInColumnProcess(data.currentPuzzle, col, val, props.interfaceId);
+        if (currentStatus.cpu.addProcess(colP, 9, onProcessOver(colP))) {
+          data.activeProcesses.add(colP);
+        }
+        const rowP = new OnlyChoiceInRowProcess(data.currentPuzzle, row, val, props.interfaceId);
+        if (currentStatus.cpu.addProcess(rowP, 9, onProcessOver(rowP))) {
+          data.activeProcesses.add(rowP);
+        }
+      }
+      if (data.autoImply) {
+        const rowCol = data.currentPuzzle.marks.getWithRowCol(row, col);
+        if (rowCol.size == 2) {
+          const iter = rowCol.values();
+          const t1 = { row: row, col: col, val: iter.next().value };
+          const t2 = { row: row, col: col, val: iter.next().value };
+          data.currentPuzzle.addOffToOnImplication(t1, t2);
+        }
+
+        const rowVal = data.currentPuzzle.marks.getWithRowVal(row, val);
+        if (rowVal.size == 2) {
+          const iter = rowVal.values();
+          const t1 = { row: row, col: iter.next().value, val: val };
+          const t2 = { row: row, col: iter.next().value, val: val };
+          data.currentPuzzle.addOffToOnImplication(t1, t2)
+        }
+
+        const colVal = data.currentPuzzle.marks.getWithColVal(col, val);
+        if (colVal.size == 2) {
+          const iter = colVal.values();
+          const t1 = { row: iter.next().value, col: col, val: val };
+          const t2 = { row: iter.next().value, col: col, val: val };
+          data.currentPuzzle.addOffToOnImplication(t1, t2)
+        }
+      }
+    }
+
     async function assignNewPuzzle() {
       data.validating = false;
       data.isCorrect = false;
@@ -223,106 +294,24 @@ export default {
           // Puzzle is full, no need to add new processes.
           return;
         }
-        if (data.autoFollowImply && a.type == ActionType.REMOVE_POSSIBILITY) {
+        if (a.type == ActionType.SET_POSSIBILITY) {
+          onPossibilitySet(a.row, a.column, a.value);
+          for (let val of a.previousPossibilities) {
+            if (val != a.value) {
+              onPossibilityRemoved(a.row, a.column, val);
+            }
+          }
+        }
+        if (a.type == ActionType.REMOVE_POSSIBILITY) {
+          onPossibilityRemoved(a.row, a.column, a.value);
           const cell = data.currentPuzzle.marksCell(a.row, a.column);
           if (cell.size == 1) {
             const v: number = cell.values().next().value;
-            const triple = {
-              row: a.row,
-              col: a.column,
-              val: v
-            }
-            const p = new FollowSetImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
-            if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
-              data.activeProcesses.add(p);
-            }
-          }
-          const triple = { row: a.row, col: a.column, val: a.value }
-          const p = new FollowRemovalImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
-          if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
-            data.activeProcesses.add(p);
+            onPossibilitySet(a.row, a.column, v);
           }
         }
-        if (data.autoUnique && a.type == ActionType.REMOVE_POSSIBILITY) {
-          const cell = data.currentPuzzle.marksCell(a.row, a.column);
-          if (cell.size == 1) {
-            const v: number = cell.values().next().value;
-            for (let i = 0; i < data.currentPuzzle.n; ++i) {
-              if (i != a.column) {
-                const p = new RemovalProcess(data.currentPuzzle, a.row, i, v, props.interfaceId);
-                if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
-                  data.activeProcesses.add(p);
-                }
-              }
-              if (i != a.row) {
-                const p = new RemovalProcess(data.currentPuzzle, i, a.column, v, props.interfaceId);
-                if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
-                  data.activeProcesses.add(p);
-                }
-              }
-            }
-          }
-        }
-        if (data.autoSweep && a.type == ActionType.REMOVE_POSSIBILITY) {
-          const colP = new OnlyChoiceInColumnProcess(data.currentPuzzle, a.column, a.value, props.interfaceId);
-          if (currentStatus.cpu.addProcess(colP, 9, onProcessOver(colP))) {
-            data.activeProcesses.add(colP);
-          }
-          const rowP = new OnlyChoiceInRowProcess(data.currentPuzzle, a.row, a.value, props.interfaceId);
-          if (currentStatus.cpu.addProcess(rowP, 9, onProcessOver(rowP))) {
-            data.activeProcesses.add(rowP);
-          }
-        }
-        if (data.autoImply && a.type == ActionType.REMOVE_POSSIBILITY) {
-          const rowCol = data.currentPuzzle.marks.getWithRowCol(a.row, a.column);
-          if (rowCol.size == 2) {
-            const iter = rowCol.values();
-            const t1 = {
-              row: a.row,
-              col: a.column,
-              val: iter.next().value,
-            };
-            const t2 = {
-              row: a.row,
-              col: a.column,
-              val: iter.next().value,
-            }
-            data.currentPuzzle.addOffToOnImplication(t1, t2)
-          }
 
-          const rowVal = data.currentPuzzle.marks.getWithRowVal(a.row, a.value);
-          if (rowVal.size == 2) {
-            const iter = rowVal.values();
-            const t1 = {
-              row: a.row,
-              col: iter.next().value,
-              val: a.value,
-            };
-            const t2 = {
-              row: a.row,
-              col: iter.next().value,
-              val: a.value,
-            }
-            data.currentPuzzle.addOffToOnImplication(t1, t2)
-          }
-
-          const colVal = data.currentPuzzle.marks.getWithColVal(a.column, a.value);
-          if (colVal.size == 2) {
-            const iter = colVal.values();
-            const t1 = {
-              row: iter.next().value,
-              col: a.column,
-              val: a.value,
-            };
-            const t2 = {
-              row: iter.next().value,
-              col: a.column,
-              val: a.value,
-            }
-            data.currentPuzzle.addOffToOnImplication(t1, t2)
-          }
-        }
-        if (data.currentPuzzle.isReadyForValidation && data.autoValidate && !data.validating) {
+        if (data.currentPuzzle.isReadyForValidation() && data.autoValidate && !data.validating) {
           startValidate();
         }
       });
@@ -359,17 +348,17 @@ export default {
       interfaceProps[InterfaceHandlers.STOP_VALIDATE] = stopValidate;
       interfaceProps[InterfaceHandlers.UNDO] = () => {
         data.currentPuzzle.undo();
-      }
+      };
       interfaceProps[InterfaceHandlers.ABANDON_GUESS] = () => {
         stopValidate();
         stopAllProcesses();
         data.currentPuzzle.abandonGuess();
-      }
+      };
       interfaceProps[InterfaceHandlers.MARK_GUESS_AS_IMPOSSIBLE] = () => {
         stopValidate();
         stopAllProcesses();
         data.currentPuzzle.markGuessAsImpossible();
-      }
+      };
       const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
       items.push(interfaceStatus);
 

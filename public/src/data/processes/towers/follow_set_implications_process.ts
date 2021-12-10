@@ -42,7 +42,15 @@ export default class FollowSetImplicationsProcess extends Process<void> {
     }
     if (this.toSet.length > 0) {
       const t: Triple = this.toSet.pop()!;
-      this.puzzle.removeAllBut(t.row, t.col, t.val);
+      if (this.puzzle.marks.has(t)) {
+        this.puzzle.setCell(t.row, t.col, t.val);
+      } else {
+        // Contradiciton
+        for (let i = 0 ; i < this.puzzle.n; ++i) {
+          this.puzzle.removeFromCell(t.row, t.col, i);
+        }
+        return true;
+      }
     } else if (this.toRemove.length > 0) {
       const t: Triple = this.toRemove.pop()!;
       this.puzzle.removeFromCell(t.row, t.col, t.val);

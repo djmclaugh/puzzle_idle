@@ -1,5 +1,5 @@
 import Vue from '../../vue.js'
-import Loopy from '../../puzzles/loopy/loopy.js'
+import Loopy, {Action} from '../../puzzles/loopy/loopy.js'
 import LoopyComponent from './loopy.js'
 import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.js'
 import { currentStatus } from '../../data/status.js'
@@ -35,6 +35,10 @@ export default {
     async function assignNewPuzzle() {
       data.currentPuzzle = await randomOfSize(size());
       puzzleUUID += 1;
+
+      data.currentPuzzle.onAction((a: Action) => {
+        // Start off relevant processes.
+      })
     }
 
     Vue.onMounted(async () => {
@@ -62,9 +66,15 @@ export default {
       interfaceProps[InterfaceHandlers.RESTART] = restart;
       interfaceProps[InterfaceHandlers.START_VALIDATE] = () => {};
       interfaceProps[InterfaceHandlers.STOP_VALIDATE] = () => {};
-      interfaceProps[InterfaceHandlers.UNDO] = () => {};
-      interfaceProps[InterfaceHandlers.ABANDON_GUESS] = () => {};
-      interfaceProps[InterfaceHandlers.MARK_GUESS_AS_IMPOSSIBLE] = () => {};
+      interfaceProps[InterfaceHandlers.UNDO] = () => {
+        data.currentPuzzle.undo();
+      };
+      interfaceProps[InterfaceHandlers.ABANDON_GUESS] = () => {
+        data.currentPuzzle.abandonGuess();
+      };
+      interfaceProps[InterfaceHandlers.MARK_GUESS_AS_IMPOSSIBLE] = () => {
+        data.currentPuzzle.markGuessAsImpossible();
+      };
       const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
       items.push(interfaceStatus);
 

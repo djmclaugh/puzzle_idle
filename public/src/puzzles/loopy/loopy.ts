@@ -1,3 +1,5 @@
+import Puzzle from '../puzzle.js'
+
 export type Hint = (number|undefined);
 
 export enum EdgeState {
@@ -6,12 +8,52 @@ export enum EdgeState {
   UNKNOWN,
 }
 
-export default class Loopy {
+function stateToString(e: EdgeState) {
+  switch (e) {
+    case EdgeState.UNKNOWN:
+      return "UNKNOWN"
+    case EdgeState.ON:
+      return "ON"
+    case EdgeState.OFF:
+      return "OFF"
+  }
+}
+
+export enum EdgeType {
+  Horizontal,
+  Vertical,
+}
+
+function typeToString(e: EdgeType) {
+  switch (e) {
+    case EdgeType.Horizontal:
+      return "Horizontal"
+    case EdgeType.Vertical:
+      return "Vertical"
+  }
+}
+
+export class Action {
+  public constructor(
+    public edgeType: EdgeType,
+    public row: number,
+    public column: number,
+    public from: EdgeState,
+    public state: EdgeState,
+  ) {}
+
+  public toString() {
+    return `${typeToString(this.edgeType)} edge at column ${this.column} and row ${this.row} set to ${stateToString(this.state)}.`;
+  }
+}
+
+export default class Loopy extends Puzzle<Action> {
   private hints: Hint[][];
   private vEdges: EdgeState[][];
   private hEdges: EdgeState[][];
 
   constructor(hints: Hint[][]) {
+    super();
     this.hints = hints;
     this.vEdges = [];
     this.hEdges = [];
@@ -36,19 +78,23 @@ export default class Loopy {
   }
 
   public getHEdge(row: number, column: number) {
-    return this.hEdges[row][column]
+    return this.hEdges[row][column];
   }
 
   public getVEdge(row: number, column: number) {
-    return this.vEdges[row][column]
+    return this.vEdges[row][column];
   }
 
   public setHEdge(row: number, column: number, state: EdgeState) {
-    this.hEdges[row][column] = state
+    const was = this.hEdges[row][column];
+    this.hEdges[row][column] = state;
+    this.addAction(new Action(EdgeType.Horizontal, row, column, was, state));
   }
 
   public setVEdge(row: number, column: number, state: EdgeState) {
-    this.vEdges[row][column] = state
+    const was = this.vEdges[row][column];
+    this.vEdges[row][column] = state;
+    this.addAction(new Action(EdgeType.Vertical, row, column, was, state));
   }
 
   // Returns [top, right, bottom, left]
@@ -75,21 +121,60 @@ export default class Loopy {
     return this.hints[row][column];
   }
 
-  public restart(): void {
-    for (const row of this.vEdges) {
-      for (let i = 0; i < row.length; ++i) {
-        row[i] = EdgeState.UNKNOWN;
-      }
+  public undo(): void {
+    const a = this.history.pop();
+    if (a === undefined) {
+      return;
     }
-    for (const row of this.hEdges) {
-      for (let i = 0; i < row.length; ++i) {
-        row[i] = EdgeState.UNKNOWN;
-      }
+    switch (a.edgeType) {
+      case EdgeType.Vertical:
+        this.vEdges[a.row][a.column] = a.from;
+        break;
+      case EdgeType.Horizontal:
+        this.hEdges[a.row][a.column] = a.from;
+        break;
+    }
+    if (this.lastGuess !== undefined && this.history.length <= this.lastGuess) {
+      this.guesses.pop();
+    }
+  }
+
+  public markGuessAsImpossible(): void {
+    const g = this.lastGuess;
+    if (g === undefined) {
+      return;
+    }
+
+    const a = this.history[g];
+    this.abandonGuess();
+
+    let otherState = a.state == EdgeState.OFF ? EdgeState.ON : EdgeState.OFF;
+    switch (a.edgeType) {
+      case EdgeType.Vertical:
+        this.setVEdge(a.row, a.column, otherState);
+        break;
+      case EdgeType.Horizontal:
+        this.setHEdge(a.row, a.column, otherState);
+        break;
     }
   }
 
   public copy(): Loopy {
     return new Loopy(this.hints);
+  }
+
+  public isReadyForValidation(): boolean {
+    for (let i = 0; i < this.n; ++i) {
+      for (let j = 0; j < this.n + 1; ++j) {
+        if (this.hEdges[j][i] == EdgeState.UNKNOWN) {
+          return false;
+        }
+        if (this.vEdges[i][j] == EdgeState.UNKNOWN) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   public static fromString(s: string): Loopy {

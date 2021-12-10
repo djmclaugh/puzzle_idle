@@ -1,13 +1,9 @@
 import Vue from '../vue.js'
-import Towers, {GuessInfo} from '../puzzles/towers/towers.js'
+import Puzzle from '../puzzles/puzzle.js'
 import { currentStatus } from '../data/status.js'
 
 function eventToHandler(event: string): string {
   return 'on' + event[0].toUpperCase() + event.substr(1);
-}
-
-function guessToString(g: GuessInfo) {
-  return `${g.guess.val + 1} at (${g.guess.col + 1}, ${g.guess.row + 1})`;
 }
 
 export enum InterfaceEvents {
@@ -32,15 +28,14 @@ export const InterfaceHandlers = {
 
 interface InterfaceStatusComponentProps {
   interfaceId: number,
-  guesses: GuessInfo[],
   isValidating: boolean,
   isDone: boolean,
   isCorrect: boolean,
-  puzzle: Towers,
+  puzzle: Puzzle<any>,
 }
 
 export default {
-  props: ['interfaceId', 'guesses', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
+  props: ['interfaceId', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
   setup(props: InterfaceStatusComponentProps, {attrs, slots, emit}: any): any {
     function size(): number {
       return currentStatus.interfacesCurrentSize[props.interfaceId];
@@ -71,19 +66,19 @@ export default {
 
       const abandonGuessButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.ABANDON_GUESS); },
-        disabled: props.guesses === undefined || props.guesses.length == 0,
+        disabled: props.puzzle.guesses === undefined || props.puzzle.guesses.length == 0,
       }, 'Abandon Guess');
       items.push(abandonGuessButton);
 
       const markGuessAsImpossibleButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.MARK_GUESS_AS_IMPOSSIBLE); },
-        disabled: props.guesses === undefined || props.guesses.length == 0,
+        disabled: props.puzzle.guesses === undefined || props.puzzle.guesses.length == 0,
       }, 'Remove Guess');
       items.push(markGuessAsImpossibleButton);
 
       const checkButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.START_VALIDATE); },
-        disabled: !(props.puzzle instanceof Towers) || props.isValidating || !props.puzzle.isReadyForValidation,
+        disabled: !(props.puzzle instanceof Puzzle) || props.isValidating || !props.puzzle.isReadyForValidation(),
       }, 'Validate');
       items.push(checkButton);
 
@@ -95,9 +90,10 @@ export default {
         items.push(stopButton);
       }
 
-      if (props.guesses !== undefined && props.guesses.length > 0) {
+      if (props.puzzle.guesses !== undefined && props.puzzle.guesses.length > 0) {
         items.push(Vue.h('br'));
-        items.push(Vue.h('p', 'Guesses: ' + props.guesses.map(g => guessToString(g)).join(", ")))
+        const guessStrings = props.puzzle.guesses.map(g => props.puzzle.history[g].toString());
+        items.push(Vue.h('p', 'Guesses: ' + guessStrings.join(", ")));
       }
 
       return Vue.h('div', {}, items);

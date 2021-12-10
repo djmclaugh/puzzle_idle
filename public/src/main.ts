@@ -34,7 +34,7 @@ const App = {
       items.push(Vue.h('br'));
 
       for (let i = 0; i < currentStatus.interfaces.length; ++i) {
-        items.push(Vue.h(LoopyInterface, {
+        items.push(Vue.h(TowersInterface, {
           key: i,
           interfaceId: i,
           isCurrent: i == data.currentInterface,
