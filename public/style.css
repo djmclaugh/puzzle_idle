@@ -28,6 +28,10 @@ canvas {
   z-index: 1;
 }
 
+.loopy-dot-contradiction {
+  background-color: #d00000;
+}
+
 .loopy-hint {
   height: 100%;
   width: 100%;
@@ -36,6 +40,10 @@ canvas {
   align-items: center;
   justify-content: center;
   z-index: -1;
+}
+
+.loopy-hint-contradiction {
+  background-color: #ffb0b0;
 }
 
 .loopy-edge-container {
@@ -71,35 +79,30 @@ canvas {
 }
 
 .loopy-h-edge-unknown {
-  background: repeating-linear-gradient(90deg, #aaaaaa 0, #aaaaaa 10px, transparent 10px, transparent 18px)
+  background: repeating-linear-gradient(90deg, #aaaaaa 0, #aaaaaa 10px, transparent 10px, transparent 18px);
 }
 
 .loopy-v-edge-unknown {
-  background: repeating-linear-gradient(180deg, #aaaaaa 0, #aaaaaa 10px, transparent 10px, transparent 18px)
+  background: repeating-linear-gradient(180deg, #aaaaaa 0, #aaaaaa 10px, transparent 10px, transparent 18px);
+}
+
+.loopy-h-edge-contradiction {
+  background: repeating-linear-gradient(90deg, #ff6060 0, #ff6060 10px, #ff9090 10px, #ff9090 18px);
 }
 
 .loopy-edge-container:hover .loopy-h-edge-unknown {
-  background: repeating-linear-gradient(90deg, #555555 0, #555555 10px, transparent 10px, transparent 18px)
+  background: repeating-linear-gradient(90deg, #555555 0, #555555 10px, transparent 10px, transparent 18px);
 }
 
 .loopy-edge-container:hover .loopy-v-edge-unknown {
-  background: repeating-linear-gradient(180deg, #555555 0, #555555 10px, transparent 10px, transparent 18px)
+  background: repeating-linear-gradient(180deg, #555555 0, #555555 10px, transparent 10px, transparent 18px);
 }
 
 .loopy-edge-on {
   background: #000000
 }
-
-.loopy-edge-container:hover .loopy-edge-on {
-  background: #666666
-}
-
 .loopy-edge-off {
   background: transparent
-}
-
-.loopy-edge-container:hover .loopy-edge-off {
-  background: #cccccc
 }
 
 .towers-grid {

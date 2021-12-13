@@ -55,6 +55,11 @@ export default {
       puzzleUUID += 1;
 
       data.currentPuzzle.onAction((a: Action) => {
+        if (data.currentPuzzle.hasContradiction()) {
+          // Then no need to make further inferences
+          stopAllProcesses();
+          return;
+        }
         const nodes = Node.fromEdge(a.edgeType, a.row, a.column);
         const p1 = new EdgeNumberProcess(data.currentPuzzle, nodes[0], props.interfaceId);
         if (currentStatus.cpu.addProcess(p1, 9, onProcessOver(p1))) {
@@ -64,7 +69,7 @@ export default {
         if (currentStatus.cpu.addProcess(p2, 9, onProcessOver(p2))) {
           data.activeProcesses.add(p2);
         }
-      })
+      });
     }
 
     Vue.onMounted(async () => {

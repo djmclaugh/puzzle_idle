@@ -55,10 +55,23 @@ export class Action {
   }
 }
 
+export enum ContradictionType {
+  NODE,
+  CELL,
+}
+
+export type Contradiction = {
+  type: ContradictionType,
+  row: number,
+  column: number,
+  noticedOnMove: number,
+}
+
 export default class Loopy extends Puzzle<Action> {
   private hints: Hint[][];
   private vEdges: EdgeState[][];
   private hEdges: EdgeState[][];
+  public contradiction: Contradiction|null = null;
 
   constructor(hints: Hint[][]) {
     super();
@@ -106,12 +119,6 @@ export default class Loopy extends Puzzle<Action> {
     }
   }
 
-  public toggleEdge(edgeType: EdgeType, row: number, column: number, type: ActionType) {
-    const a: Action = new Action(edgeType, row, column, type);
-    this.applyAction(a);
-    this.addAction(a);
-  }
-
   public setEdgeON(edgeType: EdgeType, row: number, column: number) {
     const grid = edgeType == EdgeType.Horizontal ? this.hEdges : this.vEdges;
     if (grid[row][column].ON) {
@@ -132,6 +139,24 @@ export default class Loopy extends Puzzle<Action> {
     const a: Action = new Action(edgeType, row, column, ActionType.ToggleOFF);
     this.applyAction(a);
     this.addAction(a);
+  }
+
+  public noticeNodeContradiction(row: number, column: number) {
+    this.contradiction = {
+      type: ContradictionType.NODE,
+      row: row,
+      column: column,
+      noticedOnMove: this.history.length - 1,
+    }
+  }
+
+  public noticeCellContradiction(row: number, column: number) {
+    this.contradiction = {
+      type: ContradictionType.CELL,
+      row: row,
+      column: column,
+      noticedOnMove: this.history.length - 1,
+    }
   }
 
   // Returns [top, right, bottom, left]
@@ -166,6 +191,9 @@ export default class Loopy extends Puzzle<Action> {
       return;
     }
     this.applyAction(a);
+    if (this.contradiction !== null && this.contradiction.noticedOnMove >= this.history.length) {
+      this.contradiction = null;
+    }
     if (this.lastGuess !== undefined && this.history.length <= this.lastGuess) {
       this.guesses.pop();
     }
@@ -180,8 +208,12 @@ export default class Loopy extends Puzzle<Action> {
     const a = this.history[g];
     this.abandonGuess();
 
-    let otherType = a.type == ActionType.ToggleOFF ? ActionType.ToggleON : ActionType.ToggleOFF;
-    this.toggleEdge(a.edgeType, a.row, a.column, otherType);
+    if (a.type == ActionType.ToggleOFF) {
+      this.setEdgeON(a.edgeType, a.row, a.column);
+    } else {
+      this.setEdgeOFF(a.edgeType, a.row, a.column);
+    }
+
   }
 
   public copy(): Loopy {
@@ -203,12 +235,15 @@ export default class Loopy extends Puzzle<Action> {
   }
 
   public hasContradiction(): boolean {
+    if (this.contradiction !== null) {
+      return true;
+    }
     for (let i = 0; i < this.n; ++i) {
       for (let j = 0; j < this.n + 1; ++j) {
         if (this.hEdges[j][i].OFF && this.hEdges[j][i].ON) {
           return true;
         }
-        if (this.vEdges[j][i].OFF && this.vEdges[j][i].ON) {
+        if (this.vEdges[i][j].OFF && this.vEdges[i][j].ON) {
           return true;
         }
       }

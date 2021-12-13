@@ -287,7 +287,6 @@ export default {
           if (data.autoRevertOnContradiction) {
             data.currentPuzzle.markGuessAsImpossible();
           }
-          startRandomGuessProcessIfNeeded();
           return;
         }
         if (data.validating) {

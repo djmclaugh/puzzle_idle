@@ -1,5 +1,5 @@
 import Vue from '../../vue.js'
-import Loopy, {EdgeState, EdgeType, ActionType} from '../../puzzles/loopy/loopy.js'
+import Loopy, {EdgeState, EdgeType, ActionType, ContradictionType} from '../../puzzles/loopy/loopy.js'
 
 interface LoopyComponentProps {
   puzzle: Loopy,
@@ -26,8 +26,11 @@ export default {
       return Vue.h('div', {
         class: ['loopy-edge-container', 'loopy-h-edge-container'],
         onClick: (e: MouseEvent) => {
-          const type = e.ctrlKey ? ActionType.ToggleOFF : ActionType.ToggleON;
-          props.puzzle.toggleEdge(EdgeType.Horizontal, row, column, type);
+          if (e.ctrlKey) {
+            props.puzzle.setEdgeOFF(EdgeType.Horizontal, row, column);
+          } else {
+            props.puzzle.setEdgeON(EdgeType.Horizontal, row, column);
+          }
         },
       }, inner);
     }
@@ -48,8 +51,11 @@ export default {
       return Vue.h('div', {
         class: ['loopy-edge-container', 'loopy-v-edge-container'],
         onClick: (e: MouseEvent) => {
-          const type = e.ctrlKey ? ActionType.ToggleOFF : ActionType.ToggleON;
-          props.puzzle.toggleEdge(EdgeType.Vertical, row, column, type);
+          if (e.ctrlKey) {
+            props.puzzle.setEdgeOFF(EdgeType.Vertical, row, column);
+          } else {
+            props.puzzle.setEdgeON(EdgeType.Vertical, row, column);
+          }
         },
       }, inner);
     }
@@ -63,7 +69,14 @@ export default {
         // dots and edges row
         for (let j = 0; j < (2 * n) + 1; ++j) {
           if (j % 2 == 0) {
-            items.push(Vue.h('div', {class: ['loopy-dot']}));
+            const classes = ['loopy-dot'];
+            if (puzzle.contradiction &&
+                puzzle.contradiction.type == ContradictionType.NODE &&
+                puzzle.contradiction.row == i &&
+                puzzle.contradiction.column == j / 2) {
+              classes.push('loopy-dot-contradiction');
+            }
+            items.push(Vue.h('div', {class: classes}));
           } else {
             items.push(hEdge(i, (j - 1) / 2));
           }
@@ -77,7 +90,14 @@ export default {
             if (hint === undefined) {
               items.push(Vue.h('div'));
             } else {
-              items.push(Vue.h('div', {class: ['loopy-hint']}, hint.toString()));
+              const classes = ['loopy-hint'];
+              if (puzzle.contradiction &&
+                  puzzle.contradiction.type == ContradictionType.CELL &&
+                  puzzle.contradiction.row == i &&
+                  puzzle.contradiction.column == (j - 1) / 2) {
+                classes.push('loopy-hint-contradiction');
+              }
+              items.push(Vue.h('div', {class: classes}, hint.toString()));
             }
           }
         }
@@ -85,7 +105,14 @@ export default {
       // Bottom dots and edges row
       for (let j = 0; j < (2 * n) + 1; ++j) {
         if (j % 2 == 0) {
-          items.push(Vue.h('div', {class: ['loopy-dot']}));
+          const classes = ['loopy-dot'];
+          if (puzzle.contradiction &&
+              puzzle.contradiction.type == ContradictionType.NODE &&
+              puzzle.contradiction.row == n &&
+              puzzle.contradiction.column == j / 2) {
+            classes.push('loopy-dot-contradiction');
+          }
+          items.push(Vue.h('div', {class: classes}));
         } else {
           items.push(hEdge(n, (j - 1) / 2));
         }

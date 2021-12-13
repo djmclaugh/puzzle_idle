@@ -34,6 +34,10 @@ export default class EdgeNumberProcess extends Process<void> {
         this.edges.filter(e => e.OFF).length,
       ];
     } else {
+      if (this.edges.find(e => e.ON && e.OFF) !== undefined) {
+        // Already a contradiction, no need to make inferences.
+        return true;
+      }
       if (this.counts[0] == 2) {
         // If already two ON edges, the rest have to be off
         if (!this.edges[0].OFF && !this.edges[0].ON) {
@@ -48,7 +52,8 @@ export default class EdgeNumberProcess extends Process<void> {
         if (!this.edges[3].OFF && !this.edges[3].ON) {
           this.p.setEdgeOFF(EdgeType.Horizontal, this.node.row, this.node.column - 1);
         }
-      } else if (this.counts[0] == 1 && this.counts[1] == 2) {
+      }
+      if (this.counts[0] == 1 && this.counts[1] == 2) {
         // If there's one ON edge and two OFF edges, then we know the last edge
         // must be ON
         if (!this.edges[0].OFF && !this.edges[0].ON) {
@@ -63,7 +68,8 @@ export default class EdgeNumberProcess extends Process<void> {
         if (!this.edges[3].OFF && !this.edges[3].ON) {
           this.p.setEdgeON(EdgeType.Horizontal, this.node.row, this.node.column - 1);
         }
-      } else if (this.counts[0] == 0 && this.counts[1] == 3) {
+      }
+      if (this.counts[0] == 0 && this.counts[1] == 3) {
         // If there's no ON edges and three OFF edges, then we know the last
         // edge must be OFF
         if (!this.edges[0].OFF && !this.edges[0].ON) {
@@ -78,6 +84,14 @@ export default class EdgeNumberProcess extends Process<void> {
         if (!this.edges[3].OFF && !this.edges[3].ON) {
           this.p.setEdgeOFF(EdgeType.Horizontal, this.node.row, this.node.column - 1);
         }
+      }
+      if (this.counts[0] >= 3) {
+        // If there are more than two edges, then we have a contradiction.
+        this.p.noticeNodeContradiction(this.node.row, this.node.column);
+      }
+      if (this.counts[0] == 1 && this.counts[1] == 3) {
+        // If there is exactly one edge, then we have a contradiction.
+        this.p.noticeNodeContradiction(this.node.row, this.node.column);
       }
       return true;
     }
