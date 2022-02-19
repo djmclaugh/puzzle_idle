@@ -19,6 +19,12 @@ export enum EdgeType {
   Vertical,
 }
 
+export interface Edge {
+  row: number,
+  col: number,
+  edgeType: EdgeType,
+}
+
 function edgeTypeToString(e: EdgeType) {
   switch (e) {
     case EdgeType.Horizontal:
@@ -168,6 +174,7 @@ export default class Loopy extends Puzzle<Action> {
       column: column,
       noticedOnMove: this.history.length - 1,
     }
+    this.noticeContradiction();
   }
 
   public noticeCellContradiction(row: number, column: number) {
@@ -177,6 +184,7 @@ export default class Loopy extends Puzzle<Action> {
       column: column,
       noticedOnMove: this.history.length - 1,
     }
+    this.noticeContradiction();
   }
 
   /**

@@ -10,6 +10,7 @@ import { randomOfSize } from '../../puzzles/loopy/loopy_loader.js'
 import Process from '../../data/process.js'
 import CellEdgeNumberProcess from '../../data/processes/loopy/cell_edge_number_process.js'
 import NodeEdgeNumberProcess from '../../data/processes/loopy/node_edge_number_process.js'
+import RandomGuessProcess from '../../data/processes/loopy/random_guess_process.js'
 import ValidationProcess from '../../data/processes/loopy/validation_process.js'
 
 interface LoopyInterfaceComponentProps {
@@ -24,6 +25,9 @@ interface LoopyInterfaceComponentData {
   autoNodeCount: boolean,
   autoValidate: boolean,
   autoCashIn: boolean,
+  autoGuess: boolean,
+  autoRevertOnContradiction: boolean,
+  autoRevertOnFailedValidation: boolean,
   validationProcess: ValidationProcess|null,
 }
 
@@ -38,6 +42,9 @@ export default {
       autoCashIn: true,
       autoCellCount: true,
       autoNodeCount: true,
+      autoGuess: false,
+      autoRevertOnContradiction: false,
+      autoRevertOnFailedValidation: false,
       activeProcesses: new Set(),
       validationProcess: null,
     };
@@ -56,15 +63,26 @@ export default {
       }
     }
 
+    function startRandomGuessProcessIfNeeded() {
+      if (data.autoGuess && data.activeProcesses.size == 0 && !data.currentPuzzle.isReadyForValidation() && !data.currentPuzzle.hasContradiction()) {
+        const p = new RandomGuessProcess(data.currentPuzzle, props.interfaceId);
+        if (currentStatus.cpu.addProcess(p, 5, onProcessOver(p))) {
+          data.activeProcesses.add(p);
+        }
+      }
+    }
+
     function onProcessOver<R>(process: Process<R>) {
       return () => {
         data.activeProcesses.delete(process);
+        startRandomGuessProcessIfNeeded();
       }
     }
 
     function restart(): void {
       stopAllProcesses()
       data.currentPuzzle.restart();
+      startRandomGuessProcessIfNeeded();
     }
 
     async function assignNewPuzzle() {
@@ -72,10 +90,21 @@ export default {
       data.currentPuzzle = await randomOfSize(size());
       puzzleUUID += 1;
 
+      data.currentPuzzle.onContradiction(() => {
+        stopAllProcesses();
+        if (data.autoRevertOnContradiction) {
+          while (data.currentPuzzle.hasContradiction()) {
+            data.currentPuzzle.markGuessAsImpossible();
+          }
+          startRandomGuessProcessIfNeeded();
+        }
+      });
+
       data.currentPuzzle.onAction((a: Action) => {
         if (data.currentPuzzle.hasContradiction()) {
           // Then no need to make further inferences
-          stopAllProcesses();
+          // Stoppig the active processes and other tasks are handled by the
+          // onContradiciton listener.
           return;
         }
 
@@ -106,6 +135,8 @@ export default {
           }
         }
       });
+
+      startRandomGuessProcessIfNeeded();
     }
 
     async function cashIn() {
@@ -119,8 +150,12 @@ export default {
       data.activeProcesses.add(data.validationProcess);
       currentStatus.cpu.addProcess(data.validationProcess, 10, () => {
         data.activeProcesses.delete(data.validationProcess!);
-        if (data.validationProcess!.returnValue && data.autoCashIn) {
+        if (data.autoCashIn && data.validationProcess!.returnValue) {
           cashIn();
+        } else if (data.autoRevertOnFailedValidation && !data.validationProcess!.returnValue) {
+          stopValidate();
+          data.currentPuzzle.markGuessAsImpossible();
+          startRandomGuessProcessIfNeeded();
         }
       });
     }
@@ -176,6 +211,7 @@ export default {
         stopValidate();
         stopAllProcesses();
         data.currentPuzzle.markGuessAsImpossible();
+        startRandomGuessProcessIfNeeded();
       };
       const interfaceStatus = Vue.h(InterfaceStatusComponent, interfaceProps)
       items.push(interfaceStatus);
@@ -226,6 +262,40 @@ export default {
       });
       items.push(autoNode);
 
+      const autoGuess = Vue.h(LabeledCheckbox, {
+        value: data.autoGuess,
+        label: 'Auto Guess When Stuck',
+        boxId: 'auto_guess_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoGuess = t.checked;
+          startRandomGuessProcessIfNeeded();
+        }
+      });
+      items.push(autoGuess);
+
+      const autoRevertOnContradiction = Vue.h(LabeledCheckbox, {
+        value: data.autoRevertOnContradiction,
+        label: 'Auto Revert On Contradiciton',
+        boxId: 'auto_revert_on_contradiction_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoRevertOnContradiction = t.checked;
+        }
+      });
+      items.push(autoRevertOnContradiction);
+
+      const autoRevertOnFailedValidation = Vue.h(LabeledCheckbox, {
+        value: data.autoRevertOnFailedValidation,
+        label: 'Auto Revert On Failed Validation',
+        boxId: 'auto_revert_on_failed_validation_checkbox',
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.autoRevertOnFailedValidation = t.checked;
+        }
+      });
+      items.push(autoRevertOnFailedValidation);
+
       items.push(Vue.h('br'));
 
       const loopyProps: any = {
@@ -243,11 +313,11 @@ export default {
 
       if (data.validationProcess) {
         for (const log of data.validationProcess.logs) {
-          items.push(Vue.h('br'));
           for (const innerLog of log) {
             items.push(Vue.h('br'));
             items.push(innerLog);
           }
+          items.push(Vue.h('br'));
         }
       } else {
         // Nothing for now

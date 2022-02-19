@@ -1,7 +1,8 @@
 export default abstract class Puzzle<A> {
   public history: A[] = [];
   public guesses: number[] = [];
-  private callbacks: Set<(action: A) => void> = new Set();
+  private actionCallbacks: Set<(action: A) => void> = new Set();
+  private contradictionCallbacks: Set<() => void> = new Set();
 
   public get lastGuess(): number|undefined {
     if (this.guesses.length == 0) {
@@ -12,15 +13,23 @@ export default abstract class Puzzle<A> {
 
   protected addAction(a: A) {
     this.history.push(a);
-    this.callbacks.forEach((c) => { c(a); });
+    this.actionCallbacks.forEach((c) => { c(a); });
+  }
+
+  protected noticeContradiction() {
+    this.contradictionCallbacks.forEach((c) => { c(); });
   }
 
   public onAction(c: (action: A) => void) {
-    this.callbacks.add(c);
+    this.actionCallbacks.add(c);
+  }
+
+  public onContradiction(c: () => void) {
+    this.contradictionCallbacks.add(c);
   }
 
   public removeActionListener(c: (action: A) => void) {
-    this.callbacks.delete(c);
+    this.actionCallbacks.delete(c);
   }
 
   public abstract undo(): void;
