@@ -141,6 +141,26 @@ export default class Loopy extends Puzzle<Action> {
     this.addAction(a);
   }
 
+  public guessEdgeON(edgeType: EdgeType, row: number, column: number) {
+    const grid = edgeType == EdgeType.Horizontal ? this.hEdges : this.vEdges;
+    if (grid[row][column].ON) {
+      // Already ON, do nothing
+      return;
+    }
+    this.guesses.push(this.history.length);
+    this.setEdgeON(edgeType, row, column);
+  }
+
+  public guessEdgeOFF(edgeType: EdgeType, row: number, column: number) {
+    const grid = edgeType == EdgeType.Horizontal ? this.hEdges : this.vEdges;
+    if (grid[row][column].OFF) {
+      // Already OFF, do nothing
+      return;
+    }
+    this.guesses.push(this.history.length);
+    this.setEdgeOFF(edgeType, row, column);
+  }
+
   public noticeNodeContradiction(row: number, column: number) {
     this.contradiction = {
       type: ContradictionType.NODE,

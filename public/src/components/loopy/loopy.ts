@@ -29,10 +29,18 @@ export default {
           if (state.OFF || state.ON) {
             return;
           }
-          if (e.ctrlKey) {
-            props.puzzle.setEdgeOFF(EdgeType.Horizontal, row, column);
+          if (e.shiftKey) {
+            if (e.ctrlKey) {
+              props.puzzle.guessEdgeOFF(EdgeType.Horizontal, row, column);
+            } else {
+              props.puzzle.guessEdgeON(EdgeType.Horizontal, row, column);
+            }
           } else {
-            props.puzzle.setEdgeON(EdgeType.Horizontal, row, column);
+            if (e.ctrlKey) {
+              props.puzzle.setEdgeOFF(EdgeType.Horizontal, row, column);
+            } else {
+              props.puzzle.setEdgeON(EdgeType.Horizontal, row, column);
+            }
           }
         },
       }, inner);
@@ -57,10 +65,18 @@ export default {
           if (state.OFF || state.ON) {
             return;
           }
-          if (e.ctrlKey) {
-            props.puzzle.setEdgeOFF(EdgeType.Vertical, row, column);
+          if (e.shiftKey) {
+            if (e.ctrlKey) {
+              props.puzzle.guessEdgeOFF(EdgeType.Vertical, row, column);
+            } else {
+              props.puzzle.guessEdgeON(EdgeType.Vertical, row, column);
+            }
           } else {
-            props.puzzle.setEdgeON(EdgeType.Vertical, row, column);
+            if (e.ctrlKey) {
+              props.puzzle.setEdgeOFF(EdgeType.Vertical, row, column);
+            } else {
+              props.puzzle.setEdgeON(EdgeType.Vertical, row, column);
+            }
           }
         },
       }, inner);

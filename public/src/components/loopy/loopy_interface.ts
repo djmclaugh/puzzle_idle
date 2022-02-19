@@ -146,7 +146,7 @@ export default {
 
       const interfaceProps: any = {
         interfaceId: props.interfaceId,
-        guesses: [],
+        guesses: data.currentPuzzle.guesses,
         isValidating: data.validationProcess !== null,
         isDone: data.validationProcess !== null && data.validationProcess.isDone,
         isCorrect: data.validationProcess !== null && data.validationProcess.returnValue,
