@@ -34,8 +34,8 @@ export default {
   setup(props: LoopyInterfaceComponentProps): any {
     const initialData: LoopyInterfaceComponentData = {
       currentPuzzle: new Loopy([]),
-      autoValidate: false,
-      autoCashIn: false,
+      autoValidate: true,
+      autoCashIn: true,
       autoCellCount: true,
       autoNodeCount: true,
       activeProcesses: new Set(),
@@ -79,6 +79,11 @@ export default {
           return;
         }
 
+        if (data.autoValidate && data.currentPuzzle.isReadyForValidation()) {
+          startValidate();
+          return;
+        }
+
         if (data.autoNodeCount) {
           const nodes = Node.fromEdge(a.edgeType, a.row, a.column);
           const p1 = new NodeEdgeNumberProcess(data.currentPuzzle, nodes[0], props.interfaceId);
@@ -110,7 +115,6 @@ export default {
 
     function startValidate(): void {
       stopAllProcesses();
-      console.log("start validate");
       data.validationProcess = new ValidationProcess(data.currentPuzzle, props.interfaceId);
       data.activeProcesses.add(data.validationProcess);
       currentStatus.cpu.addProcess(data.validationProcess, 10, () => {

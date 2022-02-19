@@ -27,7 +27,7 @@ export default class RAM {
       this.used -= amount;
       this.allocation.delete(name);
     } else {
-      throw new Error("Process with this ID has no memeory allocated: " + name);
+      // throw new Error("Process with this ID has no memeory allocated: " + name);
     }
   }
 }
