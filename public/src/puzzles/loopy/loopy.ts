@@ -159,7 +159,9 @@ export default class Loopy extends Puzzle<Action> {
     }
   }
 
-  // Returns [top, right, bottom, left]
+  /**
+   * Returns [top, right, bottom, left]
+   */
   public getEdgesForCell(row: number, column: number): EdgeState[] {
     return [
       this.hEdges[row][column],
@@ -167,6 +169,29 @@ export default class Loopy extends Puzzle<Action> {
       this.hEdges[row + 1][column],
       this.vEdges[row][column],
     ];
+  }
+
+  public getCellsForEdge(type: EdgeType, row: number, column: number): {row: number, column: number}[] {
+    const result: {row: number, column: number}[] = [];
+    switch (type) {
+      case EdgeType.Horizontal:
+        if (row > 0) {
+          result.push({row: row - 1, column: column});
+        }
+        if (row < this.n) {
+          result.push({row: row, column: column});
+        }
+        break;
+      case EdgeType.Vertical:
+        if (column > 0) {
+          result.push({row: row, column: column - 1});
+        }
+        if (column < this.n) {
+          result.push({row: row, column: column});
+        }
+        break;
+    }
+    return result;
   }
 
   /**

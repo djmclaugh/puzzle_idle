@@ -6,7 +6,8 @@ import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.j
 import { currentStatus } from '../../data/status.js'
 import { randomOfSize } from '../../puzzles/loopy/loopy_loader.js'
 import Process from '../../data/process.js'
-import EdgeNumberProcess from '../../data/processes/loopy/edge_number_process.js'
+import CellEdgeNumberProcess from '../../data/processes/loopy/cell_edge_number_process.js'
+import NodeEdgeNumberProcess from '../../data/processes/loopy/node_edge_number_process.js'
 
 interface LoopyInterfaceComponentProps {
   interfaceId: number,
@@ -29,8 +30,7 @@ export default {
     });
 
     function size(): number {
-      return 5;
-      // return currentStatus.interfacesCurrentSize[props.interfaceId];
+      return currentStatus.interfacesCurrentSize[props.interfaceId];
     }
 
     function stopAllProcesses() {
@@ -61,13 +61,21 @@ export default {
           return;
         }
         const nodes = Node.fromEdge(a.edgeType, a.row, a.column);
-        const p1 = new EdgeNumberProcess(data.currentPuzzle, nodes[0], props.interfaceId);
+        const p1 = new NodeEdgeNumberProcess(data.currentPuzzle, nodes[0], props.interfaceId);
         if (currentStatus.cpu.addProcess(p1, 9, onProcessOver(p1))) {
           data.activeProcesses.add(p1);
         }
-        const p2 = new EdgeNumberProcess(data.currentPuzzle, nodes[1], props.interfaceId);
+        const p2 = new NodeEdgeNumberProcess(data.currentPuzzle, nodes[1], props.interfaceId);
         if (currentStatus.cpu.addProcess(p2, 9, onProcessOver(p2))) {
           data.activeProcesses.add(p2);
+        }
+
+        const cells = data.currentPuzzle.getCellsForEdge(a.edgeType, a.row, a.column);
+        for (const cell of cells) {
+          const p = new CellEdgeNumberProcess(data.currentPuzzle, cell.row, cell.column, props.interfaceId);
+          if (currentStatus.cpu.addProcess(p, 9, onProcessOver(p))) {
+            data.activeProcesses.add(p);
+          }
         }
       });
     }

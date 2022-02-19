@@ -2,7 +2,7 @@ import Process from '../../process.js'
 import Loopy, { EdgeState, EdgeType } from '../../../puzzles/loopy/loopy.js'
 import Node from '../../../puzzles/loopy/node.js'
 
-export default class EdgeNumberProcess extends Process<void> {
+export default class NodeEdgeNumberProcess extends Process<void> {
   public readonly processId: string;
   /**
    * Need to keep track of current column.
@@ -17,27 +17,23 @@ export default class EdgeNumberProcess extends Process<void> {
   public edges: EdgeState[];
   public counts: [number, number]|undefined;
 
-  /**
-   * Checks if the provided row only has one cell that can be the provided value.
-   * If so, set that cell to that value.
-   */
   public constructor(private p: Loopy, private node: Node, interfaceId: number) {
     super();
     this.edges = p.getEdgesForNode(node.row, node.column);
-    this.processId = "edge_number_" + node.row + "_" + node.column +"_" + interfaceId;
+    this.processId = "node_edge_number_" + node.row + "_" + node.column +"_" + interfaceId;
   }
 
   public tick(): boolean {
+    if (this.edges.find(e => e.ON && e.OFF) !== undefined) {
+      // Already a contradiction, no need to make inferences.
+      return true;
+    }
     if (this.counts === undefined) {
       this.counts = [
         this.edges.filter(e => e.ON).length,
         this.edges.filter(e => e.OFF).length,
       ];
     } else {
-      if (this.edges.find(e => e.ON && e.OFF) !== undefined) {
-        // Already a contradiction, no need to make inferences.
-        return true;
-      }
       if (this.counts[0] == 2) {
         // If already two ON edges, the rest have to be off
         if (!this.edges[0].OFF && !this.edges[0].ON) {

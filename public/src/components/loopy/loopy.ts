@@ -26,6 +26,9 @@ export default {
       return Vue.h('div', {
         class: ['loopy-edge-container', 'loopy-h-edge-container'],
         onClick: (e: MouseEvent) => {
+          if (state.OFF || state.ON) {
+            return;
+          }
           if (e.ctrlKey) {
             props.puzzle.setEdgeOFF(EdgeType.Horizontal, row, column);
           } else {
@@ -51,6 +54,9 @@ export default {
       return Vue.h('div', {
         class: ['loopy-edge-container', 'loopy-v-edge-container'],
         onClick: (e: MouseEvent) => {
+          if (state.OFF || state.ON) {
+            return;
+          }
           if (e.ctrlKey) {
             props.puzzle.setEdgeOFF(EdgeType.Vertical, row, column);
           } else {

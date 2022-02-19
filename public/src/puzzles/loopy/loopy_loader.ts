@@ -30,6 +30,11 @@ async function loadLoopy(size: number): Promise<void> {
   // The text file ends with the delimiter, so remove the empty string at the
   // end of the array
   puzzles.pop();
+  // Remove difficulty rating for now
+  puzzles = puzzles.map(p => {
+    const index = p.indexOf("\n");
+    return p.substring(index + 1, p.length);
+  })
 
   LOADED_LOOPY.set(size, puzzles.map(p => {
     let t = Loopy.fromString(p);

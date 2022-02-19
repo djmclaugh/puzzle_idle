@@ -15,11 +15,61 @@ canvas {
   user-select: none;
 }
 
+.loopy-grid-2 {
+  width: 156px;
+  height: 156px;
+  grid-template-columns: 12px 60px 12px 60px 12px;
+  grid-template-rows: 12px 60px 12px 60px 12px;
+}
+
+.loopy-grid-3 {
+  width: 228px;
+  height: 228px;
+  grid-template-columns: 12px 60px 12px 60px 12px 60px 12px;
+  grid-template-rows: 12px 60px 12px 60px 12px 60px 12px;
+}
+
+.loopy-grid-4 {
+  width: 300px;
+  height: 300px;
+  grid-template-columns: 12px 60px 12px 60px 12px 60px 12px 60px 12px;
+  grid-template-rows: 12px 60px 12px 60px 12px 60px 12px 60px 12px;
+}
+
 .loopy-grid-5 {
   width: 372px;
   height: 372px;
-  grid-template-columns: 12px 60fr 12px 60fr 12px 60fr 12px 60fr 12px 60fr 12px;
-  grid-template-rows: 12px 60fr 12px 60fr 12px 60fr 12px 60fr 12px 60fr 12px;
+  grid-template-columns: 12px 60px 12px 60px 12px 60px 12px 60px 12px 60px 12px;
+  grid-template-rows: 12px 60px 12px 60px 12px 60px 12px 60px 12px 60px 12px;
+}
+
+.loopy-grid-6 {
+  width: 370px;
+  height: 370px;
+  grid-template-columns: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+  grid-template-rows: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+}
+
+.loopy-grid-7 {
+  width: 430px;
+  height: 430px;
+  grid-template-columns: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+  grid-template-rows: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+}
+
+.loopy-grid-8 {
+  width: 490px;
+  height: 490px;
+  grid-template-columns: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+  grid-template-rows: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+}
+
+
+.loopy-grid-9 {
+  width: 550px;
+  height: 550px;
+  grid-template-columns: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
+  grid-template-rows: 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px 50px 10px;
 }
 
 .loopy-dot {
