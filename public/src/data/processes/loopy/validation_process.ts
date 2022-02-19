@@ -23,6 +23,12 @@ export default class ValidationProcess extends Process<boolean> {
   public currentNode: Node|null = null;
   public nodesFound: Set<number> = new Set();
 
+  private hasStoped: boolean = false;
+
+  public get isDone(): boolean {
+    return this.hasStoped;
+  }
+
   public logs: string[][] = [];
 
   public beat: number = 0;
@@ -60,6 +66,7 @@ export default class ValidationProcess extends Process<boolean> {
               this.logs[0].push(`-- Cell touches exactly ${hint} edges ✔️`);
             } else {
               this.logs[0].push(`-- Cell touches ${numEdges} edges, not ${hint} ❌`);
+              this.hasStoped = true;
               return true;
             }
           }
@@ -105,7 +112,8 @@ export default class ValidationProcess extends Process<boolean> {
             if (numEdges == 2) {
               this.logs[1].push(`---- Yes! ✔️`);
             } else {
-              this.logs[1].push(`---- No, ${edges} edge(s) ❌`);
+              this.logs[1].push(`---- No, it touches ${numEdges} edge(s) ❌`);
+              this.hasStoped = true;
               return true;
             }
             if (this.previousNode == null) {
@@ -130,6 +138,8 @@ export default class ValidationProcess extends Process<boolean> {
             if (this.row > n) {
               // No nodes on path found...
               this.logs[1].push('------ No loop found ❌');
+              this.hasStoped = true;
+              return true;
             } else {
               this.logs[1].push(`---- Checking if node on row ${this.row}, column ${this.column} is on the loop...`);
             }
@@ -151,12 +161,14 @@ export default class ValidationProcess extends Process<boolean> {
             const newHash = this.currentNode.hash();
             if (this.nodesFound.has(newHash)) {
               this.logs[1].push(`-- Loop completed ✔️`);
+              this.step += 1;
               this.column = 0;
               this.row = 0;
               this.logs.push([])
               this.logs[2].push('Checking that there are no other edges...')
               this.logs[2].push(`-- Checking if node at row ${this.row} and colunm ${this.column} is either on the loop or without edges...`);
             } else {
+              this.logs[1].push(`-- Checking if node on row ${this.currentNode.row}, column ${this.currentNode.column} touches exactly two edges...`);
               this.nodesFound.add(newHash);
             }
           }
@@ -172,6 +184,7 @@ export default class ValidationProcess extends Process<boolean> {
             this.logs[2].push(`---- On loop ✔️`);
           } else {
             this.logs[2].push(`---- Found edge not on loop ❌`);
+            this.hasStoped = true;
             return true;
           }
         } else {
@@ -193,6 +206,7 @@ export default class ValidationProcess extends Process<boolean> {
       }
 
       case ValidationStep.DONE:
+        this.hasStoped = true;
         return true;
     }
     return false;
