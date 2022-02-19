@@ -5,12 +5,14 @@ import TowersInterface from './components/towers/towers_interface.js'
 import { currentStatus } from './data/status.js'
 
 interface AppData {
+  puzzleChoice: string,
   currentInterface: number,
 }
 
 const App = {
   setup(): any {
     const data: AppData = Vue.reactive({
+      puzzleChoice: "",
       currentInterface: 0,
     });
 
@@ -33,12 +35,32 @@ const App = {
       items.push(Vue.h('br'));
       items.push(Vue.h('br'));
 
-      for (let i = 0; i < currentStatus.interfaces.length; ++i) {
-        items.push(Vue.h(LoopyInterface, {
-          key: i,
-          interfaceId: i,
-          isCurrent: i == data.currentInterface,
-        }));
+      if (data.puzzleChoice == "") {
+        items.push(Vue.h("select", {
+          onChange: (e: InputEvent) => {
+            data.puzzleChoice = (e.target! as HTMLOptionElement).value;
+          }
+        }, [
+          Vue.h("option", {value: ""}, "Choose a puzzle type"),
+          Vue.h("option", {value: "loopy"}, "Loopy / Slitherlink"),
+          Vue.h("option", {value: "towers"}, "Towers / Skyscrapers"),
+        ]));
+      } else if (data.puzzleChoice == "loopy") {
+        for (let i = 0; i < currentStatus.interfaces.length; ++i) {
+          items.push(Vue.h(LoopyInterface, {
+            key: i,
+            interfaceId: i,
+            isCurrent: i == data.currentInterface,
+          }));
+        }
+      } else if (data.puzzleChoice == "towers") {
+        for (let i = 0; i < currentStatus.interfaces.length; ++i) {
+          items.push(Vue.h(TowersInterface, {
+            key: i,
+            interfaceId: i,
+            isCurrent: i == data.currentInterface,
+          }));
+        }
       }
 
       return Vue.h('div', {}, items);

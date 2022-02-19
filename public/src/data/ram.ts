@@ -1,6 +1,6 @@
 export default class RAM {
   public used: number = 0;
-  public max: number = 30;
+  public max: number = 3000;
 
   // Keeps track of what uses how much ram
   private allocation: Map<string, number> = new Map();

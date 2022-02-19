@@ -23,7 +23,7 @@ function interfaceRamRequirements(size: number) {
 export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
-  public money: number = 10000000;
+  public money: number = 0;
   public ram: RAM = globalRam
   public cpu: CPU = globalCpu;
 

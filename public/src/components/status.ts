@@ -7,15 +7,15 @@ export default {
       let items = [];
       items.push(Vue.h('p', {}, `Current money: $${currentStatus.money}`));
 
-      items.push(Vue.h('p', {}, [
-        `RAM: Using ${currentStatus.usedRam} of ${currentStatus.maxRam} Bytes `,
-        Vue.h('button', {
-          onClick: () => {
-            currentStatus.upgradeRam();
-          },
-          disabled: !currentStatus.canAffordRamUpgrade(),
-        }, `Upgrade ($${currentStatus.ramUpgradeCost})`)
-      ]));
+      // items.push(Vue.h('p', {}, [
+      //   `RAM: Using ${currentStatus.usedRam} of ${currentStatus.maxRam} Bytes `,
+      //   Vue.h('button', {
+      //     onClick: () => {
+      //       currentStatus.upgradeRam();
+      //     },
+      //     disabled: !currentStatus.canAffordRamUpgrade(),
+      //   }, `Upgrade ($${currentStatus.ramUpgradeCost})`)
+      // ]));
 
       items.push(Vue.h('p', {}, [
         `CPU Core Speed: ${currentStatus.cpuSpeed} Hz `,

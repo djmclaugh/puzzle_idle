@@ -38,10 +38,10 @@ export default {
   setup(props: LoopyInterfaceComponentProps): any {
     const initialData: LoopyInterfaceComponentData = {
       currentPuzzle: new Loopy([]),
-      autoValidate: true,
-      autoCashIn: true,
-      autoCellCount: true,
-      autoNodeCount: true,
+      autoValidate: false,
+      autoCashIn: false,
+      autoCellCount: false,
+      autoNodeCount: false,
       autoGuess: false,
       autoRevertOnContradiction: false,
       autoRevertOnFailedValidation: false,
