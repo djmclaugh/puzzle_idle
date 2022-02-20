@@ -255,7 +255,7 @@ export default class Loopy extends Puzzle<Action> {
   public markGuessAsImpossible(): void {
     const g = this.lastGuess;
     if (g === undefined) {
-      return;
+      throw new Error("Cannot abandon non-existant guess");
     }
 
     const a = this.history[g];

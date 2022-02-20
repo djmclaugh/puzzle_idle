@@ -93,7 +93,7 @@ export default {
       data.currentPuzzle.onContradiction(() => {
         stopAllProcesses();
         if (data.autoRevertOnContradiction) {
-          while (data.currentPuzzle.hasContradiction()) {
+          while (data.currentPuzzle.hasContradiction() && data.currentPuzzle.guesses.length > 0) {
             data.currentPuzzle.markGuessAsImpossible();
           }
           startRandomGuessProcessIfNeeded();
@@ -154,7 +154,11 @@ export default {
           cashIn();
         } else if (data.autoRevertOnFailedValidation && !data.validationProcess!.returnValue) {
           stopValidate();
-          data.currentPuzzle.markGuessAsImpossible();
+          if (data.currentPuzzle.guesses.length > 0) {
+            data.currentPuzzle.markGuessAsImpossible();
+          } else {
+            data.currentPuzzle.restart();
+          }
           startRandomGuessProcessIfNeeded();
         }
       });
@@ -276,7 +280,7 @@ export default {
 
       const autoRevertOnContradiction = Vue.h(LabeledCheckbox, {
         value: data.autoRevertOnContradiction,
-        label: 'Auto Revert On Contradiciton',
+        label: 'Auto Remove Guess On Contradiciton',
         boxId: 'auto_revert_on_contradiction_checkbox',
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;

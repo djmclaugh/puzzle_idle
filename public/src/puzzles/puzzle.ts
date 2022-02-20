@@ -43,7 +43,7 @@ export default abstract class Puzzle<A> {
   public abandonGuess(): void {
     const g = this.lastGuess;
     if (g === undefined) {
-      return;
+      throw new Error("Cannot abandon non-existant guess");
     }
     while (this.history.length > g) {
       this.undo();
