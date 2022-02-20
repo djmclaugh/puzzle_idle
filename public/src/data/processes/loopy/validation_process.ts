@@ -42,7 +42,12 @@ export default class ValidationProcess extends Process<boolean> {
     this.processId = "validation_" + interfaceId;
   }
 
+  // TODO: Figure out if validation is too tedious.
   public tick(): boolean {
+    return this.halfTick() || this.halfTick();
+  }
+
+  public halfTick(): boolean {
     const n = this.p.n;
     switch (this.step) {
       case ValidationStep.NEW:
