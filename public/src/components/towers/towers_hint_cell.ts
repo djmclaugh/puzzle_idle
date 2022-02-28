@@ -25,7 +25,7 @@ export default {
           'towers-hint-marked': props.marked && props.value != - 1,
         },
         style: {
-          opacity: data.hover ? 0.5 : 1,
+          // opacity: data.hover ? 0.5 : 1,
         },
         onMouseover: () => { data.hover = true; },
         onMouseout: () => { data.hover = false; },

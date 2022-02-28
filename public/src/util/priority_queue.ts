@@ -17,6 +17,14 @@ export default class PriorityQueue<T> {
   private items: Map<number, T[]> = new Map();
   private heap: number[] = [];
 
+  public toArray(): T[] {
+    let result: T[] = [];
+    for (const priority of Array.from(this.items.keys()).sort()) {
+      result = result.concat(this.items.get(priority)!);
+    }
+    return result;
+  }
+
   public isEmpty(): boolean {
     return this.heap.length == 0;
   }

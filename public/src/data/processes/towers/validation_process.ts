@@ -11,6 +11,7 @@ export enum ValidationStep {
 
 export default class ValidationProcess extends Process<boolean> {
   public readonly processId: string;
+  public readonly friendlyName: string;
   public readonly ramRequirement: number = 4;
 
   public step: ValidationStep = ValidationStep.NEW;
@@ -18,21 +19,46 @@ export default class ValidationProcess extends Process<boolean> {
   public index2: number = 0;
   public index3: number = 0;
   public seenSoFar: number[] = [];
+  public readonly size: number;
+
+  public foundContradiction:boolean = false;
 
   public logs: string[][] = [];
 
   public beat: number = 0;
   private grid: number[][];
 
+  private callbacks: (() => void)[] = [];
+
+  public onTick(callback: () => void) {
+    this.callbacks.push(callback);
+  }
+
+  private callCallbacks() {
+    for (const c of this.callbacks) {
+      c();
+    }
+  }
+
+  public get currentAction(): string {
+    return this.logs[this.logs.length - 1][0];
+  }
+
+  public get isDone(): boolean {
+    return this.step == ValidationStep.DONE || this.foundContradiction;
+  }
 
   public get returnValue(): boolean {
     return this.step == ValidationStep.DONE;
   }
 
-  public constructor(private t: Towers, interfaceId: number) {
+  public constructor(private t: Towers, public interfaceId: number) {
     super();
     this.processId = "validation_" + interfaceId;
+    this.friendlyName = `Validation`;
     this.grid = t.solvedGrid();
+    this.size = this.grid.length;
+    this.logs = [['Waiting for process to run...']]
   }
 
   public getBackgrounds(): {cell: [number, number], colour: string}[] {
@@ -88,7 +114,7 @@ export default class ValidationProcess extends Process<boolean> {
       if (rowIndex < n) {
         const [x, y] = getCoordinates(face, hintIndex, rowIndex, n);
         let colour = '#ffffc0f0';
-        if (this.beat == 1) {
+        if (this.beat == 0) {
           if (this.seenSoFar.indexOf(rowIndex) != -1) {
             colour = '#c0ffc0f0';
           } else {
@@ -129,6 +155,10 @@ export default class ValidationProcess extends Process<boolean> {
   }
 
   public tick(): boolean {
+    if (this.foundContradiction) {
+      this.callCallbacks();
+      return true;
+    }
     const grid = this.grid;
     const n = grid.length;
     switch (this.step) {
@@ -137,7 +167,7 @@ export default class ValidationProcess extends Process<boolean> {
         this.index1 = 0;
         this.index2 = 0;
         this.index3 = 1;
-        this.logs.push([]);
+        this.logs[0] = [];
         this.logs[0].push(`Checking that no row has duplicates...`);
         this.logs[0].push(`-- Is ${grid[0][0] + 1} different from ${grid[0][1] + 1}?`);
         break;
@@ -150,9 +180,8 @@ export default class ValidationProcess extends Process<boolean> {
           const isDistinctCell = a != b;
           const isSameValue = this.grid[row][a] == this.grid[row][b];
           if (isDistinctCell && isSameValue) {
-            this.beat = 1 - this.beat;
             this.logs[0].push('-- No ❌');
-            return true;
+            this.foundContradiction = true;
           } else {
             this.logs[0].push(`-- Yes ✔️`);
           }
@@ -192,9 +221,8 @@ export default class ValidationProcess extends Process<boolean> {
           const isDistinctCell = a != b;
           const isSameValue = this.grid[a][column] == this.grid[b][column];
           if (isDistinctCell && isSameValue) {
-            this.beat = 1 - this.beat;
             this.logs[1].push('-- No ❌');
-            return true;
+            this.foundContradiction = true;
           } else {
             this.logs[1].push(`-- Yes ✔️`);
           }
@@ -262,11 +290,10 @@ export default class ValidationProcess extends Process<boolean> {
           } else {
             // Check if count matches
             if (hints[hintIndex] != this.seenSoFar.length) {
-              this.beat = 1 - this.beat;
-              this.logs[2].push(`---- No`);
-              return true;
+              this.logs[2].push(`---- No ❌`);
+              this.foundContradiction = true;
             } else {
-              this.logs[2].push(`---- Yes`);
+              this.logs[2].push(`---- Yes ✔️`);
             }
           }
         } else {
@@ -290,6 +317,7 @@ export default class ValidationProcess extends Process<boolean> {
             if (this.index1 == HintFace.NORTH) {
               this.step += 1;
               this.logs.push(['Done!']);
+              this.callCallbacks();
               return true;
             } else {
               this.logs[2].push(`- Checking ${faceToString(this.index1)} face...`);
@@ -309,8 +337,10 @@ export default class ValidationProcess extends Process<boolean> {
         break;
       }
       case ValidationStep.DONE:
+        this.callCallbacks();
         return true;
     }
-    return false;
+    this.callCallbacks();
+    return this.foundContradiction;
   }
 }

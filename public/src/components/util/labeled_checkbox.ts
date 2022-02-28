@@ -11,7 +11,7 @@ export default {
 
   setup(props: LabeledCheckboxProps) {
     return () => {
-      return Vue.h('div', {}, [
+      return Vue.h('div', {class: 'labeled-checkbox'}, [
         Vue.h('input', {
           type: 'checkbox',
           id: props.boxId,

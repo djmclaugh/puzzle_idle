@@ -1,9 +1,6 @@
 import Vue from '../vue.js'
-import CPU from './cpu.js'
-import RAM from './ram.js'
-
-const globalRam = Vue.reactive(new RAM());
-const globalCpu = Vue.reactive(new CPU(globalRam));
+import { currentCPU } from './cpu.js'
+import { currentRAM } from './ram.js'
 
 function interfaceRamRequirements(size: number) {
   let total = 0;
@@ -24,62 +21,13 @@ export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
   public money: number = 0;
-  public ram: RAM = globalRam
-  public cpu: CPU = globalCpu;
 
   public constructor() {
-    this.ram.allocate("interface-0", interfaceRamRequirements(this.interfacesCurrentSize[0]));
-  }
-
-  public get usedRam() {
-    return this.ram.used;
-  }
-
-  public get maxRam() {
-    return this.ram.max;
-  }
-
-  public get cpuSpeed() {
-    return this.cpu.speed;
-  }
-
-  public get cpuCoresInUse() {
-    return this.cpu.coresInUse;
-  }
-
-  public get cpuCores() {
-    return this.cpu.cores;
-  }
-
-  public interfaceUpgradeCost(id: number): number {
-    return 3 * this.puzzleReward(this.interfaces[id]);
-  }
-
-  public canAffordInterfaceUpgrade(id: number): boolean {
-    return this.money >= this.interfaceUpgradeCost(id);
-  }
-
-  public upgradeInterface(id: number): void {
-    this.money -= this.interfaceUpgradeCost(id);
-    this.interfaces[id] += 1;
-    this.interfacesCurrentSize[id] += 1;
-  }
-
-  public get ramUpgradeCost(): number {
-    return Math.pow(this.maxRam, 2);
-  }
-
-  public canAffordRamUpgrade(): boolean {
-    return this.money >= this.ramUpgradeCost;
-  }
-
-  public upgradeRam(): void {
-    this.money -= this.ramUpgradeCost;
-    this.ram.max += 10;
+    currentRAM.allocate("interface-0", interfaceRamRequirements(this.interfacesCurrentSize[0]));
   }
 
   public get cpuSpeedUpgradeCost(): number {
-    return this.cpuSpeed;
+    return currentCPU.maxSpeed;
   }
 
   public canAffordCpuSpeedUpgrade(): boolean {
@@ -88,11 +36,14 @@ export class StatusData {
 
   public upgradeCpuSpeed(): void {
     this.money -= this.cpuSpeedUpgradeCost;
-    this.cpu.speed += 1;
+    currentCPU.maxSpeed += 1;
+    if (currentCPU.speed == currentCPU.maxSpeed - 1) {
+      currentCPU.speed = currentCPU.maxSpeed;
+    }
   }
 
   public get cpuCoresUpgradeCost(): number {
-    return Math.pow(100, this.cpuCores);
+    return Math.pow(100, currentCPU.cores);
   }
 
   public canAffordCpuCoresUpgrade(): boolean {
@@ -101,7 +52,7 @@ export class StatusData {
 
   public upgradeCpuCores(): void {
     this.money -= this.cpuCoresUpgradeCost;
-    this.cpu.cores += 1;
+    currentCPU.cores += 1;
   }
 
   public get numberOfInterfacesUpgradeCost(): number {

@@ -1,4 +1,4 @@
-import Puzzle from '../puzzle.js'
+import Puzzle, {Contradiction} from '../puzzle.js'
 import { Triple, TripleCollection } from './triple_collection.js'
 import ImplicationsTracker from './implications_tracker.js'
 
@@ -54,6 +54,39 @@ export type ImplicationAction = {
 export type Action = CellAction|HintAction|ImplicationAction;
 
 export type ActionCallback = (a: Action) => void;
+
+export enum ContradictionType {
+  ROW,
+  COLUMN,
+  VIEW,
+}
+
+export interface RowContradiction {
+  type: ContradictionType.ROW,
+  noticedOnMove: number,
+  row: number,
+  col1: number,
+  col2: number,
+}
+
+export interface ColumnContradiction {
+  type: ContradictionType.COLUMN,
+  noticedOnMove: number,
+  col: number,
+  row1: number,
+  row2: number,
+}
+
+export type TowersContradiction = RowContradiction|ColumnContradiction
+
+export function isRowContradiction(c: TowersContradiction): c is RowContradiction {
+  return c.type == ContradictionType.ROW;
+}
+export function isColumnContradiction(c: TowersContradiction): c is ColumnContradiction {
+  return c.type == ContradictionType.COLUMN;
+}
+
+
 
 export enum HintFace {
   WEST = 1,
@@ -114,6 +147,7 @@ export function next(face: HintFace): HintFace {
 
 export default class Towers extends Puzzle<Action> {
   public grid: number[][];
+  protected contradiction: TowersContradiction|null = null;
   private westHints: number[];
   private northHints: number[];
   private eastHints: number[];
@@ -127,6 +161,14 @@ export default class Towers extends Puzzle<Action> {
   public southHintMarked: boolean[];
 
   public implications;
+
+  public getContradiction(): TowersContradiction|null {
+    return this.contradiction;
+  }
+
+  public noticeContradiction(c: TowersContradiction) {
+    super.noticeContradiction(c);
+  }
 
   public getHints(face: HintFace) {
     switch(face) {
@@ -156,74 +198,68 @@ export default class Towers extends Puzzle<Action> {
 
   public marks: TripleCollection;
 
-  public undo(): void {
-    const lastAction = this.history.pop();
-    if (lastAction === undefined) {
-      return;
-    }
-    switch (lastAction.type) {
+  public undoAction(a: Action): void {
+    switch (a.type) {
       case ActionType.SET_POSSIBILITY:
-        for (let v of lastAction.previousPossibilities) {
+        for (let v of a.previousPossibilities) {
           this.marks.add({
-            row: lastAction.row,
-            col: lastAction.column,
+            row: a.row,
+            col: a.column,
             val: v,
           });
         }
         break;
       case ActionType.ADD_POSSIBILITY:
         this.marks.delete({
-          row: lastAction.row,
-          col: lastAction.column,
-          val: lastAction.value,
+          row: a.row,
+          col: a.column,
+          val: a.value,
         });
         break;
       case ActionType.REMOVE_POSSIBILITY:
         this.marks.add({
-          row: lastAction.row,
-          col: lastAction.column,
-          val: lastAction.value,
+          row: a.row,
+          col: a.column,
+          val: a.value,
         });
         break;
       case ActionType.ADD_HINT:
-        this.setHint(lastAction.face, lastAction.index, true);
+        this.setHint(a.face, a.index, true);
         break;
       case ActionType.REMOVE_HINT:
-        this.setHint(lastAction.face, lastAction.index, false);
+        this.setHint(a.face, a.index, false);
         break;
       case ActionType.ADD_IMPLICATION:
-        if (lastAction.antecedent[1] && lastAction.consequent[1]) {
-          this.implications.removeImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        if (a.antecedent[1] && a.consequent[1]) {
+          this.implications.removeImplication(a.antecedent[0], a.consequent[0]);
         }
-        if (!lastAction.antecedent[1] && !lastAction.consequent[1]) {
-          this.implications.removeImplication(lastAction.consequent[0], lastAction.antecedent[0]);
+        if (!a.antecedent[1] && !a.consequent[1]) {
+          this.implications.removeImplication(a.consequent[0], a.antecedent[0]);
         }
-        if (lastAction.antecedent[1] && !lastAction.consequent[1]) {
-          this.implications.removeOnToOffImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        if (a.antecedent[1] && !a.consequent[1]) {
+          this.implications.removeOnToOffImplication(a.antecedent[0], a.consequent[0]);
         }
-        if (!lastAction.antecedent[1] && lastAction.consequent[1]) {
-          this.implications.removeOffToOnImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        if (!a.antecedent[1] && a.consequent[1]) {
+          this.implications.removeOffToOnImplication(a.antecedent[0], a.consequent[0]);
         }
         break;
       case ActionType.REMOVE_IMPLICATION: {
-        if (lastAction.antecedent[1] && lastAction.consequent[1]) {
-          this.implications.addImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        if (a.antecedent[1] && a.consequent[1]) {
+          this.implications.addImplication(a.antecedent[0], a.consequent[0]);
         }
-        if (!lastAction.antecedent[1] && !lastAction.consequent[1]) {
-          this.implications.addImplication(lastAction.consequent[0], lastAction.antecedent[0]);
+        if (!a.antecedent[1] && !a.consequent[1]) {
+          this.implications.addImplication(a.consequent[0], a.antecedent[0]);
         }
-        if (lastAction.antecedent[1] && !lastAction.consequent[1]) {
-          this.implications.addOnToOffImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        if (a.antecedent[1] && !a.consequent[1]) {
+          this.implications.addOnToOffImplication(a.antecedent[0], a.consequent[0]);
         }
-        if (!lastAction.antecedent[1] && lastAction.consequent[1]) {
-          this.implications.addOffToOnImplication(lastAction.antecedent[0], lastAction.consequent[0]);
+        if (!a.antecedent[1] && a.consequent[1]) {
+          this.implications.addOffToOnImplication(a.antecedent[0], a.consequent[0]);
         }
         break;
       }
     }
-    if (this.lastGuess !== undefined && this.history.length <= this.lastGuess) {
-      this.guesses.pop();
-    }
+
   }
 
   public takeGuess(triple: Triple): void {
@@ -238,12 +274,10 @@ export default class Towers extends Puzzle<Action> {
       return;
     }
 
-    const a = this.history[g];
     this.abandonGuess();
 
-    if (a instanceof CellAction) {
-      console.log(a.toString());
-      this.removeFromCell(a.row, a.column, a.value);
+    if (g instanceof CellAction) {
+      this.removeFromCell(g.row, g.column, g.value);
     } else {
       throw Error("This should never happen");
     }
@@ -497,17 +531,6 @@ export default class Towers extends Puzzle<Action> {
       }
     }
     return true;
-  }
-
-  public get hasContradiction(): boolean {
-    for (let r = 0; r < this.n; ++r) {
-      for (let c = 0; c < this.n; ++c) {
-        if (this.marks.getWithRowCol(r, c).size == 0) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   public solvedGrid(): number[][] {

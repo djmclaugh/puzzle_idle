@@ -5,6 +5,9 @@ import Towers from '../../../puzzles/towers/towers.js'
 export default class FollowRemovalImplicationsProcess extends Process<void> {
   public readonly processId: string;
 
+  public readonly friendlyName: string;
+  public readonly interfaceId: number;
+
   public get ramRequirement(): number {
     return 2;
   }
@@ -14,9 +17,15 @@ export default class FollowRemovalImplicationsProcess extends Process<void> {
   private toRemove: Triple[] = [];
   private needsToCalculate: boolean = true;
 
+  public get currentAction(): string {
+    return "TODO..."
+  }
+
   public constructor(private puzzle: Towers, private triple: Triple, interfaceId: number) {
     super();
     this.processId = "followRemoveImplications_" + JSON.stringify(triple) + "_" + interfaceId;
+    this.friendlyName = "Follow Removal Implication";
+    this.interfaceId = interfaceId;
   }
 
   public tick(): boolean {

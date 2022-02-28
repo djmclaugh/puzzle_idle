@@ -4,6 +4,7 @@ import Towers from '../../../puzzles/towers/towers.js'
 
 export default class RandomGuessProcess extends Process<Triple> {
   public readonly processId: string;
+  public readonly friendlyName: string;
   /**
    *  3 bytes for current
    *  3 bytes for choice
@@ -20,6 +21,7 @@ export default class RandomGuessProcess extends Process<Triple> {
     col: 0,
     valIndex: 0,
   };
+  public choiceCountdown = -1;
   public encounters: Set<Triple> = new Set();
   public choice: Triple|undefined
 
@@ -27,24 +29,47 @@ export default class RandomGuessProcess extends Process<Triple> {
     return this.choice;
   }
 
+  public get currentAction(): string {
+    if (this.choiceCountdown == -1) {
+      return `Looking at possibilites in cell (${this.current.col + 1}, ${this.current.row + 1}).`;
+    } else {
+      return `Randomly choosing out of ${this.encounters.size} possibilities.`
+    }
+  }
+
   public beat: number = 0;
 
-  public constructor(private t: Towers, interfaceId: number) {
+  public constructor(private t: Towers, public interfaceId: number) {
     super();
     this.processId = "random_selection_" + interfaceId;
+    this.friendlyName = `Random Guess`;
   }
 
   public tick(): boolean {
+    if (this.choice) {
+      return true;
+    }
+    if (this.choiceCountdown != -1) {
+      this.choiceCountdown += 1;
+      if (this.choiceCountdown < this.encounters.size) {
+        return false;
+      } else {
+        const l = Array.from(this.encounters);
+        let index = Math.floor(Math.random() * l.length);
+        this.choice = l[index];
+        this.t.takeGuess(this.choice);
+        return true;
+      }
+    }
     const n = this.t.n;
     if (this.beat == 0) {
       const p: Set<number> = this.t.marksCell(this.current.row, this.current.col);
-      if (p.size > 1) {
-        p.forEach(val => {
-          this.encounters.add({
+      if (p.size > 1 && this.current.valIndex < p.size) {
+        const possibilites = Array.from(p).sort();
+        this.encounters.add({
             row: this.current.row,
             col: this.current.col,
-            val: val,
-          });
+            val: possibilites[this.current.valIndex],
         });
       } else {
         // Do nothing
@@ -62,20 +87,7 @@ export default class RandomGuessProcess extends Process<Triple> {
         this.current.row += 1;
       }
       if (this.current.row >= n) {
-        const l = Array.from(this.encounters);
-        let index = Math.floor(Math.random() * l.length);
-        // double check that this encounter is still available.
-        while (!this.t.marks.has(l[index])) {
-          l.splice(index, 1);
-          // If no choices remain, then the grid is full.
-          if (l.length == 0) {
-            return true;
-          }
-          index = Math.floor(Math.random() * l.length);
-        }
-        this.choice = l[index];
-        this.t.takeGuess(this.choice);
-        return true;
+        this.choiceCountdown = 0;
       }
     }
     this.beat = 1 - this.beat;

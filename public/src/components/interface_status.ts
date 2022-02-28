@@ -7,7 +7,6 @@ function eventToHandler(event: string): string {
 }
 
 export enum InterfaceEvents {
-  UPGRADE = "upgrade",
   RESTART = "restart",
   UNDO = "undo",
   START_VALIDATE = "start_validate",
@@ -17,7 +16,6 @@ export enum InterfaceEvents {
 }
 
 export const InterfaceHandlers = {
-  UPGRADE: eventToHandler(InterfaceEvents.UPGRADE),
   RESTART: eventToHandler(InterfaceEvents.RESTART),
   UNDO: eventToHandler(InterfaceEvents.UNDO),
   START_VALIDATE: eventToHandler(InterfaceEvents.START_VALIDATE),
@@ -27,54 +25,53 @@ export const InterfaceHandlers = {
 }
 
 interface InterfaceStatusComponentProps {
+  undoUnlocked: boolean,
+  guessUnlocked: boolean,
   interfaceId: number,
   isValidating: boolean,
   isDone: boolean,
   isCorrect: boolean,
+  size: number,
   puzzle: Puzzle<any>,
 }
 
 export default {
-  props: ['interfaceId', 'isValidating', 'isDone', 'isCorrect', 'puzzle'],
+  props: ['undoUnlocked', 'guessUnlocked', 'interfaceId', 'isValidating', 'isDone', 'isCorrect', 'size', 'puzzle'],
   setup(props: InterfaceStatusComponentProps, {attrs, slots, emit}: any): any {
-    function size(): number {
-      return currentStatus.interfacesCurrentSize[props.interfaceId];
-    }
 
     return () => {
+      if (!(props.puzzle instanceof Puzzle)) {
+        return Vue.h('div');
+      }
       let items = [];
-
-      const upgradeButton = Vue.h('button', {
-        onClick: async () => {
-          emit(InterfaceEvents.UPGRADE);
-        },
-        disabled: props.isValidating || !currentStatus.canAffordInterfaceUpgrade(props.interfaceId)
-      }, `Upgrade ($${currentStatus.interfaceUpgradeCost(props.interfaceId)})`);
-      items.push(upgradeButton);
 
       const restartButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.RESTART); },
-        disabled: props.isValidating,
+        disabled: props.isValidating || props.puzzle.history.length == 0,
       }, 'Restart');
       items.push(restartButton);
 
-      const undoButton = Vue.h('button', {
-        onClick: () => { emit(InterfaceEvents.UNDO); },
-        disabled: !props.puzzle.history || props.puzzle.history.length == 0 || props.isValidating,
-      }, 'Undo');
-      items.push(undoButton);
+      if (props.undoUnlocked) {
+        const undoButton = Vue.h('button', {
+          onClick: () => { emit(InterfaceEvents.UNDO); },
+          disabled: !props.puzzle.history || props.puzzle.history.length == 0 || props.isValidating,
+        }, 'Undo');
+        items.push(undoButton);
+      }
 
-      const abandonGuessButton = Vue.h('button', {
-        onClick: () => { emit(InterfaceEvents.ABANDON_GUESS); },
-        disabled: props.puzzle.guesses === undefined || props.puzzle.guesses.length == 0,
-      }, 'Abandon Guess');
-      items.push(abandonGuessButton);
+      if (props.guessUnlocked) {
+        const abandonGuessButton = Vue.h('button', {
+          onClick: () => { emit(InterfaceEvents.ABANDON_GUESS); },
+          disabled: props.puzzle.guesses === undefined || props.puzzle.guesses.length == 0,
+        }, 'Undo Last Guess');
+        items.push(abandonGuessButton);
 
-      const markGuessAsImpossibleButton = Vue.h('button', {
-        onClick: () => { emit(InterfaceEvents.MARK_GUESS_AS_IMPOSSIBLE); },
-        disabled: props.puzzle.guesses === undefined || props.puzzle.guesses.length == 0,
-      }, 'Remove Guess');
-      items.push(markGuessAsImpossibleButton);
+        const markGuessAsImpossibleButton = Vue.h('button', {
+          onClick: () => { emit(InterfaceEvents.MARK_GUESS_AS_IMPOSSIBLE); },
+          disabled: props.puzzle.guesses === undefined || props.puzzle.guesses.length == 0,
+        }, 'Mark Last Guess As Impossible');
+        items.push(markGuessAsImpossibleButton);
+      }
 
       const checkButton = Vue.h('button', {
         onClick: () => { emit(InterfaceEvents.START_VALIDATE); },
@@ -83,14 +80,14 @@ export default {
       items.push(checkButton);
 
       if (props.isValidating) {
-        let message = props.isDone ? (props.isCorrect ? `Cash In (+$${currentStatus.puzzleReward(size())})` : 'Return to edit mode') : 'Cancel';
+        let message = props.isDone ? (props.isCorrect ? `Cash In (+$${currentStatus.puzzleReward(props.size)})` : 'Return to edit mode') : 'Cancel';
         const stopButton = Vue.h('button', {
           onClick: () => { emit(InterfaceEvents.STOP_VALIDATE); },
         }, message);
         items.push(stopButton);
       }
 
-      if (props.puzzle.guesses !== undefined && props.puzzle.guesses.length > 0) {
+      if (props.guessUnlocked && props.puzzle.guesses !== undefined && props.puzzle.guesses.length > 0) {
         items.push(Vue.h('br'));
         const guessStrings = props.puzzle.guesses.map(g => props.puzzle.history[g].toString());
         items.push(Vue.h('p', 'Guesses: ' + guessStrings.join(", ")));

@@ -1,14 +1,28 @@
+export interface Contradiction {
+  noticedOnMove: number
+}
+
+// A: Object type of actions applied to the puzzle.
 export default abstract class Puzzle<A> {
   public history: A[] = [];
   public guesses: number[] = [];
+  protected contradiction: Contradiction|null = null;
   private actionCallbacks: Set<(action: A) => void> = new Set();
   private contradictionCallbacks: Set<() => void> = new Set();
 
-  public get lastGuess(): number|undefined {
+
+  public get lastGuessIndex(): number|undefined {
     if (this.guesses.length == 0) {
       return undefined;
     }
     return this.guesses[this.guesses.length - 1];
+  }
+
+  public get lastGuess(): A|undefined {
+    if (this.guesses.length == 0) {
+      return undefined;
+    }
+    return this.history[this.lastGuessIndex!];
   }
 
   protected addAction(a: A) {
@@ -16,7 +30,13 @@ export default abstract class Puzzle<A> {
     this.actionCallbacks.forEach((c) => { c(a); });
   }
 
-  protected noticeContradiction() {
+  public noticeContradiction(c: Contradiction) {
+    // Only have to keep track of the earliest contradiction.
+    if (this.contradiction === null) {
+      this.contradiction = c;
+      this.contradiction.noticedOnMove = this.history.length - 1;
+    }
+    // But trigger the callbacks regardless again just in case.
     this.contradictionCallbacks.forEach((c) => { c(); });
   }
 
@@ -32,7 +52,30 @@ export default abstract class Puzzle<A> {
     this.actionCallbacks.delete(c);
   }
 
-  public abstract undo(): void;
+  public abstract undoAction(a: A): void;
+
+  public undo(): void {
+    const lastAction = this.history.pop();
+    if (lastAction === undefined) {
+      throw new Error("Cannot undo non-existant action");
+    }
+    this.undoAction(lastAction);
+
+    if (this.lastGuessIndex !== undefined && this.history.length <= this.lastGuessIndex) {
+      this.guesses.pop();
+    }
+    if (this.contradiction !== null && this.contradiction.noticedOnMove >= this.history.length) {
+      this.contradiction = null;
+    }
+  }
+
+  public getContradiction(): Contradiction|null {
+    return this.contradiction;
+  }
+
+  public get hasContradiction(): boolean {
+    return this.contradiction !== null;
+  }
 
   public restart() {
     while (this.history.length > 0) {
@@ -41,11 +84,11 @@ export default abstract class Puzzle<A> {
   }
 
   public abandonGuess(): void {
-    const g = this.lastGuess;
-    if (g === undefined) {
+    if (this.guesses.length == 0) {
       throw new Error("Cannot abandon non-existant guess");
     }
-    while (this.history.length > g) {
+    const index = this.lastGuessIndex!;
+    while (this.history.length > index) {
       this.undo();
     }
   }

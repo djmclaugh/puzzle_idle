@@ -5,6 +5,9 @@ import Towers from '../../../puzzles/towers/towers.js'
 export default class FollowSetImplicationsProcess extends Process<void> {
   public readonly processId: string;
 
+  public readonly friendlyName: string;
+  public readonly interfaceId: number;
+
   public get ramRequirement(): number {
     return 2;
   }
@@ -16,9 +19,15 @@ export default class FollowSetImplicationsProcess extends Process<void> {
 
   public beat: number = 0;
 
+  public get currentAction(): string {
+    return "TODO..."
+  }
+
   public constructor(private puzzle: Towers, private triple: Triple, interfaceId: number) {
     super();
     this.processId = "followSetImplications_" + JSON.stringify(triple) + "_" + interfaceId;
+    this.friendlyName = "Follow Set Implication";
+    this.interfaceId = interfaceId;
   }
 
   public tick(): boolean {

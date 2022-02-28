@@ -174,7 +174,7 @@ export default class Loopy extends Puzzle<Action> {
       column: column,
       noticedOnMove: this.history.length - 1,
     }
-    this.noticeContradiction();
+    this.noticeContradiction(this.contradiction);
   }
 
   public noticeCellContradiction(row: number, column: number) {
@@ -184,7 +184,7 @@ export default class Loopy extends Puzzle<Action> {
       column: column,
       noticedOnMove: this.history.length - 1,
     }
-    this.noticeContradiction();
+    this.noticeContradiction(this.contradiction);
   }
 
   /**
@@ -238,22 +238,15 @@ export default class Loopy extends Puzzle<Action> {
     return this.hints[row][column];
   }
 
-  public undo(): void {
-    const a = this.history.pop();
+  public undoAction(a: Action): void {
     if (a === undefined) {
       return;
     }
     this.applyAction(a);
-    if (this.contradiction !== null && this.contradiction.noticedOnMove >= this.history.length) {
-      this.contradiction = null;
-    }
-    if (this.lastGuess !== undefined && this.history.length <= this.lastGuess) {
-      this.guesses.pop();
-    }
   }
 
   public markGuessAsImpossible(): void {
-    const g = this.lastGuess;
+    const g = this.lastGuessIndex;
     if (g === undefined) {
       throw new Error("Cannot abandon non-existant guess");
     }
@@ -285,23 +278,6 @@ export default class Loopy extends Puzzle<Action> {
       }
     }
     return true;
-  }
-
-  public hasContradiction(): boolean {
-    if (this.contradiction !== null) {
-      return true;
-    }
-    for (let i = 0; i < this.n; ++i) {
-      for (let j = 0; j < this.n + 1; ++j) {
-        if (this.hEdges[j][i].OFF && this.hEdges[j][i].ON) {
-          return true;
-        }
-        if (this.vEdges[i][j].OFF && this.vEdges[i][j].ON) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   public static fromString(s: string): Loopy {

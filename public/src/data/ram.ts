@@ -1,3 +1,5 @@
+import Vue from '../vue.js'
+
 export default class RAM {
   public used: number = 0;
   public max: number = 3000;
@@ -31,3 +33,5 @@ export default class RAM {
     }
   }
 }
+
+export const currentRAM: RAM = Vue.reactive(new RAM());

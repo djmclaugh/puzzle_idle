@@ -5,6 +5,8 @@ import { Triple } from '../../puzzles/towers/triple_collection.js'
 import Towers, { HintFace } from '../../puzzles/towers/towers.js'
 import { DoubleKeyMap } from '../../util/multi_key_map.js'
 
+import { towersUpgrades } from '../../data/towers/towers_upgrades.js'
+
 export interface Background {
   cell: [number, number],
   colour: string,
@@ -32,6 +34,40 @@ export default {
       implicationSource: null,
       implicationSourceNegated: false,
     })
+
+    function onSet(row: number, col: number, val: number) {
+      if (data.implicationSource === null) {
+        props.puzzle.setCell(row, col, val);
+      } else {
+        data.implicationSource = null;
+      }
+    }
+
+    function onRemove(row: number, col: number, val: number) {
+      if (!towersUpgrades.removePossibilityUnlocked) {
+        // If the player hasn't unlocked possibility removal yet, treat control
+        // clicks the same way as normal clicks.
+        onSet(row, col, val);
+        return;
+      }
+      props.puzzle.removeFromCell(row, col, val);
+      data.hoveredValue = null;
+    }
+
+    function onGuess(row: number, col: number, val: number) {
+      if (!towersUpgrades.guessUnlocked) {
+        // If the player hasn't unlocked guessing yet, treat control the same
+        // way as normal clicks.
+        onSet(row, col, val);
+        return;
+      }
+      props.puzzle.takeGuess({
+        row: row,
+        col: col,
+        val: val,
+      })
+      data.hoveredValue = null;
+    }
 
     return () => {
       const backgroundMaps: DoubleKeyMap<number, number, string> = new DoubleKeyMap();
@@ -68,7 +104,7 @@ export default {
           value: puzzle.getHints(HintFace.NORTH)[i],
           marked: puzzle.northHintMarked[i],
           onClick: () => {
-            puzzle.toggleHint(HintFace.NORTH, i);
+            // puzzle.toggleHint(HintFace.NORTH, i);
           },
         }));
       }
@@ -79,10 +115,13 @@ export default {
         const x = i % n;
         const y = Math.floor(i / n);
 
+        // const highlight = {
+        //   red: new Set(offImplications.get(y, x) || []),
+        //   yellow: new Set(),
+        //   green: new Set(onImplications.get(y, x) || []),
+        // }
         const highlight = {
-          red: new Set(offImplications.get(y, x) || []),
-          yellow: new Set(),
-          green: new Set(onImplications.get(y, x) || []),
+          red: new Set(), yellow: new Set(), green: new Set(),
         }
         if (data.hoveredValue !== null) {
           highlight.yellow.add(data.hoveredValue.val);
@@ -93,7 +132,7 @@ export default {
             value: puzzle.getHints(HintFace.WEST)[y],
             marked: puzzle.westHintMarked[y],
             onClick: () => {
-              puzzle.toggleHint(HintFace.WEST, y);
+              // puzzle.toggleHint(HintFace.WEST, y);
             },
           }));
         }
@@ -116,19 +155,9 @@ export default {
           range: canEdit ? n : -1,
           highlight: highlight,
           style: style,
-          onAdd: (value: number) => { puzzle.addToCell(y, x, value); },
-          onRemove: (value: number) => {
-            puzzle.removeFromCell(y, x, value);
-            data.hoveredValue = null;
-          },
-          onGuess: (value: number) => { puzzle.takeGuess({row: y, col: x, val: value}); },
-          onSet: (value: number) => {
-            if (data.implicationSource === null) {
-              puzzle.setCell(y, x, value);
-            } else {
-              data.implicationSource = null;
-            }
-          },
+          onRemove: (value: number) => { onRemove(y, x, value); },
+          onGuess: (value: number) => { onGuess(y, x, value); },
+          onSet: (value: number) => { onSet(y, x, value); },
           onImplication: ([value, negated]: [number, boolean]) => {
             if (data.implicationSource === null) {
               data.implicationSource = {
@@ -184,7 +213,7 @@ export default {
             value: puzzle.getHints(HintFace.EAST)[y],
             marked: puzzle.eastHintMarked[y],
             onClick: () => {
-              puzzle.toggleHint(HintFace.EAST, y);
+              // puzzle.toggleHint(HintFace.EAST, y);
             },
           }));
         }
@@ -197,7 +226,7 @@ export default {
           value: puzzle.getHints(HintFace.SOUTH)[i],
           marked: puzzle.southHintMarked[i],
           onClick: () => {
-            puzzle.toggleHint(HintFace.SOUTH, i);
+            // puzzle.toggleHint(HintFace.SOUTH, i);
           },
         }));
       }
