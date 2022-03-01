@@ -44,7 +44,7 @@ export default {
     }
 
     function onRemove(row: number, col: number, val: number) {
-      if (!towersUpgrades.removePossibilityUnlocked) {
+      if (!towersUpgrades.removePossibility.isUnlocked) {
         // If the player hasn't unlocked possibility removal yet, treat control
         // clicks the same way as normal clicks.
         onSet(row, col, val);
@@ -55,7 +55,7 @@ export default {
     }
 
     function onGuess(row: number, col: number, val: number) {
-      if (!towersUpgrades.guessUnlocked) {
+      if (!towersUpgrades.guess.isUnlocked) {
         // If the player hasn't unlocked guessing yet, treat control the same
         // way as normal clicks.
         onSet(row, col, val);
@@ -103,9 +103,9 @@ export default {
         items.push(Vue.h(TowersHintCellComponent, {
           value: puzzle.getHints(HintFace.NORTH)[i],
           marked: puzzle.northHintMarked[i],
-          clickable: towersUpgrades.markHintSatisfiedUnlocked,
+          clickable: towersUpgrades.markHintSatisfied.isUnlocked,
           onClick: () => {
-            if (towersUpgrades.markHintSatisfiedUnlocked) {
+            if (towersUpgrades.markHintSatisfied.isUnlocked) {
               puzzle.markHint(HintFace.NORTH, i);
             }
           },
@@ -134,9 +134,9 @@ export default {
           items.push(Vue.h(TowersHintCellComponent, {
             value: puzzle.getHints(HintFace.WEST)[y],
             marked: puzzle.westHintMarked[y],
-            clickable: towersUpgrades.markHintSatisfiedUnlocked,
+            clickable: towersUpgrades.markHintSatisfied.isUnlocked,
             onClick: () => {
-              if (towersUpgrades.markHintSatisfiedUnlocked) {
+              if (towersUpgrades.markHintSatisfied.isUnlocked) {
                 puzzle.markHint(HintFace.WEST, y);
               }
             },
@@ -218,9 +218,9 @@ export default {
           items.push(Vue.h(TowersHintCellComponent, {
             value: puzzle.getHints(HintFace.EAST)[y],
             marked: puzzle.eastHintMarked[y],
-            clickable: towersUpgrades.markHintSatisfiedUnlocked,
+            clickable: towersUpgrades.markHintSatisfied.isUnlocked,
             onClick: () => {
-              if (towersUpgrades.markHintSatisfiedUnlocked) {
+              if (towersUpgrades.markHintSatisfied.isUnlocked) {
                 puzzle.markHint(HintFace.EAST, y);
               }
             },
@@ -234,9 +234,9 @@ export default {
         items.push(Vue.h(TowersHintCellComponent, {
           value: puzzle.getHints(HintFace.SOUTH)[i],
           marked: puzzle.southHintMarked[i],
-          clickable: towersUpgrades.markHintSatisfiedUnlocked,
+          clickable: towersUpgrades.markHintSatisfied.isUnlocked,
           onClick: () => {
-            if (towersUpgrades.markHintSatisfiedUnlocked) {
+            if (towersUpgrades.markHintSatisfied.isUnlocked) {
               puzzle.markHint(HintFace.SOUTH, i);
             }
           },
