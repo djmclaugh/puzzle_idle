@@ -1,5 +1,7 @@
 import Vue from '../vue.js'
 
+import LabeledCheckbox from './util/labeled_checkbox.js'
+
 import ProcessComponent from './process.js'
 
 import { currentStatus } from '../data/status.js'
@@ -12,6 +14,7 @@ let processKey = 0;
 
 export default {
   setup() {
+    const showQueue = Vue.ref(true);
     return () => {
       let items = [];
 
@@ -53,21 +56,44 @@ export default {
       }
 
       const queue = currentCPU.queue.toArray();
+
+      const showQueueCheckbox = Vue.h(LabeledCheckbox, {
+        style: {
+          display: 'inline-block',
+          'margin-left': '0px',
+          'margin-right': '0px',
+        },
+        value: showQueue.value,
+        label: "Show processes waiting in queue",
+        boxId: "show_queue_checkbox",
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          showQueue.value = t.checked;
+        }
+      });
+
       empty_message = Vue.h('em', {}, 'No processes currently in queue');
       process_list = Vue.h('ul', {}, queue.map(p => Vue.h(ProcessComponent, {
         key: processKey++,
         process: p,
         showInterface: true,
       })));
-      items.push(Vue.h('p', {}, [
-        `Process Queue: `,
-        queue.length == 0 ? empty_message : process_list,
-      ]));
+      if (showQueue.value) {
+        items.push(Vue.h('p', {}, [
+          showQueueCheckbox,
+          ": ",
+          queue.length == 0 ? empty_message : process_list,
+        ]));
+      } else {
+        items.push(Vue.h('p', {}, [
+          showQueueCheckbox
+        ]));
+      }
 
       // TODO: Allow under/overclocking
 
       return Vue.h('details', {open: true}, [
-        Vue.h('summary', {}, "CPU"),
+        Vue.h('summary', {}, `CPU | ${currentCPU.speed} Hz | ${currentCPU.coresInUse} out of ${currentCPU.cores} cores active | ${queue.length} processes waiting in queue`),
         Vue.h('div', {}, items),
       ]);
     }

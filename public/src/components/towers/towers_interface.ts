@@ -9,9 +9,11 @@ import { currentCPU } from '../../data/cpu.js'
 import { randomOfSize } from '../../puzzles/towers/towers_loader.js'
 import Process from '../../data/process.js'
 import RandomGuessProcess from '../../data/processes/towers/random_guess_process.js'
+import OneViewProcess from '../../data/processes/towers/one_view_process.js'
+import MaxViewProcess from '../../data/processes/towers/max_view_process.js'
 import SimpleViewProcess from '../../data/processes/towers/simple_view_process.js'
-import OnlyChoiceInColumnProcess from '../../data/processes/towers/check_only_choice_in_column_process.js'
-import OnlyChoiceInRowProcess from '../../data/processes/towers/check_only_choice_in_row_process.js'
+import OnlyChoiceInColumnProcess from '../../data/processes/towers/only_choice_in_column_process.js'
+import OnlyChoiceInRowProcess from '../../data/processes/towers/only_choice_in_row_process.js'
 import RemoveFromColumnProcess from '../../data/processes/towers/remove_from_column_process.js'
 import RemoveFromRowProcess from '../../data/processes/towers/remove_from_row_process.js'
 import ValidationProcess from '../../data/processes/towers/validation_process.js'
@@ -27,7 +29,6 @@ interface InterfaceComponentProps {
 interface InterfaceComponentData {
   currentPuzzle: Towers,
   autoUniqueImplications: boolean,
-  autoSweep: boolean, // Need to find better name...,
   autoImply: boolean,
   autoFollowImply: boolean,
   backgrounds: {cell: [number, number], colour: string}[],
@@ -49,7 +50,6 @@ export default {
       autoUniqueImplications: false,
       autoImply: false,
       autoFollowImply: false,
-      autoSweep: false,
       activeProcesses: new Set(),
       backgrounds: [],
       validationProcess: null,
@@ -130,6 +130,19 @@ export default {
             const p = new SimpleViewProcess(data.currentPuzzle, face, props.interfaceId);
             startProcess(p, 9);
           }
+        } else {
+          if (options.maxViewOn) {
+            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+              const p = new MaxViewProcess(data.currentPuzzle, face, props.interfaceId);
+              startProcess(p, 9);
+            }
+          }
+          if (options.oneViewOn) {
+            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+              const p = new OneViewProcess(data.currentPuzzle, face, props.interfaceId);
+              startProcess(p, 9);
+            }
+          }
         }
         if (options.removeOnSetOn) {
           for (let row = 0; row < data.currentPuzzle.n; ++row) {
@@ -195,11 +208,11 @@ export default {
         const p = new FollowRemovalImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
         currentCPU.addProcess(p, 9, onProcessOver(p));
       }
-      if (data.autoSweep) {
+      if (options.onlyInRowColumnOn) {
         const colP = new OnlyChoiceInColumnProcess(data.currentPuzzle, col, val, props.interfaceId);
-        currentCPU.addProcess(colP, 9, onProcessOver(colP));
+        startProcess(colP, 9);
         const rowP = new OnlyChoiceInRowProcess(data.currentPuzzle, row, val, props.interfaceId);
-        currentCPU.addProcess(rowP, 9, onProcessOver(rowP));
+        startProcess(rowP, 9);
       }
       if (data.autoImply) {
         const rowCol = data.currentPuzzle.marks.getWithRowCol(row, col);
@@ -294,8 +307,8 @@ export default {
       items.push(Vue.h('br'));
 
       const interfaceProps: any = {
-        undoUnlocked: towersUpgrades.undoUnlocked,
-        guessUnlocked: towersUpgrades.guessUnlocked,
+        undoUnlocked: towersUpgrades.undo.isUnlocked,
+        guessUnlocked: towersUpgrades.guess.isUnlocked,
         interfaceId: props.interfaceId,
         guesses: data.currentPuzzle.guesses,
         isValidating: data.validationProcess !== null,

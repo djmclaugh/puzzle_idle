@@ -27,22 +27,22 @@ export default class CPU {
   public set speed(newSpeed: number) {
     this._speed = newSpeed;
     clearInterval(this.intervalID);
-    // If the speed is more than 60Hz, reduce the time interval and increase
-    // the number of ticks per time interval.
-    const ticksPerInterval = Math.ceil(this._speed / 60);
     let parity = false;
+    let timestamp = Date.now();
     this.intervalID = setInterval(() => {
-      if (parity) {
-        for (let i = 0; i < ticksPerInterval; ++i) {
+      let newTimestamp = Date.now();
+      let diff = newTimestamp - timestamp;
+      let ticks = Math.floor(diff * this._speed / 500);
+      timestamp += ticks * 500 / this._speed;
+      for (let i = 0; i < ticks; ++i) {
+        if (parity) {
           this.onTick();
-        }
-      } else {
-        for (let i = 0; i < ticksPerInterval; ++i) {
+        } else {
           this.onBoostTick();
         }
+        parity = !parity;
       }
-      parity = !parity;
-    }, ticksPerInterval * 500 / this._speed);
+    }, 100);
   }
 
   public constructor(private ram: RAM) {

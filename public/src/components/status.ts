@@ -5,9 +5,13 @@ export default {
   setup() {
     return () => {
       let items = [];
-      items.push(Vue.h('p', {}, `Current money: $${currentStatus.money}`));
+      items.push(Vue.h('p', {}, [
+        `Current money: $${currentStatus.money}`,
+        ' ',
+        Vue.h('button', {onClick: () => {currentStatus.money += 10;}}, 'Give me $10'),
+      ]));
 
-      
+
       //
       // items.push(Vue.h('p', {}, [
       //   `Number of Interfaces: ${currentStatus.interfaces.length} `,

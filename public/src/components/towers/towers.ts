@@ -103,8 +103,11 @@ export default {
         items.push(Vue.h(TowersHintCellComponent, {
           value: puzzle.getHints(HintFace.NORTH)[i],
           marked: puzzle.northHintMarked[i],
+          clickable: towersUpgrades.markHintSatisfiedUnlocked,
           onClick: () => {
-            // puzzle.toggleHint(HintFace.NORTH, i);
+            if (towersUpgrades.markHintSatisfiedUnlocked) {
+              puzzle.markHint(HintFace.NORTH, i);
+            }
           },
         }));
       }
@@ -131,8 +134,11 @@ export default {
           items.push(Vue.h(TowersHintCellComponent, {
             value: puzzle.getHints(HintFace.WEST)[y],
             marked: puzzle.westHintMarked[y],
+            clickable: towersUpgrades.markHintSatisfiedUnlocked,
             onClick: () => {
-              // puzzle.toggleHint(HintFace.WEST, y);
+              if (towersUpgrades.markHintSatisfiedUnlocked) {
+                puzzle.markHint(HintFace.WEST, y);
+              }
             },
           }));
         }
@@ -212,8 +218,11 @@ export default {
           items.push(Vue.h(TowersHintCellComponent, {
             value: puzzle.getHints(HintFace.EAST)[y],
             marked: puzzle.eastHintMarked[y],
+            clickable: towersUpgrades.markHintSatisfiedUnlocked,
             onClick: () => {
-              // puzzle.toggleHint(HintFace.EAST, y);
+              if (towersUpgrades.markHintSatisfiedUnlocked) {
+                puzzle.markHint(HintFace.EAST, y);
+              }
             },
           }));
         }
@@ -225,8 +234,11 @@ export default {
         items.push(Vue.h(TowersHintCellComponent, {
           value: puzzle.getHints(HintFace.SOUTH)[i],
           marked: puzzle.southHintMarked[i],
+          clickable: towersUpgrades.markHintSatisfiedUnlocked,
           onClick: () => {
-            // puzzle.toggleHint(HintFace.SOUTH, i);
+            if (towersUpgrades.markHintSatisfiedUnlocked) {
+              puzzle.markHint(HintFace.SOUTH, i);
+            }
           },
         }));
       }

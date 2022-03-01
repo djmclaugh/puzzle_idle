@@ -3,6 +3,7 @@ import Vue from '../../vue.js'
 interface TowersHintCellComponentProps {
   value: number,
   marked: boolean,
+  clickable: boolean,
 }
 
 interface TowersHintCellComponentData {
@@ -10,7 +11,7 @@ interface TowersHintCellComponentData {
 }
 
 export default {
-  props: ['value', 'marked'],
+  props: ['value', 'marked', 'clickable'],
 
   setup(props: TowersHintCellComponentProps) {
 
@@ -25,9 +26,9 @@ export default {
           'towers-hint-marked': props.marked && props.value != - 1,
         },
         style: {
-          // opacity: data.hover ? 0.5 : 1,
+          opacity: data.hover || props.marked ? 0.5 : 1,
         },
-        onMouseover: () => { data.hover = true; },
+        onMouseover: () => { data.hover = props.clickable && true; },
         onMouseout: () => { data.hover = false; },
       }, props.value == -1 ? "" : props.value);
     };

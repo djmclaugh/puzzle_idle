@@ -20,10 +20,10 @@ const App = {
     return () => {
       let items = [];
       items.push(Vue.h(Status));
-      items.push(Vue.h(CPUStatus));
       if (data.puzzleChoice == "towers") {
         items.push(Vue.h(TowersUpgrades));
       }
+      items.push(Vue.h(CPUStatus));
       // items.push(Vue.h('h3', {}, 'Interfaces: '));
       // for (let i = 0; i < currentStatus.interfaces.length; ++i) {
       //   items.push(Vue.h('div', {

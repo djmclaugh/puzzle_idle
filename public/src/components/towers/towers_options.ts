@@ -68,7 +68,7 @@ export default {
           props.options.autoValidateOn = t.checked;
         }
       });
-      if (towersUpgrades.autoValidateUnlocked) {
+      if (towersUpgrades.autoValidate.isUnlocked) {
         optionsItems.push(autoValidate);
       }
 
@@ -81,7 +81,7 @@ export default {
           props.options.autoCashInOn = t.checked;
         }
       });
-      if (towersUpgrades.autoCashInUnlocked) {
+      if (towersUpgrades.autoCashIn.isUnlocked) {
         optionsItems.push(autoCashIn);
       }
 
@@ -94,7 +94,7 @@ export default {
           props.options.autoRevertOnContradiction = t.checked;
         }
       });
-      if (towersUpgrades.autoRevertOnContradictionUnlocked) {
+      if (towersUpgrades.autoRevertOnContradiction.isUnlocked) {
         optionsItems.push(autoRevertOnContradiction);
       }
 
@@ -133,8 +133,21 @@ export default {
           }
         }
       });
-      if (towersUpgrades.randomGuessProcessUnlocked) {
+      if (towersUpgrades.randomGuessProcess.isUnlocked) {
         processesItems.push(autoRandom);
+      }
+
+      const onlyInRowColumn = Vue.h(LabeledCheckbox, {
+        value: props.options.onlyInRowColumnOn,
+        label: 'Only In Row/Column',
+        boxId: 'only_in_row_column_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          props.options.onlyInRowColumnOn = t.checked;
+        }
+      });
+      if (towersUpgrades.onlyChoiceInColumnRowProcess.isUnlocked) {
+        processesItems.push(onlyInRowColumn);
       }
 
       const autoRemoveOnSet = Vue.h(LabeledCheckbox, {
@@ -149,8 +162,34 @@ export default {
           }
         }
       });
-      if (towersUpgrades.removeFromColumnRowProcessUnlocked) {
+      if (towersUpgrades.removeFromColumnRowProcess.isUnlocked) {
         processesItems.push(autoRemoveOnSet);
+      }
+
+      const oneView = Vue.h(LabeledCheckbox, {
+        value: props.options.oneViewOn,
+        label: '1 View',
+        boxId: 'one_view_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          props.options.oneViewOn = t.checked;
+        }
+      });
+      if (towersUpgrades.oneViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
+        processesItems.push(oneView);
+      }
+
+      const maxView = Vue.h(LabeledCheckbox, {
+        value: props.options.maxViewOn,
+        label: 'Max View',
+        boxId: 'max_view_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          props.options.maxViewOn = t.checked;
+        }
+      });
+      if (towersUpgrades.maxViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
+        processesItems.push(maxView);
       }
 
       const simpleView = Vue.h(LabeledCheckbox, {
@@ -162,7 +201,7 @@ export default {
           props.options.simpleViewOn = t.checked;
         }
       });
-      if (towersUpgrades.simpleViewProcessUnlocked) {
+      if (towersUpgrades.simpleViewProcess.isUnlocked) {
         processesItems.push(simpleView);
       }
 
