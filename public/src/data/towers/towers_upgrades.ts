@@ -68,7 +68,7 @@ export class TowersUpgrades {
   public readonly randomGuessProcess = new UnlockableUpgrade(
     "Random Guess Process",
     "Makes a random guesse if no other proccesses are running on the puzzle.",
-    1,
+    20,
     () => {return currentCPU.cores > 0 && towersUpgrades.guess.isUnlocked;},
   );
 
@@ -83,7 +83,7 @@ export class TowersUpgrades {
   public readonly removeFromColumnRowProcess = new UnlockableUpgrade(
     "Remove From Row/Column Process",
     "When a cell is set, remove that possibility from the other cells in that row/column.",
-    1,
+    5,
     () => {return currentCPU.cores > 0 && towersUpgrades.removePossibility.isUnlocked;},
   );
 
@@ -97,7 +97,7 @@ export class TowersUpgrades {
   public readonly notOneViewProcess = new UnlockableUpgrade(
     "Not 1 View Process",
     "If the view hint is not a 1, then you know that the first tower can't be the tallest tower.\n",
-    1,
+    5,
     () => {return currentCPU.cores > 0 && towersUpgrades.removePossibility.isUnlocked;},
   );
 
@@ -111,8 +111,8 @@ export class TowersUpgrades {
   public readonly simpleViewProcess = new UnlockableUpgrade(
     "Simple View Process",
     "Combines the 1 view, the not 1 view, and the max view processes into one.",
-    1,
-    () => {return false && towersUpgrades.oneViewProcess.isUnlocked && towersUpgrades.notOneViewProcess.isUnlocked && towersUpgrades.maxViewProcess.isUnlocked;},
+    10,
+    () => {return towersUpgrades.oneViewProcess.isUnlocked && towersUpgrades.notOneViewProcess.isUnlocked && towersUpgrades.maxViewProcess.isUnlocked;},
   );
 
   public readonly betterSimpleViewProcess = new UnlockableUpgrade(
@@ -122,7 +122,7 @@ export class TowersUpgrades {
     "For example, if you put a tower of height 4 in the second cell of a row of a puzzle of size 5, then you will see, at most 2 + 5 - 4 = 3 towers.\n" +
     "This means that if the view hint is 4 or 5, then the second cell can't be 4 or more.",
     1,
-    () => {return towersUpgrades.simpleViewProcess.isUnlocked}
+    () => {return false && towersUpgrades.simpleViewProcess.isUnlocked}
   );
 
   public readonly autoRevertOnContradiction = new UnlockableUpgrade(

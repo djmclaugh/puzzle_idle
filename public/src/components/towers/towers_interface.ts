@@ -10,6 +10,7 @@ import { randomOfSize } from '../../puzzles/towers/towers_loader.js'
 import Process from '../../data/process.js'
 import RandomGuessProcess from '../../data/processes/towers/random_guess_process.js'
 import OneViewProcess from '../../data/processes/towers/one_view_process.js'
+import NotOneViewProcess from '../../data/processes/towers/not_one_view_process.js'
 import MaxViewProcess from '../../data/processes/towers/max_view_process.js'
 import SimpleViewProcess from '../../data/processes/towers/simple_view_process.js'
 import OnlyChoiceInColumnProcess from '../../data/processes/towers/only_choice_in_column_process.js'
@@ -125,10 +126,12 @@ export default {
 
     function startInitialRemovalProcessIfNeeded() {
       if (data.currentPuzzle.history.length == 0) {
-        if (options.simpleViewOn) {
-          for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-            const p = new SimpleViewProcess(data.currentPuzzle, face, props.interfaceId);
-            startProcess(p, 9);
+        if (towersUpgrades.simpleViewProcess.isUnlocked) {
+          if (options.simpleViewOn) {
+            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+              const p = new SimpleViewProcess(data.currentPuzzle, face, props.interfaceId);
+              startProcess(p, 9);
+            }
           }
         } else {
           if (options.maxViewOn) {
@@ -140,6 +143,12 @@ export default {
           if (options.oneViewOn) {
             for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
               const p = new OneViewProcess(data.currentPuzzle, face, props.interfaceId);
+              startProcess(p, 9);
+            }
+          }
+          if (options.notOneViewOn) {
+            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
+              const p = new NotOneViewProcess(data.currentPuzzle, face, props.interfaceId);
               startProcess(p, 9);
             }
           }
@@ -172,8 +181,9 @@ export default {
     }
 
     function startProcess(p: Process<any>, priority: number) {
-      data.otherProcesses.add(p);
-      currentCPU.addProcess(p, priority, onProcessOver(p));
+      if (currentCPU.addProcess(p, priority, onProcessOver(p))) {
+        data.otherProcesses.add(p);
+      }
     }
 
     function onProcessOver<R>(process: Process<R>) {

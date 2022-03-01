@@ -179,6 +179,19 @@ export default {
         processesItems.push(oneView);
       }
 
+      const notOneView = Vue.h(LabeledCheckbox, {
+        value: props.options.notOneViewOn,
+        label: 'Not 1 View',
+        boxId: 'not_one_view_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          props.options.notOneViewOn = t.checked;
+        }
+      });
+      if (towersUpgrades.notOneViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
+        processesItems.push(notOneView);
+      }
+
       const maxView = Vue.h(LabeledCheckbox, {
         value: props.options.maxViewOn,
         label: 'Max View',
