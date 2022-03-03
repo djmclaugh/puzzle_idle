@@ -56,9 +56,17 @@ export type Action = CellAction|HintAction|ImplicationAction;
 export type ActionCallback = (a: Action) => void;
 
 export enum ContradictionType {
+  NO_POSSIBILITES,
   ROW,
   COLUMN,
   VIEW,
+}
+
+export interface NoPossibilitiesContradiction {
+  type: ContradictionType.NO_POSSIBILITES,
+  noticedOnMove: number,
+  row: number,
+  col: number,
 }
 
 export interface RowContradiction {
@@ -77,16 +85,17 @@ export interface ColumnContradiction {
   row2: number,
 }
 
-export type TowersContradiction = RowContradiction|ColumnContradiction
+export type TowersContradiction = NoPossibilitiesContradiction|RowContradiction|ColumnContradiction
 
+export function isNoPossibilitesContradiction(c: TowersContradiction): c is NoPossibilitiesContradiction {
+  return c.type == ContradictionType.NO_POSSIBILITES;
+}
 export function isRowContradiction(c: TowersContradiction): c is RowContradiction {
   return c.type == ContradictionType.ROW;
 }
 export function isColumnContradiction(c: TowersContradiction): c is ColumnContradiction {
   return c.type == ContradictionType.COLUMN;
 }
-
-
 
 export enum HintFace {
   WEST = 1,
@@ -296,6 +305,14 @@ export default class Towers extends Puzzle<Action> {
     if (this.marks.delete({row: r, col: c, val: value})) {
       const a  = new CellAction(r, c, value, ActionType.REMOVE_POSSIBILITY, previous);
       this.addAction(a);
+      if (this.marks.getWithRowCol(r, c).size == 0) {
+        this.noticeContradiction({
+          type: ContradictionType.NO_POSSIBILITES,
+          row: r,
+          col: c,
+          noticedOnMove: this.history.length,
+        })
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 import Vue from '../../vue.js'
-import Towers, {HintFace, Action, ActionType, TowersContradiction, isRowContradiction, isColumnContradiction} from '../../puzzles/towers/towers.js'
+import Towers, {HintFace, Action, ActionType, TowersContradiction, isRowContradiction, isColumnContradiction, isNoPossibilitesContradiction} from '../../puzzles/towers/towers.js'
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
@@ -439,6 +439,10 @@ export default {
           towersProps.backgrounds = [
             {cell: [c.col, c.row1], colour: '#ffc0c0f0'},
             {cell: [c.col, c.row2], colour: '#ffc0c0f0'},
+          ];
+        } else if (isNoPossibilitesContradiction(c)) {
+          towersProps.backgrounds = [
+            {cell: [c.col, c.row], colour: '#ffc0c0f0'},
           ];
         } else {
           console.log("Unknown contradiction type: " + JSON.stringify(c));

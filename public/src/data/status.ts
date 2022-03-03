@@ -70,7 +70,7 @@ export class StatusData {
   }
 
   public puzzleReward(size: number): number {
-    return Math.pow(size + 2, size - 2);
+    return Math.pow(size + 6, size - 2);
   }
 
   public puzzleCompleted(size: number): void {
