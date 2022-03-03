@@ -93,7 +93,15 @@ export default {
       // TODO: Allow under/overclocking
 
       return Vue.h('details', {open: true}, [
-        Vue.h('summary', {}, `CPU | ${currentCPU.speed} Hz | ${currentCPU.coresInUse} out of ${currentCPU.cores} cores active | ${queue.length} processes waiting in queue`),
+        Vue.h('summary', {}, [
+          Vue.h('strong', {style: {display: 'inline-block'}}, `CPU`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.speed} Hz `),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} out of ${currentCPU.cores} cores active`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `${queue.length} processes waiting in queue`),
+        ]),
         Vue.h('div', {}, items),
       ]);
     }

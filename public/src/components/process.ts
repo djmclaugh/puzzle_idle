@@ -10,7 +10,7 @@ interface ProcessProps {
 
 export default {
   props: ['process', 'showInterface'],
-  setup(props: ProcessProps, {attrs, slots, emit}: any): any {
+  setup(props: ProcessProps): any {
     function processDescription(): string {
       const p = props.process;
       if (p === null) {
@@ -22,7 +22,6 @@ export default {
       return message;
     }
     return () => {
-      let items = [];
       if (props.process) {
         const runButton = Vue.h('button', {
           onMousedown: () => { currentCPU.boostedProcess = props.process; },
@@ -30,9 +29,9 @@ export default {
           onMouseout: () => { currentCPU.boostedProcess = null; },
         }, currentCPU.isActive(props.process) ? 'Speed Up (keep pressed)' : 'Manually Run (keep pressed)');
 
-        return Vue.h('li', {}, [runButton, " ", processDescription()]);
+        return Vue.h('li', {style: {height: '32px'}}, [runButton, " ", processDescription()]);
       } else {
-        return Vue.h('li', {}, Vue.h('em', {}, 'Core available'));
+        return Vue.h('li', {style: {height: '32px'}}, Vue.h('em', {}, 'Core available'));
       }
     }
   }

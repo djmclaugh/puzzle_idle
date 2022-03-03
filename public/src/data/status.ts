@@ -27,7 +27,7 @@ export class StatusData {
   }
 
   public get cpuSpeedUpgradeCost(): number {
-    return currentCPU.maxSpeed;
+    return 2 * currentCPU.maxSpeed;
   }
 
   public canAffordCpuSpeedUpgrade(): boolean {
@@ -43,7 +43,7 @@ export class StatusData {
   }
 
   public get cpuCoresUpgradeCost(): number {
-    return Math.pow(100, currentCPU.cores);
+    return Math.pow(20, currentCPU.cores);
   }
 
   public canAffordCpuCoresUpgrade(): boolean {
@@ -70,7 +70,7 @@ export class StatusData {
   }
 
   public puzzleReward(size: number): number {
-    return Math.pow(size, size - 2);
+    return Math.pow(size + 2, size - 2);
   }
 
   public puzzleCompleted(size: number): void {

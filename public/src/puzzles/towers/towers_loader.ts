@@ -4,14 +4,13 @@ const LOADED_TOWERS: Map<number, Towers[]> = new Map();
 
 const utf8Decoder = new TextDecoder('utf-8');
 
-export async function randomOfSize(size: number): Promise<Towers> {
-  await loadTowers(size);
+export function randomOfSize(size: number): Towers {
   const towers = LOADED_TOWERS.get(size)!;
   const t = towers[Math.floor(Math.random() * towers.length)];
   return t.copy();
 }
 
-async function loadTowers(size: number): Promise<void> {
+export async function loadTowers(size: number): Promise<void> {
   // Check if already loaded
   if (LOADED_TOWERS.has(size)) {
     return;

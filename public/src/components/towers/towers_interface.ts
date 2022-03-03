@@ -6,12 +6,14 @@ import TowersValidatorComponent from './towers_validator.js'
 import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.js'
 import { currentStatus } from '../../data/status.js'
 import { currentCPU } from '../../data/cpu.js'
-import { randomOfSize } from '../../puzzles/towers/towers_loader.js'
+import { randomOfSize, loadTowers } from '../../puzzles/towers/towers_loader.js'
 import Process from '../../data/process.js'
 import RandomGuessProcess from '../../data/processes/towers/random_guess_process.js'
 import OneViewProcess from '../../data/processes/towers/one_view_process.js'
 import NotOneViewProcess from '../../data/processes/towers/not_one_view_process.js'
+import PositionsSeenForSureProcess from '../../data/processes/towers/positions_seen_for_sure_process.js'
 import MaxViewProcess from '../../data/processes/towers/max_view_process.js'
+import BetterSimpleViewProcess from '../../data/processes/towers/better_simple_view_process.js'
 import SimpleViewProcess from '../../data/processes/towers/simple_view_process.js'
 import OnlyChoiceInColumnProcess from '../../data/processes/towers/only_choice_in_column_process.js'
 import OnlyChoiceInRowProcess from '../../data/processes/towers/only_choice_in_row_process.js'
@@ -19,7 +21,6 @@ import RemoveFromColumnProcess from '../../data/processes/towers/remove_from_col
 import RemoveFromRowProcess from '../../data/processes/towers/remove_from_row_process.js'
 import ValidationProcess from '../../data/processes/towers/validation_process.js'
 import FollowSetImplicationsProcess from '../../data/processes/towers/follow_set_implications_process.js'
-import FollowRemovalImplicationsProcess from '../../data/processes/towers/follow_removal_implications_process.js'
 import TowersOptions from '../../data/towers/towers_options.js'
 import {towersUpgrades} from '../../data/towers/towers_upgrades.js'
 
@@ -43,7 +44,7 @@ let puzzleUUID: number = 0;
 
 export default {
   props: ['interfaceId'],
-  setup(props: InterfaceComponentProps): any {
+  setup(props: InterfaceComponentProps) {
     const options: TowersOptions = Vue.reactive(new TowersOptions());
     const data: InterfaceComponentData = Vue.reactive({
       currentPuzzle: {},
@@ -57,6 +58,55 @@ export default {
       randomGuessProcess: null,
       otherProcesses: new Set(),
     });
+
+    const incomeTracker: [number, number][] = [];
+    const averages: {minute: number, tenMinute: number, hour: number} = Vue.reactive({
+      minute: 0,
+      tenMinute: 0,
+      hour: 0,
+    });
+
+    let updateAverageTimeoutId = setTimeout(updateAverages, 2000);
+    function updateAverages() {
+      // If this was explictly called, cancel the timeout
+      clearTimeout(updateAverageTimeoutId)
+      const now = Date.now();
+      const minuteAgo = now - (60 * 1000)
+      const tenMinutesAgo = now - (10 * 60 * 1000)
+      const hourAgo = now - (60 * 60 * 1000)
+
+      let minuteSum = 0;
+      let tenMinutesSum = 0;
+      let hourSum = 0;
+
+      let firstRelevantIndex = -1;
+      for (let i = 0; i < incomeTracker.length; ++i) {
+        if (firstRelevantIndex == -1 && incomeTracker[i][0] > hourAgo) {
+          firstRelevantIndex = i;
+        }
+        if (firstRelevantIndex != -1) {
+          hourSum += incomeTracker[i][1];
+          if (incomeTracker[i][0] > tenMinutesAgo) {
+            tenMinutesSum += incomeTracker[i][1];
+            if (incomeTracker[i][0] > minuteAgo) {
+              minuteSum += incomeTracker[i][1];
+            }
+          }
+        }
+      }
+
+      if (firstRelevantIndex == -1) {
+        incomeTracker.splice(0, incomeTracker.length);
+      }
+      incomeTracker.splice(0, firstRelevantIndex);
+
+      averages.minute = minuteSum;
+      averages.tenMinute = tenMinutesSum / 10;
+      averages.hour = hourSum / 60;
+
+      // Update in 2 seconds
+      updateAverageTimeoutId = setTimeout(updateAverages, 2000);
+    }
 
     function stopAllProcesses() {
       if (data.validationProcess) {
@@ -129,7 +179,9 @@ export default {
         if (towersUpgrades.simpleViewProcess.isUnlocked) {
           if (options.simpleViewOn) {
             for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-              const p = new SimpleViewProcess(data.currentPuzzle, face, props.interfaceId);
+              const p = towersUpgrades.betterSimpleViewProcess.isUnlocked ?
+                  new BetterSimpleViewProcess(data.currentPuzzle, face, props.interfaceId) :
+                  new SimpleViewProcess(data.currentPuzzle, face, props.interfaceId);
               startProcess(p, 9);
             }
           }
@@ -193,9 +245,11 @@ export default {
       }
     }
 
-    async function cashIn() {
+    function cashIn() {
+      incomeTracker.push([Date.now(), currentStatus.puzzleReward(options.currentSize)]);
       currentStatus.puzzleCompleted(options.currentSize);
-      await assignNewPuzzle()
+      updateAverages();
+      assignNewPuzzle()
     }
 
     function onPossibilitySet(row: number, col: number, val: number) {
@@ -213,48 +267,59 @@ export default {
     }
 
     function onPossibilityRemoved(row: number, col: number, val: number) {
-      if (data.autoFollowImply) {
-        const triple = { row: row, col: col, val: val };
-        const p = new FollowRemovalImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
-        currentCPU.addProcess(p, 9, onProcessOver(p));
-      }
+      // if (data.autoFollowImply) {
+      //   const triple = { row: row, col: col, val: val };
+      //   const p = new FollowRemovalImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
+      //   currentCPU.addProcess(p, 9, onProcessOver(p));
+      // }
       if (options.onlyInRowColumnOn) {
         const colP = new OnlyChoiceInColumnProcess(data.currentPuzzle, col, val, props.interfaceId);
-        startProcess(colP, 9);
+        startProcess(colP, 8);
         const rowP = new OnlyChoiceInRowProcess(data.currentPuzzle, row, val, props.interfaceId);
-        startProcess(rowP, 9);
+        startProcess(rowP, 8);
       }
-      if (data.autoImply) {
-        const rowCol = data.currentPuzzle.marks.getWithRowCol(row, col);
-        if (rowCol.size == 2) {
-          const iter = rowCol.values();
-          const t1 = { row: row, col: col, val: iter.next().value };
-          const t2 = { row: row, col: col, val: iter.next().value };
-          data.currentPuzzle.addOffToOnImplication(t1, t2);
-        }
 
-        const rowVal = data.currentPuzzle.marks.getWithRowVal(row, val);
-        if (rowVal.size == 2) {
-          const iter = rowVal.values();
-          const t1 = { row: row, col: iter.next().value, val: val };
-          const t2 = { row: row, col: iter.next().value, val: val };
-          data.currentPuzzle.addOffToOnImplication(t1, t2)
-        }
-
-        const colVal = data.currentPuzzle.marks.getWithColVal(col, val);
-        if (colVal.size == 2) {
-          const iter = colVal.values();
-          const t1 = { row: iter.next().value, col: col, val: val };
-          const t2 = { row: iter.next().value, col: col, val: val };
-          data.currentPuzzle.addOffToOnImplication(t1, t2)
-        }
+      if (options.positionsSeenForSureOn) {
+        const northP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.NORTH, col, props.interfaceId);
+        startProcess(northP, 7);
+        const southP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.SOUTH, col, props.interfaceId);
+        startProcess(southP, 7);
+        const eastP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.EAST, row, props.interfaceId);
+        startProcess(eastP, 7);
+        const westP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.WEST, row, props.interfaceId);
+        startProcess(westP, 7);
       }
+      // if (data.autoImply) {
+      //   const rowCol = data.currentPuzzle.marks.getWithRowCol(row, col);
+      //   if (rowCol.size == 2) {
+      //     const iter = rowCol.values();
+      //     const t1 = { row: row, col: col, val: iter.next().value };
+      //     const t2 = { row: row, col: col, val: iter.next().value };
+      //     data.currentPuzzle.addOffToOnImplication(t1, t2);
+      //   }
+      //
+      //   const rowVal = data.currentPuzzle.marks.getWithRowVal(row, val);
+      //   if (rowVal.size == 2) {
+      //     const iter = rowVal.values();
+      //     const t1 = { row: row, col: iter.next().value, val: val };
+      //     const t2 = { row: row, col: iter.next().value, val: val };
+      //     data.currentPuzzle.addOffToOnImplication(t1, t2)
+      //   }
+      //
+      //   const colVal = data.currentPuzzle.marks.getWithColVal(col, val);
+      //   if (colVal.size == 2) {
+      //     const iter = colVal.values();
+      //     const t1 = { row: iter.next().value, col: col, val: val };
+      //     const t2 = { row: iter.next().value, col: col, val: val };
+      //     data.currentPuzzle.addOffToOnImplication(t1, t2)
+      //   }
+      // }
     }
 
-    async function assignNewPuzzle() {
+    function assignNewPuzzle() {
       stopAllProcesses();
 
-      data.currentPuzzle = await randomOfSize(options.currentSize);
+      data.currentPuzzle = randomOfSize(options.currentSize);
       data.currentPuzzle.onContradiction(() => {
         stopAllProcesses();
         if (options.autoRevertOnContradiction) {
@@ -300,7 +365,15 @@ export default {
     }
 
     Vue.onMounted(async () => {
-      await assignNewPuzzle();
+      await loadTowers(2);
+      loadTowers(3);
+      loadTowers(4);
+      loadTowers(5);
+      loadTowers(6);
+      loadTowers(7);
+      loadTowers(8);
+      loadTowers(9);
+      assignNewPuzzle();
     });
 
     return () => {
@@ -390,7 +463,15 @@ export default {
       }, flexItems));
 
       return Vue.h('details', {open: true, class: 'towers-interface'}, [
-        Vue.h('summary', {}, 'Towers ' + (props.interfaceId + 1)),
+        Vue.h('summary', {}, [
+          Vue.h('strong', {style: {display: 'inline-block'}}, `Towers ${props.interfaceId + 1}`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `Last minute: $${averages.minute}`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `Last 10 minutes average: $${averages.tenMinute.toFixed(2)}/min`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `Last hour average: $${averages.hour.toFixed(2)}/min`),
+        ]),
         Vue.h('div', {}, items),
       ]);
     };

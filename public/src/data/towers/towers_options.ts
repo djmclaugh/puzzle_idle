@@ -9,6 +9,7 @@ export default class TowersOptions {
   public randomGuessOn: boolean = false;
   public onlyInRowColumnOn: boolean = false;
   public removeOnSetOn: boolean = false;
+  public positionsSeenForSureOn: boolean = false;
   public oneViewOn: boolean = false;
   public notOneViewOn: boolean = false;
   public maxViewOn: boolean = false;

@@ -2,16 +2,11 @@ import Vue from '../../vue.js'
 
 import LabeledCheckbox from '../util/labeled_checkbox.js'
 
-import { currentCPU } from '../../data/cpu.js'
 import { UnlockableUpgrade, towersUpgrades } from '../../data/towers/towers_upgrades.js'
 
 export default {
   setup() {
     const showUnlocked = Vue.ref(true);
-
-    function shouldShow(unlocked: boolean): boolean {
-      return !unlocked || showUnlocked.value;
-    }
 
     function shouldShowUpgrade(u: UnlockableUpgrade): boolean {
       return (!u.isUnlocked || showUnlocked.value) && u.isAvailable();
@@ -97,6 +92,7 @@ export default {
       for (const upgrade of [
         towersUpgrades.onlyChoiceInColumnRowProcess,
         towersUpgrades.removeFromColumnRowProcess,
+        towersUpgrades.positionsSeenForSureProcess,
         towersUpgrades.maxViewProcess,
         towersUpgrades.oneViewProcess,
         towersUpgrades.notOneViewProcess,
@@ -129,7 +125,13 @@ export default {
       }
 
       return Vue.h('details', {open: true}, [
-        Vue.h('summary', {}, `Puzzle Upgrades | ${availableUpgrades} new upgrades available | ${affordableUpgrades} new upgrades affordable`),
+        Vue.h('summary', {}, [
+          Vue.h('strong', {style: {display: 'inline-block'}}, `Puzzle Upgrades`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `${availableUpgrades} new upgrades available`),
+          ' | ',
+          Vue.h('span', {style: {display: 'inline-block'}}, `${affordableUpgrades} new upgrades affordable`),
+        ]),
         Vue.h('div', {}, items),
       ]);
     }

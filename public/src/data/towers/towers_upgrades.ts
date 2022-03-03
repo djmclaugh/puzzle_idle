@@ -30,7 +30,7 @@ export class TowersUpgrades {
   public interfaces: number[] = [2];
 
   public sizeUpgradeCost(i: number): number {
-    return Math.pow(10, i * 2) * 3 * currentStatus.puzzleReward(this.interfaces[i]);
+    return Math.pow(10, i * 2) * 5 * currentStatus.puzzleReward(this.interfaces[i]);
   }
   public canAffordSizeUpgrade(i: number): boolean {
     return currentStatus.money >= this.sizeUpgradeCost(i);
@@ -122,7 +122,16 @@ export class TowersUpgrades {
     "For example, if you put a tower of height 4 in the second cell of a row of a puzzle of size 5, then you will see, at most 2 + 5 - 4 = 3 towers.\n" +
     "This means that if the view hint is 4 or 5, then the second cell can't be 4 or more.",
     1,
-    () => {return false && towersUpgrades.simpleViewProcess.isUnlocked}
+    () => {return towersUpgrades.interfaces[0] > 3 && towersUpgrades.simpleViewProcess.isUnlocked}
+  );
+
+  public readonly positionsSeenForSureProcess = new UnlockableUpgrade(
+    "Cells Seen For Sure Process",
+    "If the smallest possibility in a cell is bigger than any possibility of any previous cell, then that cell will be seen for sure.\n" +
+    "If there are 𝑛 cells that are seen for sure, and the hint tells us that 𝑛 cells have to be seen, then we know that the other cells can't be seen.\n" +
+    "If a cell can't be seen, it can't be one of the possibilities bigger than all possibilities of all previous cells.",
+    10,
+    () => {return towersUpgrades.removePossibility.isUnlocked && towersUpgrades.interfaces[0] > 2}
   );
 
   public readonly autoRevertOnContradiction = new UnlockableUpgrade(
@@ -157,7 +166,7 @@ export class TowersUpgrades {
     "Guessing",
     "Shift-click to make a guess. Allows you to easily go back to before the guess was made.",
     20,
-    () => {return towersUpgrades.interfaces[0] > 3 || towersUpgrades.undo.isUnlocked;}
+    () => {return towersUpgrades.interfaces[0] > 3 && towersUpgrades.undo.isUnlocked;}
   );
 }
 

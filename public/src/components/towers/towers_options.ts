@@ -47,7 +47,7 @@ export default {
           }
         }),
         Vue.h('button', {
-          onClick: (e: InputEvent) => {
+          onClick: () => {
             towersUpgrades.upgradeSize(props.interfaceId);
           },
           disabled: !towersUpgrades.canAffordSizeUpgrade(props.interfaceId),
@@ -139,7 +139,7 @@ export default {
 
       const onlyInRowColumn = Vue.h(LabeledCheckbox, {
         value: props.options.onlyInRowColumnOn,
-        label: 'Only In Row/Column',
+        label: 'Only Choice In Row/Column',
         boxId: 'only_in_row_column_checkbox_' + props.interfaceId,
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
@@ -164,6 +164,19 @@ export default {
       });
       if (towersUpgrades.removeFromColumnRowProcess.isUnlocked) {
         processesItems.push(autoRemoveOnSet);
+      }
+
+      const autoPositionsSeenForSure = Vue.h(LabeledCheckbox, {
+        value: props.options.positionsSeenForSureOn,
+        label: 'Cells Seen For Sure',
+        boxId: 'auto_positions_seen_for_sure_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          props.options.positionsSeenForSureOn = t.checked;
+        }
+      });
+      if (towersUpgrades.positionsSeenForSureProcess.isUnlocked) {
+        processesItems.push(autoPositionsSeenForSure);
       }
 
       const oneView = Vue.h(LabeledCheckbox, {
