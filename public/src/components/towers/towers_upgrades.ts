@@ -17,7 +17,7 @@ export default {
         onClick: () => { u.unlock(); },
         disabled: !u.canAfford,
       }, `Unlock ($${u.cost})`);
-      return Vue.h('div', [
+      return Vue.h('div', { style: {margin: '8px'}}, [
         Vue.h('strong', {}, u.name),
         ': ',
         u.description,

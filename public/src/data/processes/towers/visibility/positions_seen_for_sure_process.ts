@@ -1,5 +1,5 @@
-import Process from '../../process.js'
-import Towers, {HintFace, faceToString, isClockwise, isVertical, getCoordinates, ContradictionType} from '../../../puzzles/towers/towers.js'
+import Process from '../../../process.js'
+import Towers, {HintFace, faceToString, isClockwise, isVertical, getCoordinates, ContradictionType} from '../../../../puzzles/towers/towers.js'
 
 function ordinal(n: number): string {
   if (n == 1) {

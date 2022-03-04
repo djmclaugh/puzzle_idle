@@ -1,5 +1,5 @@
-import Process from '../../process.js'
-import Towers, {HintFace, faceToString, isClockwise, isVertical, getCoordinates} from '../../../puzzles/towers/towers.js'
+import Process from '../../../process.js'
+import Towers, {HintFace, faceToString, isClockwise, isVertical, getCoordinates} from '../../../../puzzles/towers/towers.js'
 
 export default class OneViewProcess extends Process<void> {
   public readonly processId: string;

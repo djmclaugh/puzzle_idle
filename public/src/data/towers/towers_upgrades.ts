@@ -74,15 +74,15 @@ export class TowersUpgrades {
 
   public readonly onlyChoiceInColumnRowProcess = new UnlockableUpgrade(
     "Only Choice In Row/Column Process",
-    "When a possibility is removed, check how many times that possibility is available in the other cells of that row/column.\n" +
-    "If only one cell in the row/column can be that possibility, then that cell must be that possibility.",
+    "When a possibility is removed, check which other cells in that row/columns have that possibility.\n" +
+    "If only one cell has that possibility, then that cell must be that possibility.",
     1,
     () => {return currentCPU.cores > 0},
   );
 
   public readonly removeFromColumnRowProcess = new UnlockableUpgrade(
     "Remove From Row/Column Process",
-    "When a cell is set, remove that possibility from the other cells in that row/column.",
+    "When a cell is set, remove that possibility from the other cells of that row/column.",
     5,
     () => {return currentCPU.cores > 0 && towersUpgrades.removePossibility.isUnlocked;},
   );
@@ -110,7 +110,7 @@ export class TowersUpgrades {
 
   public readonly simpleViewProcess = new UnlockableUpgrade(
     "Simple View Process",
-    "Combines the 1 view, the not 1 view, and the max view processes into one.",
+    "Combines the \"1 View\", \"Not 1 View\", and \"Max View\" processes into one process.",
     10,
     () => {return towersUpgrades.oneViewProcess.isUnlocked && towersUpgrades.notOneViewProcess.isUnlocked && towersUpgrades.maxViewProcess.isUnlocked;},
   );
@@ -128,10 +128,58 @@ export class TowersUpgrades {
   public readonly positionsSeenForSureProcess = new UnlockableUpgrade(
     "Cells Seen For Sure Process",
     "If the smallest possibility in a cell is bigger than any possibility of any previous cell, then that cell will be seen for sure.\n" +
-    "If there are 𝑛 cells that are seen for sure, and the hint tells us that 𝑛 cells have to be seen, then we know that the other cells can't be seen.\n" +
-    "If a cell can't be seen, it can't be one of the possibilities bigger than all possibilities of all previous cells.",
+    "If the hint tells us that 𝑣 cells have to be seen and there are already 𝑣 cells seen for sure, then we know that the other cells must be hidden.\n" +
+    "If a cell must be hidden, then it can't be one of the possibilities bigger than all possibilities of all previous cells.",
     10,
     () => {return towersUpgrades.removePossibility.isUnlocked && towersUpgrades.interfaces[0] > 2}
+  );
+
+  public readonly positionsHiddenForSureProcess = new UnlockableUpgrade(
+    "Cells Hidden For Sure Process",
+    "If the biggest possibility in a cell is smaller than the smallest possibility of any previous cell, then that cell will be hidden for sure.\n" +
+    "If the hint tells us that 𝑣 cells have to be seen and there are already 𝑛-𝑣 cells hidden for sure, then we know that the other cells must be seen.\n" +
+    "If a cell must be seen, it can't be one of the possibilities smaller than the smallest possibility of any previous cell.",
+    10,
+    () => {return towersUpgrades.removePossibility.isUnlocked && towersUpgrades.interfaces[0] > 2}
+  );
+
+  public readonly positionsSeenHiddenForSureProcess = new UnlockableUpgrade(
+    "Cells Seen/Hidden For Sure Process",
+    "Combines the \"Cells Seen For Sure\" and \"Cells Hidden For Sure\" processes into one process.",
+    50,
+    () => {return towersUpgrades.positionsSeenForSureProcess.isUnlocked && towersUpgrades.positionsHiddenForSureProcess.isUnlocked}
+  );
+
+  public readonly towersSeenForSureProcess = new UnlockableUpgrade(
+    "Towers Seen For Sure Process",
+    "If the last possibile position for the tower of heigth ℎ is in front of all possible positions for all towers taller than ℎ, then the tower of height ℎ is seen for sure.\n" +
+    "If the hint tells us that 𝑣 towers have to be seen and there are already 𝑣 towers seen for sure, then we know that the other towers must be hidden.\n" +
+    "If a tower must be hidden, then it can't be in a cell that comes before the earliest possible position of all towers taller than it.",
+    10,
+    () => {return towersUpgrades.removePossibility.isUnlocked && towersUpgrades.interfaces[0] > 2}
+  );
+
+  public readonly towersHiddenForSureProcess = new UnlockableUpgrade(
+    "Towers Hidden For Sure Process",
+    "If the earliest possibile position for the tower of heigth ℎ is in after of all possible positions for any tower taller than ℎ, then the tower of height ℎ is hidden for sure.\n" +
+    "If the hint tells us that 𝑣 towers have to be seen and there are already 𝑛-𝑣 towers hidden for sure, then we know that the other towers must be seen.\n" +
+    "If a tower must be seen, then it can't be in a cell that comes after the latest possible position of any towers taller than it.",
+    10,
+    () => {return towersUpgrades.removePossibility.isUnlocked && towersUpgrades.interfaces[0] > 2}
+  );
+
+  public readonly towersSeenHiddenForSureProcess = new UnlockableUpgrade(
+    "Towers Seen/Hidden For Sure Process",
+    "Combines the \"Towers Seen For Sure\" and \"Towers Hidden For Sure\" processes into one process.",
+    50,
+    () => {return towersUpgrades.towersSeenForSureProcess.isUnlocked && towersUpgrades.towersHiddenForSureProcess.isUnlocked}
+  );
+
+  public readonly visibilityProcess = new UnlockableUpgrade(
+    "Visibility Process",
+    "Combines the \"Cells Seen/Hidden For Sure\" and \"Towers Seen/Hidden For Sure\" processes into one process.",
+    100,
+    () => {return towersUpgrades.positionsSeenHiddenForSureProcess.isUnlocked && towersUpgrades.towersSeenHiddenForSureProcess.isUnlocked}
   );
 
   public readonly autoRevertOnContradiction = new UnlockableUpgrade(

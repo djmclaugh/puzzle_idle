@@ -1,5 +1,5 @@
-import Process from '../../process.js'
-import Towers, {HintFace, faceToString, isReverse, isClockwise, isVertical, getCoordinates} from '../../../puzzles/towers/towers.js'
+import Process from '../../../process.js'
+import Towers, {HintFace, faceToString, isReverse, isClockwise, isVertical, getCoordinates} from '../../../../puzzles/towers/towers.js'
 
 export default class SimpleViewProcess extends Process<void> {
   public readonly processId: string;
