@@ -1,5 +1,16 @@
 import Vue from '../../vue.js'
-import Towers, {HintFace, Action, ActionType, TowersContradiction, isRowContradiction, isColumnContradiction, isNoPossibilitesContradiction} from '../../puzzles/towers/towers.js'
+import Towers, {
+  HintFace,
+  Action,
+  ActionType,
+  TowersContradiction,
+  isClockwise,
+  getCoordinates,
+  isRowContradiction,
+  isColumnContradiction,
+  isNoPossibilitesContradiction,
+  isViewContradiction
+} from '../../puzzles/towers/towers.js'
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
@@ -444,6 +455,25 @@ export default {
           towersProps.backgrounds = [
             {cell: [c.col, c.row], colour: '#ffc0c0f0'},
           ];
+        } else if (isViewContradiction(c)) {
+          const n = data.currentPuzzle.n;
+          towersProps.backgrounds = [];
+          for (let i of c.cellIndices) {
+            let [col, row] = [0, 0];
+            if (!isClockwise(c.face)) {
+              [col, row] = getCoordinates(c.face, n - c.rowIndex - 1, i, n);
+            } else {
+              [col, row] = getCoordinates(c.face, c.rowIndex, i, n);
+            }
+            towersProps.backgrounds.push({cell: [col, row], colour: '#ffc0c0f0'});
+          }
+          let [col, row] = [0, 0];
+          if (!isClockwise(c.face)) {
+            [col, row] = getCoordinates(c.face, n - c.rowIndex - 1, -1, n);
+          } else {
+            [col, row] = getCoordinates(c.face, c.rowIndex, -1, n);
+          }
+          towersProps.backgrounds.push({cell: [col, row], colour: '#ffc0c0f0'});
         } else {
           console.log("Unknown contradiction type: " + JSON.stringify(c));
         }

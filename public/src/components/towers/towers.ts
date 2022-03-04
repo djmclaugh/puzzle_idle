@@ -101,6 +101,7 @@ export default {
       items.push(Vue.h('div'))
       for (let i = 0; i < n; ++i) {
         items.push(Vue.h(TowersHintCellComponent, {
+          background: backgroundMaps.get(i, -1),
           value: puzzle.getHints(HintFace.NORTH)[i],
           marked: puzzle.northHintMarked[i],
           clickable: towersUpgrades.markHintSatisfied.isUnlocked,
@@ -132,6 +133,7 @@ export default {
 
         if (x == 0) {
           items.push(Vue.h(TowersHintCellComponent, {
+            background: backgroundMaps.get(-1, y),
             value: puzzle.getHints(HintFace.WEST)[y],
             marked: puzzle.westHintMarked[y],
             clickable: towersUpgrades.markHintSatisfied.isUnlocked,
@@ -216,6 +218,7 @@ export default {
         items.push(cell);
         if (x == n - 1) {
           items.push(Vue.h(TowersHintCellComponent, {
+            background: backgroundMaps.get(n, y),
             value: puzzle.getHints(HintFace.EAST)[y],
             marked: puzzle.eastHintMarked[y],
             clickable: towersUpgrades.markHintSatisfied.isUnlocked,
@@ -232,6 +235,7 @@ export default {
       items.push(Vue.h('div'))
       for (let i = 0; i < n; ++i) {
         items.push(Vue.h(TowersHintCellComponent, {
+          background: backgroundMaps.get(i, n),
           value: puzzle.getHints(HintFace.SOUTH)[i],
           marked: puzzle.southHintMarked[i],
           clickable: towersUpgrades.markHintSatisfied.isUnlocked,

@@ -1,5 +1,5 @@
 import Process from '../../process.js'
-import Towers, {HintFace, faceToString, isClockwise, isVertical, getCoordinates} from '../../../puzzles/towers/towers.js'
+import Towers, {HintFace, faceToString, isClockwise, isVertical, getCoordinates, ContradictionType} from '../../../puzzles/towers/towers.js'
 
 function ordinal(n: number): string {
   if (n == 1) {
@@ -87,7 +87,13 @@ export default class PositionsSeenForSureProcess extends Process<void> {
         if (this.indicesSeenForSure.length > this.hint) {
           this.actionMessage = `Too many cells seen for sure: Contradiction!`;
           this.done = true;
-          // TODO: notice contradiction
+          this.t.noticeContradiction({
+            type: ContradictionType.VIEW,
+            noticedOnMove: this.t.history.length,
+            face: this.face,
+            rowIndex: this.rowIndex,
+            cellIndices: this.indicesSeenForSure.concat(),
+          })
         } else if (this.indicesSeenForSure.length == this.hint) {
           this.actionMessage = `All other cells must be hidden.`;
           this.depth = 0;

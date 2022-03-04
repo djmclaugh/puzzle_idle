@@ -1,6 +1,7 @@
 import Vue from '../../vue.js'
 
 interface TowersHintCellComponentProps {
+  background: string|undefined,
   value: number,
   marked: boolean,
   clickable: boolean,
@@ -11,7 +12,7 @@ interface TowersHintCellComponentData {
 }
 
 export default {
-  props: ['value', 'marked', 'clickable'],
+  props: ['background', 'value', 'marked', 'clickable'],
 
   setup(props: TowersHintCellComponentProps) {
 
@@ -25,12 +26,12 @@ export default {
           'towers-hint': true,
           'towers-hint-marked': props.marked && props.value != - 1,
         },
-        style: {
-          opacity: data.hover || props.marked ? 0.5 : 1,
-        },
+        style: { 'background-color': props.background },
         onMouseover: () => { data.hover = props.clickable && true; },
         onMouseout: () => { data.hover = false; },
-      }, props.value == -1 ? "" : props.value);
+      }, props.value == -1 ? "" : Vue.h('span', {
+        style: { color: data.hover || props.marked ? '#808080' : undefined },
+      }, props.value));
     };
 
   },

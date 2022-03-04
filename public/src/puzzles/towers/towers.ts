@@ -85,7 +85,15 @@ export interface ColumnContradiction {
   row2: number,
 }
 
-export type TowersContradiction = NoPossibilitiesContradiction|RowContradiction|ColumnContradiction
+export interface ViewContradiction {
+  type: ContradictionType.VIEW,
+  noticedOnMove: number,
+  face: HintFace,
+  rowIndex: number,
+  cellIndices: number[],
+}
+
+export type TowersContradiction = NoPossibilitiesContradiction|RowContradiction|ColumnContradiction|ViewContradiction
 
 export function isNoPossibilitesContradiction(c: TowersContradiction): c is NoPossibilitiesContradiction {
   return c.type == ContradictionType.NO_POSSIBILITES;
@@ -95,6 +103,9 @@ export function isRowContradiction(c: TowersContradiction): c is RowContradictio
 }
 export function isColumnContradiction(c: TowersContradiction): c is ColumnContradiction {
   return c.type == ContradictionType.COLUMN;
+}
+export function isViewContradiction(c: TowersContradiction): c is ViewContradiction {
+  return c.type == ContradictionType.VIEW;
 }
 
 export enum HintFace {

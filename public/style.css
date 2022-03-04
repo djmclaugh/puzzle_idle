@@ -387,8 +387,10 @@ details > div {
 }
 
 .towers-hint {
-  height: 100%;
-  width: 100%;
+  width: 60px;
+  height: 60px;
+  border-radius: 2px;
+  margin: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -396,7 +398,7 @@ details > div {
 }
 
 .towers-hint-marked {
-  background: linear-gradient(to bottom right, transparent 45%, currentColor 48%, currentColor 52%, transparent 55%);
+  background: linear-gradient(to bottom right, transparent 45%, #808080 48%, #808080 52%, transparent 55%);
   background-size: 30px 30px;
   background-repeat: no-repeat;
   background-position: center;

@@ -9,6 +9,8 @@ export default {
         `Current money: $${currentStatus.money}`,
         ' ',
         Vue.h('button', {onClick: () => {currentStatus.money += 10;}}, 'Give me $10'),
+        ' ',
+        Vue.h('button', {onClick: () => {currentStatus.money += 100;}}, 'Give me $100'),
       ]));
 
 
