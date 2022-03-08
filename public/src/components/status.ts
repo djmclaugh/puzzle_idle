@@ -1,5 +1,6 @@
 import Vue from '../vue.js'
 import { currentStatus } from '../data/status.js'
+import { towersUpgrades } from '../data/towers/towers_upgrades.js'
 
 export default {
   setup() {
@@ -10,7 +11,37 @@ export default {
         ' ',
         Vue.h('button', {onClick: () => {currentStatus.money += 10;}}, 'Give me $10'),
         ' ',
-        Vue.h('button', {onClick: () => {currentStatus.money += 100;}}, 'Give me $100'),
+        Vue.h('button', {onClick: () => {currentStatus.money += 1000;}}, 'Give me $1000'),
+        ' ',
+        Vue.h('button', {
+          onClick: () => {
+              const m = currentStatus.money;
+
+              towersUpgrades.autoCashIn.unlock();
+              towersUpgrades.autoRevertOnContradiction.unlock();
+              towersUpgrades.autoValidate.unlock();
+              towersUpgrades.betterSimpleViewProcess.unlock();
+              towersUpgrades.guess.unlock();
+              towersUpgrades.markHintSatisfied.unlock();
+              towersUpgrades.maxViewProcess.unlock();
+              towersUpgrades.notOneViewProcess.unlock();
+              towersUpgrades.oneViewProcess.unlock();
+              towersUpgrades.onlyChoiceInColumnRowProcess.unlock();
+              towersUpgrades.positionsHiddenForSureProcess.unlock();
+              towersUpgrades.positionsSeenHiddenForSureProcess.unlock();
+              towersUpgrades.positionsSeenForSureProcess.unlock();
+              towersUpgrades.towersHiddenForSureProcess.unlock();
+              towersUpgrades.towersSeenHiddenForSureProcess.unlock();
+              towersUpgrades.towersSeenForSureProcess.unlock();
+              towersUpgrades.randomGuessProcess.unlock();
+              towersUpgrades.removeFromColumnRowProcess.unlock();
+              towersUpgrades.removePossibility.unlock();
+              towersUpgrades.simpleViewProcess.unlock();
+              towersUpgrades.undo.unlock();
+
+              currentStatus.money = m;
+          }
+        }, 'Unlock All'),
       ]));
 
 

@@ -363,10 +363,17 @@ export default {
       // }
     }
 
-    function assignNewPuzzle() {
+    function assignNewPuzzle(puzzleId: string = "") {
       stopAllProcesses();
 
-      data.currentPuzzle = randomOfSize(options.currentSize);
+      if (puzzleId == "") {
+        data.currentPuzzle = randomOfSize(options.currentSize);
+      } else {
+        data.currentPuzzle = Towers.fromSimonThatamId(puzzleId);
+      }
+
+      console.log("New puzzle started: " + data.currentPuzzle.toSimonTathamId());
+
       data.currentPuzzle.onContradiction(() => {
         stopAllProcesses();
         if (options.autoRevertOnContradiction) {
@@ -531,6 +538,19 @@ export default {
           'flex-wrap': 'wrap',
         }
       }, flexItems));
+
+      if (data.currentPuzzle instanceof Towers) {
+        items.push(Vue.h('span', {}, 'Puzzle ID: ' + data.currentPuzzle.toSimonTathamId()));
+        items.push(Vue.h('br'));
+        items.push(Vue.h('em', {}, '(compatible with Simon Tatham\'s implementation)'));
+        items.push(Vue.h('br'));
+        items.push(Vue.h('input', {id: 'puzzle-id-input'}, ''));
+        items.push(Vue.h('button', {onclick: () => {
+          const element = document.getElementById('puzzle-id-input') as HTMLInputElement;
+          const id = element.value;
+          assignNewPuzzle(id);
+        }}, 'Import With ID'));
+      }
 
       return Vue.h('details', {open: true, class: 'towers-interface'}, [
         Vue.h('summary', {}, [
