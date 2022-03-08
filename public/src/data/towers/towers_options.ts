@@ -10,6 +10,11 @@ export default class TowersOptions {
   public onlyInRowColumnOn: boolean = false;
   public removeOnSetOn: boolean = false;
   public positionsSeenForSureOn: boolean = false;
+  public positionsHiddenForSureOn: boolean = false;
+  public positionVisibilityOn: boolean = false;
+  public towersSeenForSureOn: boolean = false;
+  public towersHiddenForSureOn: boolean = false;
+  public towerVisibilityOn: boolean = false;
   public oneViewOn: boolean = false;
   public notOneViewOn: boolean = false;
   public maxViewOn: boolean = false;

@@ -22,7 +22,16 @@ import Process from '../../data/process.js'
 import RandomGuessProcess from '../../data/processes/towers/random_guess_process.js'
 import OneViewProcess from '../../data/processes/towers/visibility/one_view_process.js'
 import NotOneViewProcess from '../../data/processes/towers/visibility/not_one_view_process.js'
-import PositionsSeenForSureProcess from '../../data/processes/towers/visibility/positions_seen_for_sure_process.js'
+import {
+  PositionsSeenHiddenForSureProcess,
+  PositionsSeenForSureProcess,
+  PositionsHiddenForSureProcess,
+} from '../../data/processes/towers/visibility/positions_seen_hidden_for_sure_process.js'
+import {
+  TowersSeenHiddenForSureProcess,
+  TowersSeenForSureProcess,
+  TowersHiddenForSureProcess,
+} from '../../data/processes/towers/visibility/towers_seen_hidden_for_sure_process.js'
 import MaxViewProcess from '../../data/processes/towers/visibility/max_view_process.js'
 import BetterSimpleViewProcess from '../../data/processes/towers/visibility/better_simple_view_process.js'
 import SimpleViewProcess from '../../data/processes/towers/visibility/simple_view_process.js'
@@ -290,15 +299,42 @@ export default {
         startProcess(rowP, 8);
       }
 
-      if (options.positionsSeenForSureOn) {
-        const northP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.NORTH, col, props.interfaceId);
-        startProcess(northP, 7);
-        const southP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.SOUTH, col, props.interfaceId);
-        startProcess(southP, 7);
-        const eastP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.EAST, row, props.interfaceId);
-        startProcess(eastP, 7);
-        const westP = new PositionsSeenForSureProcess(data.currentPuzzle, HintFace.WEST, row, props.interfaceId);
-        startProcess(westP, 7);
+      if (towersUpgrades.positionsSeenHiddenForSureProcess.isUnlocked) {
+        if (options.positionVisibilityOn) {
+          for (const p of PositionsSeenHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+            startProcess(p, 7);
+          }
+        }
+      } else {
+        if (options.positionsSeenForSureOn) {
+          for (const p of PositionsSeenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+            startProcess(p, 7);
+          }
+        }
+        if (options.positionsHiddenForSureOn) {
+          for (const p of PositionsHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+            startProcess(p, 7);
+          }
+        }
+      }
+
+      if (towersUpgrades.towersSeenHiddenForSureProcess.isUnlocked) {
+        if (options.towerVisibilityOn) {
+          for (const p of TowersSeenHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+            startProcess(p, 7);
+          }
+        }
+      } else {
+        if (options.towersSeenForSureOn) {
+          for (const p of TowersSeenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+            startProcess(p, 7);
+          }
+        }
+        if (options.towersHiddenForSureOn) {
+          for (const p of TowersHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+            startProcess(p, 7);
+          }
+        }
       }
       // if (data.autoImply) {
       //   const rowCol = data.currentPuzzle.marks.getWithRowCol(row, col);

@@ -21,11 +21,13 @@ export default {
       items.push(Vue.h('p', {}, [
         `Max Speed: ${currentCPU.maxSpeed} Hz `,
         Vue.h('button', {
-          onClick: () => {
-            currentStatus.upgradeCpuSpeed();
-          },
+          onClick: () => { currentStatus.upgradeCpuSpeed(); },
           disabled: !currentStatus.canAffordCpuSpeedUpgrade(),
-        }, `Upgrade ($${currentStatus.cpuSpeedUpgradeCost})`)
+        }, `Upgrade ($${currentStatus.cpuSpeedUpgradeCost})`),
+        Vue.h('br'),
+        Vue.h('button', {
+          onClick: () => { currentCPU.paused = !currentCPU.paused; },
+        }, currentCPU.paused ? 'Resume' : 'Pause'),
       ]));
 
       items.push(Vue.h('p', {}, [

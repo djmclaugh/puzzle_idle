@@ -15,6 +15,7 @@ export default class CPU {
   public queue: PriorityQueue<Process<any>> = new PriorityQueue();
   private callbacks: Map<string, callback> = new Map();
   public boostedProcess: Process<any>|null = null;
+  public paused: boolean = false;
 
   public get coresInUse(): number {
     return this.activeProcesses.size;
@@ -34,9 +35,14 @@ export default class CPU {
       let diff = newTimestamp - timestamp;
       let ticks = Math.floor(diff * this._speed / 500);
       timestamp += ticks * 500 / this._speed;
+      if (this.paused) {
+        ticks = Math.min(ticks, 1);
+      }
       for (let i = 0; i < ticks; ++i) {
         if (parity) {
-          this.onTick();
+          if (!this.paused) {
+            this.onTick();
+          }
         } else {
           this.onBoostTick();
         }
