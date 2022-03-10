@@ -1,5 +1,6 @@
 import Process from '../../../process.js'
-import Towers, {ContradictionType, RowContradiction} from '../../../../puzzles/towers/towers.js'
+import Towers from '../../../../puzzles/towers/towers.js'
+import {ContradictionType, RowContradiction} from '../../../../puzzles/towers/towers_contradictions.js'
 
 export default class RemoveFromRowProcess extends Process<undefined> {
   public readonly processId: string;

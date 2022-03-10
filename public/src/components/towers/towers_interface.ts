@@ -1,16 +1,14 @@
 import Vue from '../../vue.js'
-import Towers, {
-  HintFace,
-  Action,
-  ActionType,
+import {fromSimonThatamId, toSimonTathamId} from '../../puzzles/towers/util.js'
+import Towers, {Action, ActionType} from '../../puzzles/towers/towers.js'
+import {HintFace, isClockwise, getCoordinates} from '../../puzzles/towers/hint_face.js'
+import {
   TowersContradiction,
-  isClockwise,
-  getCoordinates,
   isRowContradiction,
   isColumnContradiction,
   isNoPossibilitesContradiction,
   isViewContradiction
-} from '../../puzzles/towers/towers.js'
+} from '../../puzzles/towers/towers_contradictions.js'
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
@@ -369,10 +367,10 @@ export default {
       if (puzzleId == "") {
         data.currentPuzzle = randomOfSize(options.currentSize);
       } else {
-        data.currentPuzzle = Towers.fromSimonThatamId(puzzleId);
+        data.currentPuzzle = fromSimonThatamId(puzzleId);
       }
 
-      console.log("New puzzle started: " + data.currentPuzzle.toSimonTathamId());
+      console.log("New puzzle started: " + toSimonTathamId(data.currentPuzzle));
 
       data.currentPuzzle.onContradiction(() => {
         stopAllProcesses();
@@ -540,7 +538,7 @@ export default {
       }, flexItems));
 
       if (data.currentPuzzle instanceof Towers) {
-        items.push(Vue.h('span', {}, 'Puzzle ID: ' + data.currentPuzzle.toSimonTathamId()));
+        items.push(Vue.h('span', {}, 'Puzzle ID: ' + toSimonTathamId(data.currentPuzzle)));
         items.push(Vue.h('br'));
         items.push(Vue.h('em', {}, '(compatible with Simon Tatham\'s implementation)'));
         items.push(Vue.h('br'));

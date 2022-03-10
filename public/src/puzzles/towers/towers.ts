@@ -1,11 +1,9 @@
 import Puzzle, {Contradiction} from '../puzzle.js'
 import { Triple, TripleCollection } from './triple_collection.js'
 import ImplicationsTracker from './implications_tracker.js'
-
-function isDigit(s: string) {
-  const charCode = s.charCodeAt(0);
-  return s.length == 1 && s.charCodeAt(0) <= charCode && charCode <= s.charCodeAt(9);
-}
+import CellVisibilityTracker from './cell_visibility_tracker.js'
+import { HintFace } from './hint_face.js'
+import { ContradictionType, TowersContradiction } from './towers_contradictions.js'
 
 // Returns how many towers can be seen.
 export function view(values: number[]) {
@@ -23,11 +21,9 @@ export function view(values: number[]) {
 export enum ActionType {
   SET_POSSIBILITY,
   REMOVE_POSSIBILITY,
-  ADD_POSSIBILITY,
+  SET_CELL_VISIBILITY,
   REMOVE_HINT,
-  ADD_HINT,
   ADD_IMPLICATION,
-  REMOVE_IMPLICATION,
 };
 
 export class CellAction {
@@ -35,7 +31,7 @@ export class CellAction {
     public row: number,
     public column: number,
     public value: number,
-    public type: ActionType.SET_POSSIBILITY|ActionType.REMOVE_POSSIBILITY|ActionType.ADD_POSSIBILITY,
+    public type: ActionType.SET_POSSIBILITY|ActionType.REMOVE_POSSIBILITY,
     public previousPossibilities: Set<number>,
   ) {}
 
@@ -47,136 +43,34 @@ export class CellAction {
 export type HintAction = {
   face: HintFace,
   index: number,
-  type: ActionType.REMOVE_HINT|ActionType.ADD_HINT,
+  type: ActionType.REMOVE_HINT,
 };
 
 export type ImplicationAction = {
   antecedent: [Triple, boolean],
   consequent: [Triple, boolean],
-  type: ActionType.ADD_IMPLICATION|ActionType.REMOVE_IMPLICATION,
+  type: ActionType.ADD_IMPLICATION,
 };
 
-export type Action = CellAction|HintAction|ImplicationAction;
+export type CellVisibilityAction = {
+  row: number,
+  col: number,
+  seen: boolean,
+  face: HintFace,
+  type: ActionType.SET_CELL_VISIBILITY,
+};
+
+export type Action = CellAction|HintAction|ImplicationAction|CellVisibilityAction;
 
 export type ActionCallback = (a: Action) => void;
-
-export enum ContradictionType {
-  NO_POSSIBILITES,
-  ROW,
-  COLUMN,
-  VIEW,
-}
-
-export interface NoPossibilitiesContradiction {
-  type: ContradictionType.NO_POSSIBILITES,
-  noticedOnMove: number,
-  row: number,
-  col: number,
-}
-
-export interface RowContradiction {
-  type: ContradictionType.ROW,
-  noticedOnMove: number,
-  row: number,
-  col1: number,
-  col2: number,
-}
-
-export interface ColumnContradiction {
-  type: ContradictionType.COLUMN,
-  noticedOnMove: number,
-  col: number,
-  row1: number,
-  row2: number,
-}
-
-export interface ViewContradiction {
-  type: ContradictionType.VIEW,
-  noticedOnMove: number,
-  face: HintFace,
-  rowIndex: number,
-  cellIndices: number[],
-}
-
-export type TowersContradiction = NoPossibilitiesContradiction|RowContradiction|ColumnContradiction|ViewContradiction
-
-export function isNoPossibilitesContradiction(c: TowersContradiction): c is NoPossibilitiesContradiction {
-  return c.type == ContradictionType.NO_POSSIBILITES;
-}
-export function isRowContradiction(c: TowersContradiction): c is RowContradiction {
-  return c.type == ContradictionType.ROW;
-}
-export function isColumnContradiction(c: TowersContradiction): c is ColumnContradiction {
-  return c.type == ContradictionType.COLUMN;
-}
-export function isViewContradiction(c: TowersContradiction): c is ViewContradiction {
-  return c.type == ContradictionType.VIEW;
-}
-
-export enum HintFace {
-  WEST = 1,
-  NORTH = 2,
-  EAST = 3,
-  SOUTH = 4,
-}
-
-export function faceToString(face: HintFace) {
-  switch (face) {
-    case HintFace.WEST:
-      return "West";
-    case HintFace.NORTH:
-      return "North";
-    case HintFace.EAST:
-      return "East";
-    case HintFace.SOUTH:
-      return "South";
-  }
-}
-
-export function isVertical(face: HintFace): boolean {
-  return face % 2 == 0;
-}
-
-export function isHorizontal(face: HintFace): boolean {
-  return !isVertical(face);
-}
-
-export function isReverse(face: HintFace): boolean {
-  return face > 2;
-}
-
-export function isClockwise(face: HintFace): boolean {
-  return face == HintFace.NORTH || face == HintFace.EAST;
-}
-
-export function getCoordinates(face: HintFace, hintIndex: number, index: number, n: number): [number, number] {
-  let x = hintIndex;
-  let y = index;
-  if (isReverse(face)) {
-    y = n - y - 1;
-  }
-  if (!isClockwise(face)) {
-    x = n - x - 1;
-  }
-  if (isHorizontal(face)) {
-    let temp = x;
-    x = y;
-    y = temp;
-  }
-  return [x, y];
-}
-
-export function next(face: HintFace): HintFace {
-  return (face % 4) + 1;
-}
 
 export default class Towers extends Puzzle<Action> {
   public grid: number[][];
   protected contradiction: TowersContradiction|null = null;
-  private westHints: number[];
-  private northHints: number[];
-  private eastHints: number[];
-  private southHints: number[];
+  public westHints: number[];
+  public northHints: number[];
+  public eastHints: number[];
+  public southHints: number[];
 
   // The user can put a mark a hint to signify that it won't provide any further
   // information.
@@ -185,7 +79,9 @@ export default class Towers extends Puzzle<Action> {
   public eastHintMarked: boolean[];
   public southHintMarked: boolean[];
 
-  public implications;
+  public implications: ImplicationsTracker;
+  public marks: TripleCollection;
+  public cellVisibility: CellVisibilityTracker;
 
   public getContradiction(): TowersContradiction|null {
     return this.contradiction;
@@ -221,8 +117,6 @@ export default class Towers extends Puzzle<Action> {
     }
   }
 
-  public marks: TripleCollection;
-
   public undoAction(a: Action): void {
     switch (a.type) {
       case ActionType.SET_POSSIBILITY:
@@ -234,13 +128,6 @@ export default class Towers extends Puzzle<Action> {
           });
         }
         break;
-      case ActionType.ADD_POSSIBILITY:
-        this.marks.delete({
-          row: a.row,
-          col: a.column,
-          val: a.value,
-        });
-        break;
       case ActionType.REMOVE_POSSIBILITY:
         this.marks.add({
           row: a.row,
@@ -248,11 +135,11 @@ export default class Towers extends Puzzle<Action> {
           val: a.value,
         });
         break;
-      case ActionType.ADD_HINT:
-        this.setHint(a.face, a.index, true);
-        break;
       case ActionType.REMOVE_HINT:
         this.setHint(a.face, a.index, false);
+        break;
+      case ActionType.SET_CELL_VISIBILITY:
+        this.cellVisibility.removeInfo(a.row, a.col, a.face, a.seen);
         break;
       case ActionType.ADD_IMPLICATION:
         if (a.antecedent[1] && a.consequent[1]) {
@@ -268,21 +155,6 @@ export default class Towers extends Puzzle<Action> {
           this.implications.removeOffToOnImplication(a.antecedent[0], a.consequent[0]);
         }
         break;
-      case ActionType.REMOVE_IMPLICATION: {
-        if (a.antecedent[1] && a.consequent[1]) {
-          this.implications.addImplication(a.antecedent[0], a.consequent[0]);
-        }
-        if (!a.antecedent[1] && !a.consequent[1]) {
-          this.implications.addImplication(a.consequent[0], a.antecedent[0]);
-        }
-        if (a.antecedent[1] && !a.consequent[1]) {
-          this.implications.addOnToOffImplication(a.antecedent[0], a.consequent[0]);
-        }
-        if (!a.antecedent[1] && a.consequent[1]) {
-          this.implications.addOffToOnImplication(a.antecedent[0], a.consequent[0]);
-        }
-        break;
-      }
     }
 
   }
@@ -332,15 +204,6 @@ export default class Towers extends Puzzle<Action> {
     }
   }
 
-  public addToCell(r: number, c: number, value: number) {
-    const t = {row: r, col: c, val: value};
-    if (!this.marks.has(t)) {
-      const previous = new Set(this.marks.getWithRowCol(r, c));
-      this.marks.add(t);
-      this.addAction(new CellAction(r, c, value, ActionType.ADD_POSSIBILITY, previous));
-    }
-  }
-
   public setCell(r: number, c: number, value: number) {
     const previous = new Set(this.marks.getWithRowCol(r, c));
     if (previous.size == 1 && previous.has(value)) {
@@ -356,29 +219,12 @@ export default class Towers extends Puzzle<Action> {
     this.addAction(new CellAction(r, c, value, ActionType.SET_POSSIBILITY, previous));
   }
 
-  public toggleHint(f: HintFace, i: number) {
-    if (this.getHintsMarked(f)[i]) {
-      this.unmarkHint(f, i);
-    } else {
-      this.markHint(f, i);
-    }
-  }
-
   public markHint(f: HintFace, i: number) {
     this.setHint(f, i, true);
     this.addAction({
       face: f,
       index: i,
       type: ActionType.REMOVE_HINT
-    });
-  }
-
-  public unmarkHint(f: HintFace, i: number) {
-    this.setHint(f, i, false);
-    this.addAction({
-      face: f,
-      index: i,
-      type: ActionType.ADD_HINT
     });
   }
 
@@ -396,6 +242,21 @@ export default class Towers extends Puzzle<Action> {
       case HintFace.WEST:
         this.westHintMarked[i] = value;
         break;
+    }
+  }
+
+  public setCellVisibility(row: number, col: number, face: HintFace, seen: boolean) {
+    if (this.cellVisibility.addInfo(row, col, face, seen)) {
+      this.addAction({
+        row, col, face, seen, type: ActionType.SET_CELL_VISIBILITY,
+      });
+      if (this.cellVisibility.hasContradiction(row, col, face)) {
+        this.noticeContradiction({
+          noticedOnMove: this.history.length,
+          type: ContradictionType.CELL_VISIBILITY,
+          row, col, face
+        })
+      }
     }
   }
 
@@ -508,6 +369,7 @@ export default class Towers extends Puzzle<Action> {
       }
     }
     this.implications = new ImplicationsTracker(this.n);
+    this.cellVisibility = new CellVisibilityTracker(this.n);
   }
 
   public copy(): Towers {
@@ -575,123 +437,6 @@ export default class Towers extends Puzzle<Action> {
       }
     }
     return solved;
-  }
-
-  // Convert puzzle to ID compatible with Simon Tatham's implementation of
-  // towers: https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/towers.html
-  public toSimonTathamId(): string {
-    const aCode = 'a'.charCodeAt(0);
-    let result = `${this.n}:`;
-    result += [
-      this.northHints.map(h => h == -1 ? '' : (h).toString()).join('/'),
-      this.southHints.map(h => h == -1 ? '' : (h).toString()).join('/'),
-      this.westHints.map(h => h == -1 ? '' : (h).toString()).join('/'),
-      this.eastHints.map(h => h == -1 ? '' : (h).toString()).join('/'),
-    ].join('/');
-
-    result += ',';
-
-    let run = 0;
-    for (let y = 0; y < this.n; ++y) {
-      for (let x = 0; x < this.n; ++x) {
-        if (this.grid[y][x] == -1) {
-          run += 1;
-        } else {
-          if (run > 0) {
-            result += 'z'.repeat(Math.floor(run / 26));
-            const leftover = run % 26;
-            if (leftover > 0) {
-              result += String.fromCharCode(aCode + leftover - 1);
-            }
-            run = 0;
-          } else if (x != 0 || y != 0) {
-            result += '_';
-          }
-          result += (this.grid[y][x] + 1)
-        }
-      }
-    }
-    result += 'z'.repeat(Math.floor(run / 26));
-    const leftover = run % 26;
-    if (leftover > 0) {
-      result += String.fromCharCode(aCode + leftover - 1);
-    }
-
-    return result;
-  }
-
-  public static fromSimonThatamId(id: String): Towers {
-    const aCode = 'a'.charCodeAt(0);
-    const zCode = 'z'.charCodeAt(0);
-    const firstSplit = id.split(':');
-    if (firstSplit.length != 2) {
-      throw new Error('Game ID expects a colon in it.');
-    }
-    const size = parseInt(firstSplit[0]);
-    const secondSplit = firstSplit[1].split(',');
-    if (secondSplit.length > 2) {
-      throw new Error('Game ID expects at most 1 comma in it.');
-    }
-    const view = secondSplit[0].split('/');
-    if (view.length != 4 * size) {
-      throw new Error(`Since size is ${size}, game ID expects exactly 4* size - 1 = ${4*size - 1} backslashes in it.`);
-    }
-    const nHints = [];
-    const sHints = [];
-    const wHints = [];
-    const eHints = [];
-    for (let i = 0; i < size; ++i) {
-      nHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-    }
-    for (let i = size; i < 2*size; ++i) {
-      sHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-    }
-    for (let i = 2*size; i < 3*size; ++i) {
-      wHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-    }
-    for (let i = 3*size; i < 4*size; ++i) {
-      eHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-    }
-
-    const grid: number[][] = [];
-    if (secondSplit.length == 2) {
-      const gridInfo = secondSplit[1];
-      let run = 0;
-      let infoIndex = 0;
-      for (let y = 0; y < size; ++y) {
-        grid.push([]);
-        for (let x = 0; x < size; ++x) {
-          if (run > 0) {
-            grid[y].push(-1);
-            run -= 1;
-          } else {
-            let char = gridInfo[infoIndex++];
-            while (char == '_') {
-              char = gridInfo[infoIndex++];
-            }
-            let charCode = char.charCodeAt(0);
-            if (aCode <= charCode && charCode <= zCode) {
-              grid[y].push(-1);
-              run = charCode - aCode;
-            } else {
-              while (infoIndex < gridInfo.length - 1 && isDigit(gridInfo[infoIndex + 1])) {
-                char += gridInfo[infoIndex++];
-              }
-              grid[y].push(parseInt(char) - 1);
-            }
-          }
-        }
-      }
-    } else {
-      for (let y = 0; y < size; ++y) {
-        grid.push([]);
-        for (let x = 0; x < size; ++x) {
-          grid[y].push(-1);
-        }
-      }
-    }
-
-    return new Towers(grid, wHints, nHints, eHints, sHints);
   }
 
   public toString() {

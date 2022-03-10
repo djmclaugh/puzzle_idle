@@ -1,5 +1,6 @@
 import Process from '../../../process.js'
-import Towers, {ContradictionType, ColumnContradiction} from '../../../../puzzles/towers/towers.js'
+import Towers from '../../../../puzzles/towers/towers.js'
+import {ContradictionType, ColumnContradiction} from '../../../../puzzles/towers/towers_contradictions.js'
 
 export default class RemoveFromColumnProcess extends Process<undefined> {
   public readonly processId: string;

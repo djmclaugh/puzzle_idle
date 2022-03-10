@@ -1,5 +1,6 @@
 import Process from '../../process.js'
-import Towers, {HintFace, getCoordinates, next, isClockwise, isVertical, faceToString} from '../../../puzzles/towers/towers.js'
+import Towers from '../../../puzzles/towers/towers.js'
+import {HintFace, next, faceToString, isClockwise, isVertical, getCoordinates} from '../../../puzzles/towers/hint_face.js'
 
 export enum ValidationStep {
   NEW = 0,
