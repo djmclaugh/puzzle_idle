@@ -4,7 +4,6 @@ import TowersHintCellComponent from './towers_hint_cell.js'
 import { Triple } from '../../puzzles/towers/triple_collection.js'
 import Towers from '../../puzzles/towers/towers.js'
 import { HintFace, isClockwise, getCoordinates } from '../../puzzles/towers/hint_face.js'
-import {newCellVisibilityInfo} from '../../puzzles/towers/cell_visibility_tracker.js'
 import { DoubleKeyMap } from '../../util/multi_key_map.js'
 import ValidationProcess from '../../data/processes/towers/validation_process.js'
 import {

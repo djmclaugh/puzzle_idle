@@ -34,8 +34,7 @@ import ValidationProcess from '../../data/processes/towers/validation_process.js
 import FollowSetImplicationsProcess from '../../data/processes/towers/follow_set_implications_process.js'
 import TowersOptions from '../../data/towers/towers_options.js'
 import {towersUpgrades} from '../../data/towers/towers_upgrades.js'
-let oldValidation: any = null
-let oldRaw: any = null
+
 interface InterfaceComponentProps {
   interfaceId: number,
 }

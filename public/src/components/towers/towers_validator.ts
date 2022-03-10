@@ -5,10 +5,6 @@ interface TowersValidatorComponentProps {
   process: ValidationProcess,
 }
 
-interface TowersValidatorComponentData {
-  logs: string[][],
-}
-
 export default {
   props: ['process'],
 
