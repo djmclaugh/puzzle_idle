@@ -1,8 +1,14 @@
 import Vue from '../../vue.js'
 
+import LatinSquareCellVisibilityComponent from './latin_square_cell_visibility.js'
+
+import {HintFace} from '../../puzzles/towers/hint_face.js'
+import {CellVisibilityInfo} from '../../puzzles/towers/cell_visibility_tracker.js'
+
 interface LatinCellComponentProps {
   possibilities: Set<number>,
   range: number,
+  visibilityInfo: CellVisibilityInfo,
   highlight: {
     red: Set<number>,
     yellow: Set<number>,
@@ -16,7 +22,7 @@ interface LatinCellComponentData {
 }
 
 export default {
-  props: ['possibilities', 'range', 'highlight'],
+  props: ['possibilities', 'range', 'visibilityInfo', 'highlight'],
 
   setup(props: LatinCellComponentProps, {attrs, slots, emit}: any) {
 
@@ -45,11 +51,10 @@ export default {
 
       if (data.p.size == 1) {
         const node = Vue.h('span', {
-          class: 'sudoku-selection',
+          class: 'latin-selection',
         }, (data.p.values().next().value + 1).toString());
         items.push(node);
       } else {
-
         const possibilityNodes = [];
         for (let i = 0; i < props.range; ++i) {
           const style: any[] = [];
@@ -69,7 +74,7 @@ export default {
 
           }
           const node = Vue.h('div', {
-            class: ['sudoku-possibility', {
+            class: ['latin-possibility', {
               'crossed-out': !data.p.has(i),
             }],
             style: style,
@@ -90,7 +95,7 @@ export default {
         }
 
         const possibilities = Vue.h('div', {
-          class: 'sudoku-possibilities',
+          class: 'latin-possibilities',
           style: {
             visibility: data.p.size == 1 && !data.hover ? 'hidden' : 'visible',
           },
@@ -98,8 +103,10 @@ export default {
         items.push(possibilities);
       }
 
+      items.push(Vue.h(LatinSquareCellVisibilityComponent, {visibilityInfo: props.visibilityInfo}));
+
       return Vue.h('div', {
-        class: ['sudoku-cell'],
+        class: ['latin-cell'],
         onMouseover: () => {data.hover = true;},
         onMouseout: () => {
           data.hover = false;

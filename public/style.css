@@ -293,48 +293,13 @@ details > div {
   height: 1098px;
 }
 
-.sudoku-grid {
-  margin: 8px;
-  display: grid;
-  background-color: black;
-  gap: 2px;
-  border: 2px solid black;
-  user-select: none;
-}
-
-.sudoku-grid-1 {
-  width: 20vw;
-  height: 20vw;
-  min-width: 100px;
-  min-height: 100px;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-}
-
-.sudoku-grid-2 {
-  width: 30vw;
-  height: 30vw;
-  min-width: 120px;
-  min-height: 120px;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.sudoku-grid-3 {
-  width: 40vw;
-  height: 40vw;
-  min-width: 172px;
-  min-height: 172px;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
-}
-
-.sudoku-cell {
-  position: relative;
+.latin-cell {
   background-color: white;
+  position: relative;
 }
 
-.sudoku-possibilities {
+.latin-possibilities {
+  position: absolute;
   width: calc(100% - 4px);
   display: flex;
   flex-wrap: wrap;
@@ -342,7 +307,7 @@ details > div {
   margin: 2px;
 }
 
-.sudoku-possibility {
+.latin-possibility {
   z-index: 2;
   display: flex;
   cursor: pointer;
@@ -356,7 +321,7 @@ details > div {
   background-color: #fafafa;
 }
 
-.sudoku-possibility:hover {
+.latin-possibility:hover {
   background-color: #e0e0e0;
 }
 
@@ -376,7 +341,7 @@ details > div {
   opacity: 0.3;
 }
 
-.sudoku-selection {
+.latin-selection {
   position: absolute;
   height: 100%;
   width: 100%;
@@ -384,6 +349,30 @@ details > div {
   align-items: center;
   justify-content: center;
   font-size: 30px;
+}
+
+.cell-visibility-indicator-container {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 100%;
+}
+
+.cell-visibility-indicator {
+  position: absolute;
+}
+
+.cell-visibility-indicator-seen {
+  background-color: #00800050;
+}
+
+.cell-visibility-indicator-hidden {
+  background-color: #80000050;
+}
+
+.cell-visibility-indicator-contradiction {
+  background-color: #80800050;
 }
 
 .towers-hint {

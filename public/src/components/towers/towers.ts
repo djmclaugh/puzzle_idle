@@ -3,8 +3,17 @@ import LatinSquareCellComponent from './latin_square_cell.js'
 import TowersHintCellComponent from './towers_hint_cell.js'
 import { Triple } from '../../puzzles/towers/triple_collection.js'
 import Towers from '../../puzzles/towers/towers.js'
-import { HintFace } from '../../puzzles/towers/hint_face.js'
+import { HintFace, isClockwise, getCoordinates } from '../../puzzles/towers/hint_face.js'
+import {newCellVisibilityInfo} from '../../puzzles/towers/cell_visibility_tracker.js'
 import { DoubleKeyMap } from '../../util/multi_key_map.js'
+import ValidationProcess from '../../data/processes/towers/validation_process.js'
+import {
+  TowersContradiction,
+  isRowContradiction,
+  isColumnContradiction,
+  isNoPossibilitesContradiction,
+  isViewContradiction
+} from '../../puzzles/towers/towers_contradictions.js'
 
 import { towersUpgrades } from '../../data/towers/towers_upgrades.js'
 
@@ -15,8 +24,7 @@ export interface Background {
 
 interface TowersComponentProps {
   puzzle: Towers,
-  interactive: boolean,
-  backgrounds?: Background[],
+  validationProcess: ValidationProcess|null,
 }
 
 interface TowersComponentData {
@@ -26,7 +34,7 @@ interface TowersComponentData {
 }
 
 export default {
-  props: ['puzzle', 'interactive', 'size', 'backgrounds'],
+  props: ['puzzle', 'validationProcess', 'size', 'backgrounds'],
 
   setup(props: TowersComponentProps) {
 
@@ -71,8 +79,51 @@ export default {
     }
 
     return () => {
+      let backgrounds: Background[] = [];
+      if (props.validationProcess) {
+        backgrounds = props.validationProcess.backgrounds;
+      } else if (props.puzzle.hasContradiction) {
+        let c: TowersContradiction = props.puzzle.getContradiction()!;
+        if (isRowContradiction(c)) {
+          backgrounds = [
+            {cell: [c.col1, c.row], colour: '#ffc0c0f0'},
+            {cell: [c.col2, c.row], colour: '#ffc0c0f0'},
+          ];
+        } else if (isColumnContradiction(c)) {
+          backgrounds = [
+            {cell: [c.col, c.row1], colour: '#ffc0c0f0'},
+            {cell: [c.col, c.row2], colour: '#ffc0c0f0'},
+          ];
+        } else if (isNoPossibilitesContradiction(c)) {
+          backgrounds = [
+            {cell: [c.col, c.row], colour: '#ffc0c0f0'},
+          ];
+        } else if (isViewContradiction(c)) {
+          const n = props.puzzle.n;
+          backgrounds = [];
+          for (let i of c.cellIndices) {
+            let [col, row] = [0, 0];
+            if (!isClockwise(c.face)) {
+              [col, row] = getCoordinates(c.face, n - c.rowIndex - 1, i, n);
+            } else {
+              [col, row] = getCoordinates(c.face, c.rowIndex, i, n);
+            }
+            backgrounds.push({cell: [col, row], colour: '#ffc0c0f0'});
+          }
+          let [col, row] = [0, 0];
+          if (!isClockwise(c.face)) {
+            [col, row] = getCoordinates(c.face, n - c.rowIndex - 1, -1, n);
+          } else {
+            [col, row] = getCoordinates(c.face, c.rowIndex, -1, n);
+          }
+          backgrounds.push({cell: [col, row], colour: '#ffc0c0f0'});
+        } else {
+          console.log("Unknown contradiction type: " + JSON.stringify(c));
+        }
+      }
+
       const backgroundMaps: DoubleKeyMap<number, number, string> = new DoubleKeyMap();
-      for (const background of props.backgrounds || []) {
+      for (const background of backgrounds) {
         backgroundMaps.set(background.cell[0], background.cell[1], background.colour);
       }
 
@@ -105,9 +156,9 @@ export default {
           background: backgroundMaps.get(i, -1),
           value: puzzle.getHints(HintFace.NORTH)[i],
           marked: puzzle.northHintMarked[i],
-          clickable: towersUpgrades.markHintSatisfied.isUnlocked,
+          clickable: !props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked,
           onClick: () => {
-            if (towersUpgrades.markHintSatisfied.isUnlocked) {
+            if (!props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked) {
               puzzle.markHint(HintFace.NORTH, i);
             }
           },
@@ -137,9 +188,9 @@ export default {
             background: backgroundMaps.get(-1, y),
             value: puzzle.getHints(HintFace.WEST)[y],
             marked: puzzle.westHintMarked[y],
-            clickable: towersUpgrades.markHintSatisfied.isUnlocked,
+            clickable: !props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked,
             onClick: () => {
-              if (towersUpgrades.markHintSatisfied.isUnlocked) {
+              if (!props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked) {
                 puzzle.markHint(HintFace.WEST, y);
               }
             },
@@ -157,10 +208,11 @@ export default {
           style['background-color'] = "#dddddd";
         }
 
-        const canEdit = props.interactive && puzzle.grid[y][x] == -1;
+        const canEdit = !props.validationProcess && puzzle.grid[y][x] == -1;
 
         const cell = Vue.h(LatinSquareCellComponent, {
           possibilities: puzzle.marksCell(y, x),
+          visibilityInfo: props.validationProcess ? props.validationProcess.visibilityTracker.info[y][x] : props.puzzle.cellVisibility.info[y][x],
           range: canEdit ? n : -1,
           highlight: highlight,
           style: style,
@@ -222,9 +274,9 @@ export default {
             background: backgroundMaps.get(n, y),
             value: puzzle.getHints(HintFace.EAST)[y],
             marked: puzzle.eastHintMarked[y],
-            clickable: towersUpgrades.markHintSatisfied.isUnlocked,
+            clickable: !props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked,
             onClick: () => {
-              if (towersUpgrades.markHintSatisfied.isUnlocked) {
+              if (!props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked) {
                 puzzle.markHint(HintFace.EAST, y);
               }
             },
@@ -239,9 +291,9 @@ export default {
           background: backgroundMaps.get(i, n),
           value: puzzle.getHints(HintFace.SOUTH)[i],
           marked: puzzle.southHintMarked[i],
-          clickable: towersUpgrades.markHintSatisfied.isUnlocked,
+          clickable: !props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked,
           onClick: () => {
-            if (towersUpgrades.markHintSatisfied.isUnlocked) {
+            if (!props.validationProcess && towersUpgrades.markHintSatisfied.isUnlocked) {
               puzzle.markHint(HintFace.SOUTH, i);
             }
           },

@@ -1,14 +1,7 @@
 import Vue from '../../vue.js'
 import {fromSimonThatamId, toSimonTathamId} from '../../puzzles/towers/util.js'
 import Towers, {Action, ActionType} from '../../puzzles/towers/towers.js'
-import {HintFace, isClockwise, getCoordinates} from '../../puzzles/towers/hint_face.js'
-import {
-  TowersContradiction,
-  isRowContradiction,
-  isColumnContradiction,
-  isNoPossibilitesContradiction,
-  isViewContradiction
-} from '../../puzzles/towers/towers_contradictions.js'
+import {HintFace} from '../../puzzles/towers/hint_face.js'
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
@@ -41,7 +34,8 @@ import ValidationProcess from '../../data/processes/towers/validation_process.js
 import FollowSetImplicationsProcess from '../../data/processes/towers/follow_set_implications_process.js'
 import TowersOptions from '../../data/towers/towers_options.js'
 import {towersUpgrades} from '../../data/towers/towers_upgrades.js'
-
+let oldValidation: any = null
+let oldRaw: any = null
 interface InterfaceComponentProps {
   interfaceId: number,
 }
@@ -51,7 +45,6 @@ interface InterfaceComponentData {
   autoUniqueImplications: boolean,
   autoImply: boolean,
   autoFollowImply: boolean,
-  backgrounds: {cell: [number, number], colour: string}[],
   // Processes that require special handling
   validationProcess: ValidationProcess|null;
   randomGuessProcess: RandomGuessProcess|null;
@@ -71,7 +64,6 @@ export default {
       autoImply: false,
       autoFollowImply: false,
       activeProcesses: new Set(),
-      backgrounds: [],
       validationProcess: null,
       randomGuessProcess: null,
       otherProcesses: new Set(),
@@ -139,8 +131,6 @@ export default {
         currentCPU.killProcess(p);
       }
       data.otherProcesses.clear();
-
-      data.backgrounds = [];
     }
 
     function hasProcessRunning(): boolean {
@@ -168,11 +158,7 @@ export default {
     function startValidate(): void {
       stopAllProcesses();
       data.validationProcess = new ValidationProcess(data.currentPuzzle, props.interfaceId);
-      data.validationProcess.onTick(() => {
-        if (data.validationProcess) {
-          data.backgrounds = data.validationProcess.getBackgrounds();
-        }
-      });
+
       currentCPU.addProcess(data.validationProcess, 10, (isValid: boolean) => {
         if (isValid && options.autoCashInOn) {
           cashIn();
@@ -475,49 +461,7 @@ export default {
       const towersProps: any = {
         key: 'puzzle-' + puzzleUUID,
         puzzle: data.currentPuzzle,
-        interactive: true,
-      }
-      if (data.validationProcess) {
-        towersProps.interactive = false;
-        towersProps.backgrounds = data.backgrounds;
-      } else if (data.currentPuzzle.hasContradiction) {
-        let c: TowersContradiction = data.currentPuzzle.getContradiction()!;
-        if (isRowContradiction(c)) {
-          towersProps.backgrounds = [
-            {cell: [c.col1, c.row], colour: '#ffc0c0f0'},
-            {cell: [c.col2, c.row], colour: '#ffc0c0f0'},
-          ];
-        } else if (isColumnContradiction(c)) {
-          towersProps.backgrounds = [
-            {cell: [c.col, c.row1], colour: '#ffc0c0f0'},
-            {cell: [c.col, c.row2], colour: '#ffc0c0f0'},
-          ];
-        } else if (isNoPossibilitesContradiction(c)) {
-          towersProps.backgrounds = [
-            {cell: [c.col, c.row], colour: '#ffc0c0f0'},
-          ];
-        } else if (isViewContradiction(c)) {
-          const n = data.currentPuzzle.n;
-          towersProps.backgrounds = [];
-          for (let i of c.cellIndices) {
-            let [col, row] = [0, 0];
-            if (!isClockwise(c.face)) {
-              [col, row] = getCoordinates(c.face, n - c.rowIndex - 1, i, n);
-            } else {
-              [col, row] = getCoordinates(c.face, c.rowIndex, i, n);
-            }
-            towersProps.backgrounds.push({cell: [col, row], colour: '#ffc0c0f0'});
-          }
-          let [col, row] = [0, 0];
-          if (!isClockwise(c.face)) {
-            [col, row] = getCoordinates(c.face, n - c.rowIndex - 1, -1, n);
-          } else {
-            [col, row] = getCoordinates(c.face, c.rowIndex, -1, n);
-          }
-          towersProps.backgrounds.push({cell: [col, row], colour: '#ffc0c0f0'});
-        } else {
-          console.log("Unknown contradiction type: " + JSON.stringify(c));
-        }
+        validationProcess: data.validationProcess,
       }
 
       const flexItems: any = [];

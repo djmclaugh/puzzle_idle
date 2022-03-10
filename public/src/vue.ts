@@ -4,6 +4,8 @@ declare const Vue: any;
 export default {
   ref: Vue.ref,
   reactive: Vue.reactive,
+  toRaw: Vue.toRaw,
+  readonly: Vue.readonly,
   h: Vue.h,
   createApp: Vue.createApp,
   onMounted: Vue.onMounted,

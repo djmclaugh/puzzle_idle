@@ -9,7 +9,7 @@ export type CellVisibilityInfo = {
   [key in HintFace]: VisibilityInfo;
 };
 
-function newCellVisibilityInfo(): CellVisibilityInfo {
+export function newCellVisibilityInfo(): CellVisibilityInfo {
   return {
     [HintFace.WEST]: {seen: false, hidden: false},
     [HintFace.NORTH]: {seen: false, hidden: false},
