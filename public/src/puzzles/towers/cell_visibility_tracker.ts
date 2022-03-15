@@ -32,9 +32,11 @@ export default class CellVisibilityTracker {
 
   // Returns whether something changed or not.
   addInfo(row: number, col: number, face: HintFace, seen: boolean): boolean {
-    if (seen && !this.info[row][col][face].seen) {
-      this.info[row][col][face].seen = true;
-      return true;
+    if (seen) {
+      if (!this.info[row][col][face].seen) {
+        this.info[row][col][face].seen = true;
+        return true;
+      }
     } else if (!this.info[row][col][face].hidden) {
       this.info[row][col][face].hidden = true;
       return true;

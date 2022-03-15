@@ -5,6 +5,13 @@ export enum HintFace {
   SOUTH = 4,
 }
 
+export const ALL_FACES = [
+  HintFace.WEST,
+  HintFace.NORTH,
+  HintFace.EAST,
+  HintFace.SOUTH,
+]
+
 export function faceToString(face: HintFace) {
   switch (face) {
     case HintFace.WEST:

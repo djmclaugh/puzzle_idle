@@ -363,6 +363,10 @@ details > div {
   position: absolute;
 }
 
+.cell-visibility-indicator-hover {
+  background-color: #00000050;
+}
+
 .cell-visibility-indicator-seen {
   background-color: #00800050;
 }

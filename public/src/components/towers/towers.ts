@@ -265,7 +265,13 @@ export default {
             } else {
               data.hoveredValue = {row: y, col: x, val: value};
             }
-          }
+          },
+          onSetSeen: (face: HintFace) => {
+            props.puzzle.setCellVisibility(y, x, face, true);
+          },
+          onSetHidden: (face: HintFace) => {
+            props.puzzle.setCellVisibility(y, x, face, false);
+          },
         });
         items.push(cell);
         if (x == n - 1) {

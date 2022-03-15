@@ -106,7 +106,7 @@ export function fromSimonThatamId(id: String): Towers {
             grid[y].push(-1);
             run = charCode - aCode;
           } else {
-            while (infoIndex < gridInfo.length - 1 && isDigit(gridInfo[infoIndex + 1])) {
+            while (infoIndex < gridInfo.length && isDigit(gridInfo[infoIndex])) {
               char += gridInfo[infoIndex++];
             }
             grid[y].push(parseInt(char) - 1);

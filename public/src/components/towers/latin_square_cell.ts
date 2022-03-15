@@ -24,7 +24,7 @@ interface LatinCellComponentData {
 export default {
   props: ['possibilities', 'range', 'visibilityInfo', 'highlight'],
 
-  setup(props: LatinCellComponentProps, {attrs, slots, emit}: any) {
+  setup(props: LatinCellComponentProps, {emit}: any) {
 
     const data: LatinCellComponentData = Vue.reactive({
       p: props.possibilities,
@@ -103,7 +103,16 @@ export default {
         items.push(possibilities);
       }
 
-      items.push(Vue.h(LatinSquareCellVisibilityComponent, {visibilityInfo: props.visibilityInfo}));
+      items.push(Vue.h(LatinSquareCellVisibilityComponent, {
+        visibilityInfo: props.visibilityInfo,
+        interactable: false,
+        onSetSeen: (face: HintFace) => {
+          emit('setSeen', face);
+        },
+        onSetHidden: (face: HintFace) => {
+          emit('setHidden', face);
+        },
+      }));
 
       return Vue.h('div', {
         class: ['latin-cell'],

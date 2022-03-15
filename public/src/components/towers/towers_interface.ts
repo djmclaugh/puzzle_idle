@@ -1,7 +1,7 @@
 import Vue from '../../vue.js'
 import {fromSimonThatamId, toSimonTathamId} from '../../puzzles/towers/util.js'
 import Towers, {Action, ActionType} from '../../puzzles/towers/towers.js'
-import {HintFace} from '../../puzzles/towers/hint_face.js'
+import {HintFace, isVertical, ALL_FACES} from '../../puzzles/towers/hint_face.js'
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
@@ -13,11 +13,10 @@ import Process from '../../data/process.js'
 import RandomGuessProcess from '../../data/processes/towers/random_guess_process.js'
 import OneViewProcess from '../../data/processes/towers/visibility/one_view_process.js'
 import NotOneViewProcess from '../../data/processes/towers/visibility/not_one_view_process.js'
-import {
-  PositionsSeenHiddenForSureProcess,
-  PositionsSeenForSureProcess,
-  PositionsHiddenForSureProcess,
-} from '../../data/processes/towers/visibility/positions_seen_hidden_for_sure_process.js'
+import DetectCellVisibilityProcess from '../../data/processes/towers/visibility/detect_cell_visibility_process.js'
+import CellMustBeSeenProcess from '../../data/processes/towers/visibility/cell_must_be_seen_process.js'
+import CellMustBeHiddenProcess from '../../data/processes/towers/visibility/cell_must_be_hidden_process.js'
+import CheckCellSeenHiddenCount from '../../data/processes/towers/visibility/check_cell_seen_hidden_count_process.js'
 import {
   TowersSeenHiddenForSureProcess,
   TowersSeenForSureProcess,
@@ -284,19 +283,33 @@ export default {
 
       if (towersUpgrades.positionsSeenHiddenForSureProcess.isUnlocked) {
         if (options.positionVisibilityOn) {
-          for (const p of PositionsSeenHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+          for (const p of DetectCellVisibilityProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId, true, true)) {
             startProcess(p, 7);
           }
-        }
-      } else {
-        if (options.positionsSeenForSureOn) {
-          for (const p of PositionsSeenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
-            startProcess(p, 7);
-          }
-        }
-        if (options.positionsHiddenForSureOn) {
-          for (const p of PositionsHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
-            startProcess(p, 7);
+          for (let i = 0; i < data.currentPuzzle.n; ++i) {
+            for (const face of ALL_FACES) {
+              if (isVertical(face)) {
+                const visibilityInfo = data.currentPuzzle.cellVisibility.info[i][col][face];
+                if (visibilityInfo.seen) {
+                  const p = new CellMustBeSeenProcess(data.currentPuzzle, i, col, face, props.interfaceId);
+                  startProcess(p, 6);
+                }
+                if (visibilityInfo.hidden) {
+                  const p = new CellMustBeHiddenProcess(data.currentPuzzle, i, col, face, props.interfaceId);
+                  startProcess(p, 6);
+                }
+              } else {
+                const visibilityInfo = data.currentPuzzle.cellVisibility.info[row][i][face];
+                if (visibilityInfo.seen) {
+                  const p = new CellMustBeSeenProcess(data.currentPuzzle, row, i, face, props.interfaceId);
+                  startProcess(p, 6);
+                }
+                if (visibilityInfo.hidden) {
+                  const p = new CellMustBeHiddenProcess(data.currentPuzzle, row, i, face, props.interfaceId);
+                  startProcess(p, 6);
+                }
+              }
+            }
           }
         }
       }
@@ -391,6 +404,22 @@ export default {
           if (cell.size == 1) {
             const v: number = cell.values().next().value;
             onPossibilitySet(a.row, a.column, v);
+          }
+        }
+        if (a.type == ActionType.SET_CELL_VISIBILITY) {
+          if (isVertical(a.face)) {
+            const p = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.col, props.interfaceId);
+            startProcess(p, 5);
+          } else {
+            const p = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.row, props.interfaceId);
+            startProcess(p, 5);
+          }
+          if (a.seen) {
+            const p = new CellMustBeSeenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
+            startProcess(p, 5);
+          } else {
+            const p = new CellMustBeHiddenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
+            startProcess(p, 5);
           }
         }
         startRandomGuessProcessIfNeeded();
