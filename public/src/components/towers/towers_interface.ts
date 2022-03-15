@@ -251,7 +251,7 @@ export default {
       incomeTracker.push([Date.now(), currentStatus.puzzleReward(options.currentSize)]);
       currentStatus.puzzleCompleted(options.currentSize);
       updateAverages();
-      assignNewPuzzle()
+      assignNewPuzzle();
     }
 
     function onPossibilitySet(row: number, col: number, val: number) {

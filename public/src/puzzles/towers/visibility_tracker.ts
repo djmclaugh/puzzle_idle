@@ -1,5 +1,5 @@
 import { DoubleKeyMap } from '../../util/multi_key_map.js'
-import { HintFace } from './hint_face.js'
+import { HintFace, ALL_FACES } from './hint_face.js'
 
 export type VisibilityInfo = {
   seen: boolean,
@@ -17,6 +17,17 @@ export function newDirectionalVisibilityInfo(): DirectionalVisibilityInfo {
     [HintFace.EAST]: {seen: false, hidden: false},
     [HintFace.SOUTH]: {seen: false, hidden: false},
   };
+}
+
+export function mergeVisibilityInfo(a: DirectionalVisibilityInfo, b: DirectionalVisibilityInfo): DirectionalVisibilityInfo {
+  const info = newDirectionalVisibilityInfo();
+  for (let f of ALL_FACES) {
+    info[f] = {
+      seen: a[f].seen || b[f].seen,
+      hidden: a[f].hidden || b[f].hidden,
+    }
+  }
+  return info;
 }
 
 export default class VisibilityTracker {
@@ -52,6 +63,15 @@ export default class VisibilityTracker {
       this.colValMap.set(col, val, info);
     }
     return info;
+  }
+
+  public getTowerVisibility(row: number, col: number, val: number): DirectionalVisibilityInfo {
+    return {
+      [HintFace.NORTH]: this.getWithColVal(col, val)[HintFace.NORTH],
+      [HintFace.SOUTH]: this.getWithColVal(col, val)[HintFace.SOUTH],
+      [HintFace.EAST]: this.getWithRowVal(row, val)[HintFace.EAST],
+      [HintFace.WEST]: this.getWithRowVal(row, val)[HintFace.WEST],
+    }
   }
 
   // Returns true if it was new information
@@ -101,7 +121,7 @@ export default class VisibilityTracker {
     return this.addInfo(info, seen);
   }
   public addColValInfo(col: number, val: number, face: HintFace, seen: boolean): boolean {
-    const info = this.getWithRowVal(col, val)[face];
+    const info = this.getWithColVal(col, val)[face];
     return this.addInfo(info, seen);
   }
 

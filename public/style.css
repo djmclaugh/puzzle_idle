@@ -309,6 +309,7 @@ details > div {
 
 .latin-possibility {
   z-index: 2;
+  position: relative;
   display: flex;
   cursor: pointer;
   align-items: center;
