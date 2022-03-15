@@ -5,7 +5,6 @@ export enum ContradictionType {
   ROW,
   COLUMN,
   VIEW,
-  CELL_VISIBILITY
 }
 
 export interface NoPossibilitiesContradiction {
@@ -39,15 +38,7 @@ export interface ViewContradiction {
   cellIndices: number[],
 }
 
-export interface CellVisibilityContradiction {
-  type: ContradictionType.CELL_VISIBILITY,
-  noticedOnMove: number,
-  row: number,
-  col: number,
-  face: HintFace,
-}
-
-export type TowersContradiction = NoPossibilitiesContradiction|RowContradiction|ColumnContradiction|ViewContradiction|CellVisibilityContradiction
+export type TowersContradiction = NoPossibilitiesContradiction|RowContradiction|ColumnContradiction|ViewContradiction
 
 
 export function isNoPossibilitesContradiction(c: TowersContradiction): c is NoPossibilitiesContradiction {
@@ -61,7 +52,4 @@ export function isColumnContradiction(c: TowersContradiction): c is ColumnContra
 }
 export function isViewContradiction(c: TowersContradiction): c is ViewContradiction {
   return c.type == ContradictionType.VIEW;
-}
-export function isCellVisibilityContradiction(c: TowersContradiction): c is CellVisibilityContradiction {
-  return c.type == ContradictionType.CELL_VISIBILITY;
 }

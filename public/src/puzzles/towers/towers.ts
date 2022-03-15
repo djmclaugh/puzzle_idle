@@ -1,8 +1,8 @@
-import Puzzle, {Contradiction} from '../puzzle.js'
+import Puzzle from '../puzzle.js'
 import { Triple, TripleCollection } from './triple_collection.js'
 import ImplicationsTracker from './implications_tracker.js'
-import CellVisibilityTracker from './cell_visibility_tracker.js'
-import { HintFace } from './hint_face.js'
+import VisibilityTracker from './visibility_tracker.js'
+import { HintFace, isVertical } from './hint_face.js'
 import { ContradictionType, TowersContradiction } from './towers_contradictions.js'
 
 // Returns how many towers can be seen.
@@ -21,7 +21,7 @@ export function view(values: number[]) {
 export enum ActionType {
   SET_POSSIBILITY,
   REMOVE_POSSIBILITY,
-  SET_CELL_VISIBILITY,
+  SET_VISIBILITY,
   REMOVE_HINT,
   ADD_IMPLICATION,
 };
@@ -52,15 +52,16 @@ export type ImplicationAction = {
   type: ActionType.ADD_IMPLICATION,
 };
 
-export type CellVisibilityAction = {
-  row: number,
-  col: number,
+export type VisibilityAction = {
+  row?: number,
+  col?: number,
+  val?: number,
   seen: boolean,
   face: HintFace,
-  type: ActionType.SET_CELL_VISIBILITY,
+  type: ActionType.SET_VISIBILITY,
 };
 
-export type Action = CellAction|HintAction|ImplicationAction|CellVisibilityAction;
+export type Action = CellAction|HintAction|ImplicationAction|VisibilityAction;
 
 export type ActionCallback = (a: Action) => void;
 
@@ -81,7 +82,7 @@ export default class Towers extends Puzzle<Action> {
 
   public implications: ImplicationsTracker;
   public marks: TripleCollection;
-  public cellVisibility: CellVisibilityTracker;
+  public visibility: VisibilityTracker = new VisibilityTracker();
 
   public getContradiction(): TowersContradiction|null {
     return this.contradiction;
@@ -138,8 +139,16 @@ export default class Towers extends Puzzle<Action> {
       case ActionType.REMOVE_HINT:
         this.setHint(a.face, a.index, false);
         break;
-      case ActionType.SET_CELL_VISIBILITY:
-        this.cellVisibility.removeInfo(a.row, a.col, a.face, a.seen);
+      case ActionType.SET_VISIBILITY:
+        if (a.row !== undefined && a.col !== undefined && a.val === undefined) {
+          this.visibility.removeRowColInfo(a.row, a.col, a.face, a.seen);
+        } else if (a.row !== undefined && a.col === undefined && a.val !== undefined) {
+          this.visibility.removeRowValInfo(a.row, a.val, a.face, a.seen);
+        } else if (a.row === undefined && a.col !== undefined && a.val !== undefined) {
+          this.visibility.removeColValInfo(a.col, a.val, a.face, a.seen);
+        } else {
+          throw new Error("Exactly one of row, col, or val should be undefined.");
+        }
         break;
       case ActionType.ADD_IMPLICATION:
         if (a.antecedent[1] && a.consequent[1]) {
@@ -246,15 +255,18 @@ export default class Towers extends Puzzle<Action> {
   }
 
   public setCellVisibility(row: number, col: number, face: HintFace, seen: boolean) {
-    if (this.cellVisibility.addInfo(row, col, face, seen)) {
+    if (this.visibility.addRowColInfo(row, col, face, seen)) {
       this.addAction({
-        row, col, face, seen, type: ActionType.SET_CELL_VISIBILITY,
+        row, col, face, seen, type: ActionType.SET_VISIBILITY,
       });
-      if (this.cellVisibility.hasContradiction(row, col, face)) {
+      const info = this.visibility.getWithRowCol(row, col)[face];
+      if (info.seen && info.hidden) {
         this.noticeContradiction({
           noticedOnMove: this.history.length,
-          type: ContradictionType.CELL_VISIBILITY,
-          row, col, face
+          type: ContradictionType.VIEW,
+          cellIndices: [],
+          rowIndex: isVertical(face) ? row : col,
+          face: face,
         })
       }
     }
@@ -369,7 +381,6 @@ export default class Towers extends Puzzle<Action> {
       }
     }
     this.implications = new ImplicationsTracker(this.n);
-    this.cellVisibility = new CellVisibilityTracker(this.n);
   }
 
   public copy(): Towers {

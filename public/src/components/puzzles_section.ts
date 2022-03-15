@@ -2,7 +2,6 @@ import Vue from '../vue.js'
 // import LoopyInterface from './loopy/loopy_interface.js'
 import TowersInterface from './towers/towers_interface.js'
 import { towersUpgrades } from '../data/towers/towers_upgrades.js'
-import { currentStatus } from '../data/status.js'
 
 interface InterfaceComponentProps {
   puzzleType: string,

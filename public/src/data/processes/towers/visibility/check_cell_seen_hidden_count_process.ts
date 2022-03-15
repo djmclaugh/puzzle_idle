@@ -60,10 +60,10 @@ export default class DetectCellVisibilityProcess extends Process<void> {
 
   private scanningTick() {
     const [col, row] = this.currentCoordinates();
-    if (this.t.cellVisibility.info[row][col][this.face].seen) {
+    if (this.t.visibility.getWithRowCol(row, col)[this.face].seen) {
       this.actionMessage = `${ordinal(this.depth + 1)} cell seen for sure.`;
       this.indicesSeenForSure.push(this.depth);
-    } else if (this.t.cellVisibility.info[row][col][this.face].hidden) {
+    } else if (this.t.visibility.getWithRowCol(row, col)[this.face].hidden) {
       this.actionMessage = `${ordinal(this.depth + 1)} cell hidden for sure.`;
       this.indicesHiddenForSure.push(this.depth);
     } else {

@@ -3,12 +3,12 @@ import Vue from '../../vue.js'
 import LatinSquareCellVisibilityComponent from './latin_square_cell_visibility.js'
 
 import {HintFace} from '../../puzzles/towers/hint_face.js'
-import {CellVisibilityInfo} from '../../puzzles/towers/cell_visibility_tracker.js'
+import {DirectionalVisibilityInfo} from '../../puzzles/towers/visibility_tracker.js'
 
 interface LatinCellComponentProps {
   possibilities: Set<number>,
   range: number,
-  visibilityInfo: CellVisibilityInfo,
+  visibilityInfo: DirectionalVisibilityInfo,
   highlight: {
     red: Set<number>,
     yellow: Set<number>,

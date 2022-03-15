@@ -289,22 +289,22 @@ export default {
           for (let i = 0; i < data.currentPuzzle.n; ++i) {
             for (const face of ALL_FACES) {
               if (isVertical(face)) {
-                const visibilityInfo = data.currentPuzzle.cellVisibility.info[i][col][face];
-                if (visibilityInfo.seen) {
+                const info = data.currentPuzzle.visibility.getWithRowCol(i, col)[face];
+                if (info.seen) {
                   const p = new CellMustBeSeenProcess(data.currentPuzzle, i, col, face, props.interfaceId);
                   startProcess(p, 6);
                 }
-                if (visibilityInfo.hidden) {
+                if (info.hidden) {
                   const p = new CellMustBeHiddenProcess(data.currentPuzzle, i, col, face, props.interfaceId);
                   startProcess(p, 6);
                 }
               } else {
-                const visibilityInfo = data.currentPuzzle.cellVisibility.info[row][i][face];
-                if (visibilityInfo.seen) {
+                const info = data.currentPuzzle.visibility.getWithRowCol(row, i)[face];
+                if (info.seen) {
                   const p = new CellMustBeSeenProcess(data.currentPuzzle, row, i, face, props.interfaceId);
                   startProcess(p, 6);
                 }
-                if (visibilityInfo.hidden) {
+                if (info.hidden) {
                   const p = new CellMustBeHiddenProcess(data.currentPuzzle, row, i, face, props.interfaceId);
                   startProcess(p, 6);
                 }
@@ -406,20 +406,22 @@ export default {
             onPossibilitySet(a.row, a.column, v);
           }
         }
-        if (a.type == ActionType.SET_CELL_VISIBILITY) {
-          if (isVertical(a.face)) {
-            const p = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.col, props.interfaceId);
-            startProcess(p, 5);
-          } else {
-            const p = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.row, props.interfaceId);
-            startProcess(p, 5);
-          }
-          if (a.seen) {
-            const p = new CellMustBeSeenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
-            startProcess(p, 5);
-          } else {
-            const p = new CellMustBeHiddenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
-            startProcess(p, 5);
+        if (a.type == ActionType.SET_VISIBILITY) {
+          if (a.row !== undefined && a.col !== undefined && a.val === undefined) {
+            if (isVertical(a.face)) {
+              const p = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.col, props.interfaceId);
+              startProcess(p, 5);
+            } else {
+              const p = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.row, props.interfaceId);
+              startProcess(p, 5);
+            }
+            if (a.seen) {
+              const p = new CellMustBeSeenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
+              startProcess(p, 5);
+            } else {
+              const p = new CellMustBeHiddenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
+              startProcess(p, 5);
+            }
           }
         }
         startRandomGuessProcessIfNeeded();

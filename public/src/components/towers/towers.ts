@@ -211,7 +211,7 @@ export default {
 
         const cell = Vue.h(LatinSquareCellComponent, {
           possibilities: puzzle.marksCell(y, x),
-          visibilityInfo: props.validationProcess ? props.validationProcess.visibilityTracker.info[y][x] : props.puzzle.cellVisibility.info[y][x],
+          visibilityInfo: props.validationProcess ? props.validationProcess.visibilityTracker.getWithRowCol(y, x) : props.puzzle.visibility.getWithRowCol(y, x),
           range: canEdit ? n : -1,
           highlight: highlight,
           style: style,
