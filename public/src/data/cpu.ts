@@ -1,7 +1,6 @@
 import Vue from '../vue.js'
 import PriorityQueue from '../util/priority_queue.js'
 import Process from './process.js'
-import RAM, { currentRAM } from './ram.js'
 
 type callback = (returnValue: any) => void;
 
@@ -13,6 +12,7 @@ export default class CPU {
   private intervalID: number = 0;
   public activeProcesses: Set<Process<any>> = new Set();
   public queue: PriorityQueue<Process<any>> = new PriorityQueue();
+  private standbyQueue: Map<string, [Process<any>, number, callback]> = new Map();
   private callbacks: Map<string, callback> = new Map();
   public boostedProcess: Process<any>|null = null;
   public paused: boolean = false;
@@ -46,41 +46,45 @@ export default class CPU {
         } else {
           this.onBoostTick();
         }
+        // Check if the next process can be added
+        while (this.canAddNextProcess()) {
+          const next = this.queue.extractNext()!;
+          this.activeProcesses.add(next);
+        }
         parity = !parity;
       }
     }, 100);
   }
 
-  public constructor(private ram: RAM) {
+  public constructor() {
     this.speed = this._speed;
   }
 
   public addProcess<R>(p: Process<R>, priority: number, c: callback): boolean {
     if (this.callbacks.has(p.processId)) {
+      // If the process with the same ID is active, add the new process to the
+      // standby queue.
+      if (!this.standbyQueue.has(p.processId)) {
+        for (const active of this.activeProcesses) {
+          if (active.processId == p.processId) {
+            this.standbyQueue.set(p.processId, [p, priority, c]);
+            return true;
+          }
+        }
+      }
+      // Otherwise, don't add this process at all
       return false;
     }
     this.callbacks.set(p.processId, c);
     this.queue.addItem(p, priority);
-
-    while (this.canAddNextProcess()) {
-      const next = this.queue.extractNext()!;
-      this.activeProcesses.add(next);
-      this.ram.allocate(next.processId, next.ramRequirement);
-    }
     return true;
   }
 
   public killProcess(p: Process<any>) {
-    if (this.activeProcesses.delete(p)) {
-      this.ram.deallocate(p.processId);
-      this.callbacks.delete(p.processId);
-    }
-    if (this.queue.remove(p)) {
-      this.callbacks.delete(p.processId);
-    }
-    if (this.boostedProcess == p) {
-      this.boostedProcess = null;
-    }
+    this.activeProcesses.delete(p);
+    this.queue.remove(p);
+    this.callbacks.delete(p.processId);
+    this.standbyQueue.delete(p.processId);
   }
 
   public isActive(p: Process<any>): boolean {
@@ -88,10 +92,9 @@ export default class CPU {
   }
 
   private canAddNextProcess(): boolean {
-    const hasFreeCore = this.activeProcesses.size < this.cores;
-    const next = this.queue.peakNext();
-    const hasEnoughRam = next !== undefined && next.ramRequirement <= this.ram.remaining;
-    return hasFreeCore && hasEnoughRam;
+    const hasFreeCore = this.activeProcesses.size < this.cores; this.activeProcesses.size < this.cores;
+    const hasNext = this.queue.peakNext() !== undefined;
+    return hasFreeCore && hasNext;
   }
 
   public onTick() {
@@ -102,7 +105,7 @@ export default class CPU {
       const isDone = p.tick();
       const endTimestamp = Date.now();
       const duration = endTimestamp - startTimestamp;
-      if (endTimestamp - startTimestamp > 10) {
+      if (endTimestamp - startTimestamp > 100) {
         console.log(`Warning: Tick from process ${p.processId} took ${duration}ms.`)
       }
       if (isDone) {
@@ -113,7 +116,6 @@ export default class CPU {
     // Remove processes that have terminated
     for (let p of toRemove) {
       if (this.activeProcesses.delete(p)) {
-        this.ram.deallocate(p.processId);
         if (this.boostedProcess == p) {
           this.boostedProcess = null;
         }
@@ -122,15 +124,15 @@ export default class CPU {
           this.callbacks.delete(p.processId);
           callback(p.returnValue);
         }
+        if (this.standbyQueue.has(p.processId)) {
+          const processInfo = this.standbyQueue.get(p.processId)!;
+          this.standbyQueue.delete(p.processId);
+          this.addProcess(processInfo[0], processInfo[1], processInfo[2]);
+        }
       }
     }
 
-    // Check if the next process can be added
-    while (this.canAddNextProcess()) {
-      const next = this.queue.extractNext()!;
-      this.activeProcesses.add(next);
-      this.ram.allocate(next.processId, next.ramRequirement);
-    }
+
   }
 
   public onBoostTick() {
@@ -142,34 +144,30 @@ export default class CPU {
     const isDone = p.tick();
     const endTimestamp = Date.now();
     const duration = endTimestamp - startTimestamp;
-    if (endTimestamp - startTimestamp > 10) {
+    if (endTimestamp - startTimestamp > 100) {
       console.log(`Warning: Tick from process ${p.processId} took ${duration}ms.`)
     }
     // Make sure process hasn't changed during its tick.
     if (isDone && p === this.boostedProcess) {
       // Manually bosted processes might be from the queue.
       this.queue.remove(p);
-      if (this.activeProcesses.delete(p)) {
-          this.ram.deallocate(p.processId);
-      }
+      this.activeProcesses.delete(p)
       if (this.callbacks.has(p.processId)) {
         const callback = this.callbacks.get(p.processId)!;
         this.callbacks.delete(p.processId);
         callback(p.returnValue);
       }
       this.boostedProcess = null;
-    }
-
-    // Check if the next process can be added
-    while (this.canAddNextProcess()) {
-      const next = this.queue.extractNext()!;
-      this.activeProcesses.add(next);
-      this.ram.allocate(next.processId, next.ramRequirement);
+      if (this.standbyQueue.has(p.processId)) {
+        const processInfo = this.standbyQueue.get(p.processId)!;
+        this.standbyQueue.delete(p.processId);
+        this.addProcess(processInfo[0], processInfo[1], processInfo[2]);
+      }
     }
   }
 }
 
-export const currentCPU: CPU = Vue.reactive(new CPU(currentRAM));
+export const currentCPU: CPU = Vue.reactive(new CPU());
 // TODO: verify
 // If the setInterval is done before this object is reactive, Vue will ignore
 // updates done within the setInterval handler.
