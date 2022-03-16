@@ -134,7 +134,7 @@ export default class VisibilityTracker {
     return this.removeInfo(info, seen);
   }
   public removeColValInfo(col: number, val: number, face: HintFace, seen: boolean): boolean {
-    const info = this.getWithRowVal(col, val)[face];
+    const info = this.getWithColVal(col, val)[face];
     return this.removeInfo(info, seen);
   }
 }

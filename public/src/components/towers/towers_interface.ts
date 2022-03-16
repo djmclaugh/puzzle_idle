@@ -14,6 +14,7 @@ import RandomGuessProcess from '../../data/processes/towers/random_guess_process
 import OneViewProcess from '../../data/processes/towers/visibility/one_view_process.js'
 import NotOneViewProcess from '../../data/processes/towers/visibility/not_one_view_process.js'
 import DetectCellVisibilityProcess from '../../data/processes/towers/visibility/detect_cell_visibility_process.js'
+import DetectTowerVisibilityProcess from '../../data/processes/towers/visibility/detect_tower_visibility_process.js'
 import CellMustBeSeenProcess from '../../data/processes/towers/visibility/cell_must_be_seen_process.js'
 import CellMustBeHiddenProcess from '../../data/processes/towers/visibility/cell_must_be_hidden_process.js'
 import CheckCellSeenHiddenCount from '../../data/processes/towers/visibility/check_cell_seen_hidden_count_process.js'
@@ -316,21 +317,12 @@ export default {
 
       if (towersUpgrades.towersSeenHiddenForSureProcess.isUnlocked) {
         if (options.towerVisibilityOn) {
-          for (const p of TowersSeenHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
+          for (const p of DetectTowerVisibilityProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId, true, true)) {
             startProcess(p, 7);
           }
         }
       } else {
-        if (options.towersSeenForSureOn) {
-          for (const p of TowersSeenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
-            startProcess(p, 7);
-          }
-        }
-        if (options.towersHiddenForSureOn) {
-          for (const p of TowersHiddenForSureProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
-            startProcess(p, 7);
-          }
-        }
+
       }
       // if (data.autoImply) {
       //   const rowCol = data.currentPuzzle.marks.getWithRowCol(row, col);

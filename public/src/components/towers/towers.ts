@@ -94,9 +94,24 @@ export default {
             {cell: [c.col, c.row2], colour: '#ffc0c0f0'},
           ];
         } else if (isNoPossibilitesContradiction(c)) {
-          backgrounds = [
-            {cell: [c.col, c.row], colour: '#ffc0c0f0'},
-          ];
+          if (c.row !== undefined && c.col !== undefined && c.val === undefined) {
+            backgrounds = [
+              {cell: [c.col, c.row], colour: '#ffc0c0f0'},
+            ];
+          } else if (c.row !== undefined && c.col === undefined && c.val !== undefined) {
+            backgrounds = [];
+            for (let i = 0; i < props.puzzle.n; ++i) {
+              backgrounds.push({cell: [i, c.row], colour: '#ffc0c0f0'})
+            }
+          } else if (c.row === undefined && c.col !== undefined && c.val !== undefined) {
+            backgrounds = [];
+            for (let i = 0; i < props.puzzle.n; ++i) {
+              backgrounds.push({cell: [c.col, i], colour: '#ffc0c0f0'})
+            }
+          } else {
+            throw new Error('Exactly one of row, col, or val should be undefined.');
+          }
+
         } else if (isViewContradiction(c)) {
           const n = props.puzzle.n;
           backgrounds = [];

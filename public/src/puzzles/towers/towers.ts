@@ -272,6 +272,42 @@ export default class Towers extends Puzzle<Action> {
     }
   }
 
+  public setTowerVisibility(height: number, rowIndex: number, face: HintFace, seen: boolean) {
+    if (isVertical(face)) {
+      if (this.visibility.addColValInfo(rowIndex, height, face, seen)) {
+        this.addAction({
+          col: rowIndex, val: height, face, seen, type: ActionType.SET_VISIBILITY,
+        });
+      }
+      const info = this.visibility.getWithColVal(rowIndex, height)[face];
+      if (info.seen && info.hidden) {
+        this.noticeContradiction({
+          noticedOnMove: this.history.length,
+          type: ContradictionType.VIEW,
+          cellIndices: [],
+          rowIndex: rowIndex,
+          face: face,
+        })
+      }
+    } else {
+      if (this.visibility.addRowValInfo(rowIndex, height, face, seen)) {
+        this.addAction({
+          row: rowIndex, val: height, face, seen, type: ActionType.SET_VISIBILITY,
+        });
+      }
+      const info = this.visibility.getWithRowVal(rowIndex, height)[face];
+      if (info.seen && info.hidden) {
+        this.noticeContradiction({
+          noticedOnMove: this.history.length,
+          type: ContradictionType.VIEW,
+          cellIndices: [],
+          rowIndex: rowIndex,
+          face: face,
+        })
+      }
+    }
+  }
+
   public addImplication(a: Triple, c: Triple) {
     if (this.implications.addImplication(a, c)) {
       this.addAction({

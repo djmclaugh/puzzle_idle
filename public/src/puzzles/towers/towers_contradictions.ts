@@ -10,8 +10,9 @@ export enum ContradictionType {
 export interface NoPossibilitiesContradiction {
   type: ContradictionType.NO_POSSIBILITES,
   noticedOnMove: number,
-  row: number,
-  col: number,
+  row?: number,
+  col?: number,
+  val?: number,
 }
 
 export interface RowContradiction {
