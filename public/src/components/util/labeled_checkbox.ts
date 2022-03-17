@@ -11,16 +11,18 @@ export default {
 
   setup(props: LabeledCheckboxProps) {
     return () => {
-      return Vue.h('div', {class: 'labeled-checkbox'}, [
-        Vue.h('input', {
-          type: 'checkbox',
-          id: props.boxId,
-          checked: props.value,
-        }),
-        Vue.h('label', {
-          id: props.boxId + "_label",
-          for: props.boxId,
-        }, props.label),
+      const checkbox = Vue.h('input', {
+        type: 'checkbox',
+        id: props.boxId,
+        checked: props.value,
+      });
+      return Vue.h('label', {
+        class: 'labeled-checkbox',
+        id: props.boxId + "_label",
+        for: props.boxId,
+      }, [
+        checkbox,
+        props.label,
       ]);
     }
   }
