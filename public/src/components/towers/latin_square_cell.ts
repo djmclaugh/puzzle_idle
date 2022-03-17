@@ -2,8 +2,7 @@ import Vue from '../../vue.js'
 
 import LatinSquareCellVisibilityComponent from './latin_square_cell_visibility.js'
 
-import {HintFace} from '../../puzzles/towers/hint_face.js'
-import VisibilityTracker, {mergeVisibilityInfo} from '../../puzzles/towers/visibility_tracker.js'
+import VisibilityTracker from '../../puzzles/towers/visibility_tracker.js'
 
 interface LatinCellComponentProps {
   row: number,
@@ -47,14 +46,18 @@ export default {
     return () => {
       const items = [];
 
-      let rowColInfo = props.visibilityTracker.getWithRowCol(props.row, props.col);
       if (props.possibilities.size == 1) {
         const p = props.possibilities.values().next().value;
-        rowColInfo = mergeVisibilityInfo(rowColInfo, props.visibilityTracker.getTowerVisibility(props.row, props.col, p));
         const node = Vue.h('span', {
           class: 'latin-selection',
         }, (p + 1).toString());
         items.push(node);
+        items.push(Vue.h(LatinSquareCellVisibilityComponent, {
+          visibilityInfo: props.visibilityTracker.getWithTriple({
+            row: props.row, col: props.col, val: p
+          }),
+          interactable: false,
+        }));
       } else {
         const possibilityNodes = [];
         for (let i = 0; i < props.range; ++i) {
@@ -93,7 +96,9 @@ export default {
             onMouseout: () => { emit('updateHighlight', undefined); },
           }, [(i+1).toString(), Vue.h(LatinSquareCellVisibilityComponent, {
             interactable: false,
-            visibilityInfo: props.visibilityTracker.getTowerVisibility(props.row, props.col, i)
+            visibilityInfo: props.visibilityTracker.getWithTriple({
+              row: props.row, col: props.col, val: i
+            }),
           })]);
           possibilityNodes.push(node);
         }
@@ -106,17 +111,6 @@ export default {
         }, possibilityNodes);
         items.push(possibilities);
       }
-
-      items.push(Vue.h(LatinSquareCellVisibilityComponent, {
-        visibilityInfo: rowColInfo,
-        interactable: false,
-        onSetSeen: (face: HintFace) => {
-          emit('setSeen', face);
-        },
-        onSetHidden: (face: HintFace) => {
-          emit('setHidden', face);
-        },
-      }));
 
       return Vue.h('div', {
         class: ['latin-cell'],

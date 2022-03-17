@@ -199,8 +199,9 @@ export default class ValidationProcess extends Process<boolean> {
             this.logs[2].push(`- Checking ${faceToString(this.index1)} face...`);
             this.logs[2].push(`-- Checking column 1...`);
             this.logs[2].push(`--- Can the ${grid[0][0] + 1} tower be seen?`);
-            this.visibilityTracker.addRowColInfo(0, 0, HintFace.NORTH, true);
-            this.visibilityTracker.addRowColInfo(0, 0, HintFace.NORTH, false);
+            const t = {row: 0, col: 0, val: grid[0][0]};
+            this.visibilityTracker.addInfo(t, HintFace.NORTH, true);
+            this.visibilityTracker.addInfo(t, HintFace.NORTH, false);
           } else {
             this.logs[1].push(`-- Is ${grid[this.index2][this.index1] + 1} different from ${grid[this.index3][this.index1] + 1}?`);
             this.backgrounds = [
@@ -226,8 +227,9 @@ export default class ValidationProcess extends Process<boolean> {
           if (hints[hintIndex] == -1) {
             // No hints, so do nothing
             this.logs[2].push(`---- Doesn\'t matter, no hints to satisfy.`);
-            this.visibilityTracker.removeRowColInfo(y, x, face, true);
-            this.visibilityTracker.removeRowColInfo(y, x, face, false);
+            const t = {row: y, col: x, val: grid[y][x]};
+            this.visibilityTracker.removeInfo(t, face, true);
+            this.visibilityTracker.removeInfo(t, face, false);
           } else if (rowIndex < n) {
             // Check if seen
             const value = this.grid[y][x];
@@ -237,15 +239,18 @@ export default class ValidationProcess extends Process<boolean> {
               const maxValue = this.grid[maxY][maxX];
               if (value > maxValue) {
                 this.logs[2].push(`---- Yes`);
-                this.visibilityTracker.removeRowColInfo(y, x, face, false);
+                const t = {row: y, col: x, val: grid[y][x]};
+                this.visibilityTracker.removeInfo(t, face, false);
                 this.seenSoFar.push(rowIndex);
               } else {
                 this.logs[2].push(`---- No`);
-                this.visibilityTracker.removeRowColInfo(y, x, face, true);
+                const t = {row: y, col: x, val: grid[y][x]};
+                this.visibilityTracker.removeInfo(t, face, true);
               }
             } else {
               this.logs[2].push(`---- Yes`);
-              this.visibilityTracker.removeRowColInfo(y, x, face, false);
+              const t = {row: y, col: x, val: grid[y][x]};
+              this.visibilityTracker.removeInfo(t, face, false);
               this.seenSoFar.push(rowIndex);
             }
           } else {
@@ -273,8 +278,9 @@ export default class ValidationProcess extends Process<boolean> {
             this.logs[2].push(`--- Can exactly ${hints[hintIndex]} tower(s) be seen?`);
           } else {
             const [newX, newY] = getCoordinates(face, hintIndex, this.index3, n);
-            this.visibilityTracker.addRowColInfo(newY, newX, face, true);
-            this.visibilityTracker.addRowColInfo(newY, newX, face, false);
+            const t = {row: newY, col: newX, val: grid[newY][newX]};
+            this.visibilityTracker.addInfo(t, face, true);
+            this.visibilityTracker.addInfo(t, face, false);
             this.logs[2].push(`--- Can the ${grid[newY][newX] + 1} tower be seen?`);
           }
           if (this.index2 >= n) {
@@ -293,16 +299,18 @@ export default class ValidationProcess extends Process<boolean> {
               const isV = isVertical(this.index1);
               this.logs[2].push(`-- Checking ${isV ? 'Column' : 'Row'} ${this.index2 + 1}...`);
               const [newX, newY] = getCoordinates(this.index1, this.index2, this.index3, n);
-              this.visibilityTracker.addRowColInfo(newY, newX, face, true);
-              this.visibilityTracker.addRowColInfo(newY, newX, face, false);
+              const t = {row: newY, col: newX, val: grid[newY][newX]};
+              this.visibilityTracker.addInfo(t, face, true);
+              this.visibilityTracker.addInfo(t, face, false);
               this.logs[2].push(`--- Can the ${grid[newY][newX] + 1} tower be seen?`);
             }
           } else if (this.index3 == 0) {
             const isV = isVertical(face);
             this.logs[2].push(`-- Checking ${isV ? 'Column' : 'Row'} ${this.index2 + 1}...`);
             const [newX, newY] = getCoordinates(face, this.index2, this.index3, n);
-            this.visibilityTracker.addRowColInfo(newY, newX, face, true);
-            this.visibilityTracker.addRowColInfo(newY, newX, face, false);
+            const t = {row: newY, col: newX, val: grid[newY][newX]};
+            this.visibilityTracker.addInfo(t, face, true);
+            this.visibilityTracker.addInfo(t, face, false);
             this.logs[2].push(`--- Can the ${grid[newY][newX] + 1} tower be seen?`);
           }
         }

@@ -2,7 +2,7 @@ import Process from '../../../process.js'
 import Towers from '../../../../puzzles/towers/towers.js'
 import { HintFace, faceToString, isClockwise, isVertical, getCoordinates } from '../../../../puzzles/towers/hint_face.js'
 import { ContradictionType } from '../../../../puzzles/towers/towers_contradictions.js'
-import { ordinal, ordinalPossibilitiesForTower } from './util.js'
+import { ordinal } from './util.js'
 
 export default class CheckCellSeenHiddenCountProcess extends Process<void> {
   public readonly processId: string;
@@ -39,6 +39,17 @@ export default class CheckCellSeenHiddenCountProcess extends Process<void> {
     return this.actionMessage;
   }
 
+  private noticeContradiction() {
+    this.t.noticeContradiction({
+      type: ContradictionType.VIEW,
+      noticedOnMove: this.t.history.length,
+      face: this.face,
+      rowIndex: this.rowIndex,
+      cellIndices: [],
+    });
+    this.done = true;
+  }
+
   private coordinates(i: number): [number, number] {
     const n = this.t.n;
     if (!isClockwise(this.face)) {
@@ -52,6 +63,18 @@ export default class CheckCellSeenHiddenCountProcess extends Process<void> {
     return this.coordinates(this.depth);
   }
 
+  private cellVisibilityInfo(depth: number) {
+    const info = { seen: true, hidden: true };
+    const [col, row] = this.coordinates(depth);
+    const possibilities = this.t.marks.getWithRowCol(row, col);
+    for (const val of possibilities) {
+      const possibilityInfo = this.t.visibility.getWithTriple({row, col, val})[this.face];
+      info.seen = info.seen && possibilityInfo.seen;
+      info.hidden = info.hidden && possibilityInfo.hidden;
+    }
+    return info;
+  }
+
   private checkHintTick() {
     this.actionMessage = `Checking ${faceToString(this.face)} face hint`
     this.hint = this.t.getHints(this.face)[this.rowIndex];
@@ -59,11 +82,14 @@ export default class CheckCellSeenHiddenCountProcess extends Process<void> {
   }
 
   private scanningTick() {
-    const [col, row] = this.currentCoordinates();
-    if (this.t.visibility.getWithRowCol(row, col)[this.face].seen) {
+    const info = this.cellVisibilityInfo(this.depth);
+    if (info.seen && info.hidden) {
+      this.noticeContradiction();
+      return true;
+    } else if (info.seen) {
       this.actionMessage = `${ordinal(this.depth + 1)} cell seen for sure.`;
       this.indicesSeenForSure.push(this.depth);
-    } else if (this.t.visibility.getWithRowCol(row, col)[this.face].hidden) {
+    } else if (info.hidden) {
       this.actionMessage = `${ordinal(this.depth + 1)} cell hidden for sure.`;
       this.indicesHiddenForSure.push(this.depth);
     } else {
@@ -84,24 +110,12 @@ export default class CheckCellSeenHiddenCountProcess extends Process<void> {
     } else if (this.depth == -1) {
       if (this.indicesSeenForSure.length > this.hint) {
         this.actionMessage = `Too many cells seen for sure: Contradiction.`;
-        this.t.noticeContradiction({
-          type: ContradictionType.VIEW,
-          noticedOnMove: this.t.history.length,
-          face: this.face,
-          rowIndex: this.rowIndex,
-          cellIndices: [],
-        });
-        this.done = true;
+        this.noticeContradiction();
+        return true;
       } else if (this.indicesHiddenForSure.length > this.t.n - this.hint) {
         this.actionMessage = `Too many cells hidden for sure: Contradiction.`;
-        this.t.noticeContradiction({
-          type: ContradictionType.VIEW,
-          noticedOnMove: this.t.history.length,
-          face: this.face,
-          rowIndex: this.rowIndex,
-          cellIndices: [],
-        });
-        this.done = true;
+        this.noticeContradiction();
+        return true;
       } else if (this.indicesWithUnkownVisibility.length == 0) {
         this.actionMessage = `No unknown visibility. Done!`;
         this.done = true;

@@ -53,9 +53,9 @@ export type ImplicationAction = {
 };
 
 export type VisibilityAction = {
-  row?: number,
-  col?: number,
-  val?: number,
+  row: number,
+  col: number,
+  val: number,
   seen: boolean,
   face: HintFace,
   type: ActionType.SET_VISIBILITY,
@@ -140,15 +140,7 @@ export default class Towers extends Puzzle<Action> {
         this.setHint(a.face, a.index, false);
         break;
       case ActionType.SET_VISIBILITY:
-        if (a.row !== undefined && a.col !== undefined && a.val === undefined) {
-          this.visibility.removeRowColInfo(a.row, a.col, a.face, a.seen);
-        } else if (a.row !== undefined && a.col === undefined && a.val !== undefined) {
-          this.visibility.removeRowValInfo(a.row, a.val, a.face, a.seen);
-        } else if (a.row === undefined && a.col !== undefined && a.val !== undefined) {
-          this.visibility.removeColValInfo(a.col, a.val, a.face, a.seen);
-        } else {
-          throw new Error("Exactly one of row, col, or val should be undefined.");
-        }
+        this.visibility.removeInfo({row: a.row, col: a.col, val: a.val}, a.face, a.seen);
         break;
       case ActionType.ADD_IMPLICATION:
         if (a.antecedent[1] && a.consequent[1]) {
@@ -254,56 +246,46 @@ export default class Towers extends Puzzle<Action> {
     }
   }
 
-  public setCellVisibility(row: number, col: number, face: HintFace, seen: boolean) {
-    if (this.visibility.addRowColInfo(row, col, face, seen)) {
+  public setTripleVisibility(t: Triple, face: HintFace, seen: boolean) {
+    if (this.visibility.addInfo(t, face, seen)) {
       this.addAction({
-        row, col, face, seen, type: ActionType.SET_VISIBILITY,
+        row: t.row, col: t.col, val: t.val, face, seen, type: ActionType.SET_VISIBILITY,
       });
-      const info = this.visibility.getWithRowCol(row, col)[face];
-      if (info.seen && info.hidden) {
+      const possibilitiiesForCell = this.marks.getWithRowCol(t.row, t.col);
+      let hasAtLeastOnePossibility = false;
+      for (const p of possibilitiiesForCell) {
+        const info = this.visibility.getWithTriple({row: t.row, col: t.col, val: p})[face];
+        if (!info.seen || !info.hidden) {
+          hasAtLeastOnePossibility = true;
+          break;
+        }
+      }
+      if (!hasAtLeastOnePossibility) {
         this.noticeContradiction({
           noticedOnMove: this.history.length,
           type: ContradictionType.VIEW,
           cellIndices: [],
-          rowIndex: isVertical(face) ? row : col,
+          rowIndex: isVertical(face) ? t.col : t.row,
           face: face,
         })
       }
     }
   }
 
+  public setCellVisibility(row: number, col: number, face: HintFace, seen: boolean) {
+    for (let i = 0; i < this.n; ++i) {
+      this.setTripleVisibility({row, col, val: i}, face, seen);
+    }
+  }
+
   public setTowerVisibility(height: number, rowIndex: number, face: HintFace, seen: boolean) {
     if (isVertical(face)) {
-      if (this.visibility.addColValInfo(rowIndex, height, face, seen)) {
-        this.addAction({
-          col: rowIndex, val: height, face, seen, type: ActionType.SET_VISIBILITY,
-        });
-      }
-      const info = this.visibility.getWithColVal(rowIndex, height)[face];
-      if (info.seen && info.hidden) {
-        this.noticeContradiction({
-          noticedOnMove: this.history.length,
-          type: ContradictionType.VIEW,
-          cellIndices: [],
-          rowIndex: rowIndex,
-          face: face,
-        })
+      for (let i = 0; i < this.n; ++i) {
+        this.setTripleVisibility({row: i, col: rowIndex, val: height}, face, seen);
       }
     } else {
-      if (this.visibility.addRowValInfo(rowIndex, height, face, seen)) {
-        this.addAction({
-          row: rowIndex, val: height, face, seen, type: ActionType.SET_VISIBILITY,
-        });
-      }
-      const info = this.visibility.getWithRowVal(rowIndex, height)[face];
-      if (info.seen && info.hidden) {
-        this.noticeContradiction({
-          noticedOnMove: this.history.length,
-          type: ContradictionType.VIEW,
-          cellIndices: [],
-          rowIndex: rowIndex,
-          face: face,
-        })
+      for (let i = 0; i < this.n; ++i) {
+        this.setTripleVisibility({row: rowIndex, col: i, val: height}, face, seen);
       }
     }
   }

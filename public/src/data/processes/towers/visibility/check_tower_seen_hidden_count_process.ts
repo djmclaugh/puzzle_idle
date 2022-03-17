@@ -2,6 +2,7 @@ import Process from '../../../process.js'
 import Towers from '../../../../puzzles/towers/towers.js'
 import { HintFace, faceToString, isVertical } from '../../../../puzzles/towers/hint_face.js'
 import { ContradictionType } from '../../../../puzzles/towers/towers_contradictions.js'
+import {possibilitiesForTower} from './util.js';
 
 export default class CheckTowerSeenHiddenCountProcess extends Process<void> {
   public readonly processId: string;
@@ -38,18 +39,40 @@ export default class CheckTowerSeenHiddenCountProcess extends Process<void> {
     return this.actionMessage;
   }
 
+  private noticeContradiction() {
+    this.t.noticeContradiction({
+      type: ContradictionType.VIEW,
+      noticedOnMove: this.t.history.length,
+      face: this.face,
+      rowIndex: this.rowIndex,
+      cellIndices: [],
+    });
+    this.done = true;
+  }
+
   private checkHintTick() {
     this.actionMessage = `Checking ${faceToString(this.face)} face hint`
     this.hint = this.t.getHints(this.face)[this.rowIndex];
     this.checkedHint = true;
   }
 
+  private towerVisibilityInfo(height: number) {
+    const info = { seen: true, hidden: true };
+    const possibilities = possibilitiesForTower(this.t.marks, height, this.rowIndex, this.face);
+    for (const p of possibilities) {
+      const possibilityInfo = this.t.visibility.getWithTriple(p)[this.face];
+      info.seen = info.seen && possibilityInfo.seen;
+      info.hidden = info.hidden && possibilityInfo.hidden;
+    }
+    return info;
+  }
+
   private scanningTick() {
-    const directionalVisibilityInfo = isVertical(this.face) ?
-        this.t.visibility.getWithColVal(this.rowIndex, this.height) :
-        this.t.visibility.getWithRowVal(this.rowIndex, this.height);
-    const visibilityInfo = directionalVisibilityInfo[this.face];
-    if (visibilityInfo.seen) {
+    const visibilityInfo = this.towerVisibilityInfo(this.height);
+    if (visibilityInfo.seen && visibilityInfo.hidden) {
+      this.noticeContradiction();
+      return true;
+    } else if (visibilityInfo.seen) {
       this.actionMessage = `Tower of height ${this.height + 1} seen for sure.`;
       this.towersSeenForSure.push(this.height);
     } else if (visibilityInfo.hidden) {
@@ -73,24 +96,12 @@ export default class CheckTowerSeenHiddenCountProcess extends Process<void> {
     } else if (this.height == -1) {
       if (this.towersSeenForSure.length > this.hint) {
         this.actionMessage = `Too many towers seen for sure: Contradiction.`;
-        this.t.noticeContradiction({
-          type: ContradictionType.VIEW,
-          noticedOnMove: this.t.history.length,
-          face: this.face,
-          rowIndex: this.rowIndex,
-          cellIndices: [],
-        });
-        this.done = true;
+        this.noticeContradiction();
+        return true;
       } else if (this.towersHiddenForSure.length > this.t.n - this.hint) {
         this.actionMessage = `Too many towers hidden for sure: Contradiction.`;
-        this.t.noticeContradiction({
-          type: ContradictionType.VIEW,
-          noticedOnMove: this.t.history.length,
-          face: this.face,
-          rowIndex: this.rowIndex,
-          cellIndices: [],
-        });
-        this.done = true;
+        this.noticeContradiction();
+        return true;
       } else if (this.towersWithUnkownVisibility.length == 0) {
         this.actionMessage = `No unknown visibility. Done!`;
         this.done = true;
