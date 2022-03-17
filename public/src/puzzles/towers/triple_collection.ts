@@ -12,7 +12,7 @@ export class TripleCollection {
   private rowValMap: DoubleKeyMap<number, number, Set<number>> = new DoubleKeyMap();
   private colValMap: DoubleKeyMap<number, number, Set<number>> = new DoubleKeyMap();
 
-  constructor(private n: number = 0) {}
+  constructor(public n: number = 0) {}
 
   public get size() {
     let result = 0;

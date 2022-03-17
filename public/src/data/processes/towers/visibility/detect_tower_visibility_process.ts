@@ -1,7 +1,8 @@
 import Process from '../../../process.js'
 import Towers from '../../../../puzzles/towers/towers.js'
-import { HintFace, faceToString, isClockwise, isVertical, isReverse, getCoordinates } from '../../../../puzzles/towers/hint_face.js'
+import { HintFace, faceToString, isVertical } from '../../../../puzzles/towers/hint_face.js'
 import { ContradictionType } from '../../../../puzzles/towers/towers_contradictions.js'
+import { ordinalPossibilitiesForTower } from './util.js'
 
 export default class DetectTowerVisibilityProcess extends Process<void> {
   public readonly processId: string;
@@ -67,13 +68,7 @@ export default class DetectTowerVisibilityProcess extends Process<void> {
       this.done = true;
       return;
     }
-    let possibilities = isVertical(this.face) ?
-        Array.from(this.t.marks.getWithColVal(this.rowIndex, this.height)) :
-        Array.from(this.t.marks.getWithRowVal(this.rowIndex, this.height));
-    if (isReverse(this.face)) {
-      possibilities = possibilities.map(p => this.t.n - p - 1);
-    }
-    possibilities.sort();
+    let possibilities = ordinalPossibilitiesForTower(this.t.marks, this.height, this.rowIndex, this.face);
 
     if (possibilities.length == 0) {
       this.t.noticeContradiction({
@@ -83,6 +78,8 @@ export default class DetectTowerVisibilityProcess extends Process<void> {
         col: isVertical(this.face) ? this.rowIndex : undefined,
         val: this.height,
       })
+      this.done = true;
+      return true;
     }
 
     const min = possibilities[0];

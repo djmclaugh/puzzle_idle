@@ -17,12 +17,10 @@ import DetectCellVisibilityProcess from '../../data/processes/towers/visibility/
 import DetectTowerVisibilityProcess from '../../data/processes/towers/visibility/detect_tower_visibility_process.js'
 import CellMustBeSeenProcess from '../../data/processes/towers/visibility/cell_must_be_seen_process.js'
 import CellMustBeHiddenProcess from '../../data/processes/towers/visibility/cell_must_be_hidden_process.js'
+import TowerMustBeSeenProcess from '../../data/processes/towers/visibility/tower_must_be_seen_process.js'
+import TowerMustBeHiddenProcess from '../../data/processes/towers/visibility/tower_must_be_hidden_process.js'
 import CheckCellSeenHiddenCount from '../../data/processes/towers/visibility/check_cell_seen_hidden_count_process.js'
-import {
-  TowersSeenHiddenForSureProcess,
-  TowersSeenForSureProcess,
-  TowersHiddenForSureProcess,
-} from '../../data/processes/towers/visibility/towers_seen_hidden_for_sure_process.js'
+import CheckTowerSeenHiddenCount from '../../data/processes/towers/visibility/check_tower_seen_hidden_count_process.js'
 import MaxViewProcess from '../../data/processes/towers/visibility/max_view_process.js'
 import BetterSimpleViewProcess from '../../data/processes/towers/visibility/better_simple_view_process.js'
 import SimpleViewProcess from '../../data/processes/towers/visibility/simple_view_process.js'
@@ -321,6 +319,21 @@ export default {
             startProcess(p, 7);
           }
         }
+        for (let i = 0; i < data.currentPuzzle.n; ++i) {
+          for (const face of ALL_FACES) {
+            let rowIndex = isVertical(face) ? col : row;
+            const v = data.currentPuzzle.visibility;
+            const info = isVertical(face) ? v.getWithColVal(col, i)[face] : v.getWithRowVal(row, i)[face];
+            if (info.seen) {
+              const p = new TowerMustBeSeenProcess(data.currentPuzzle, i, rowIndex, face, props.interfaceId);
+              startProcess(p, 6);
+            }
+            if (info.hidden) {
+              const p = new TowerMustBeHiddenProcess(data.currentPuzzle, i, rowIndex, face, props.interfaceId);
+              startProcess(p, 6);
+            }
+          }
+        }
       } else {
 
       }
@@ -412,6 +425,26 @@ export default {
               startProcess(p, 5);
             } else {
               const p = new CellMustBeHiddenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
+              startProcess(p, 5);
+            }
+          } else if (a.row !== undefined && a.col === undefined && a.val !== undefined) {
+            const p = new CheckTowerSeenHiddenCount(data.currentPuzzle, a.face, a.row, props.interfaceId);
+            startProcess(p, 5);
+            if (a.seen) {
+              const p = new TowerMustBeSeenProcess(data.currentPuzzle, a.val, a.row, a.face, props.interfaceId);
+              startProcess(p, 5);
+            } else {
+              const p = new TowerMustBeHiddenProcess(data.currentPuzzle, a.val, a.row, a.face, props.interfaceId);
+              startProcess(p, 5);
+            }
+          } else if (a.row === undefined && a.col !== undefined && a.val !== undefined) {
+            const p = new CheckTowerSeenHiddenCount(data.currentPuzzle, a.face, a.col, props.interfaceId);
+            startProcess(p, 5);
+            if (a.seen) {
+              const p = new TowerMustBeSeenProcess(data.currentPuzzle, a.val, a.col, a.face, props.interfaceId);
+              startProcess(p, 5);
+            } else {
+              const p = new TowerMustBeHiddenProcess(data.currentPuzzle, a.val, a.col, a.face, props.interfaceId);
               startProcess(p, 5);
             }
           }

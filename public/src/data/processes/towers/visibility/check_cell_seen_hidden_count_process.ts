@@ -2,9 +2,9 @@ import Process from '../../../process.js'
 import Towers from '../../../../puzzles/towers/towers.js'
 import { HintFace, faceToString, isClockwise, isVertical, getCoordinates } from '../../../../puzzles/towers/hint_face.js'
 import { ContradictionType } from '../../../../puzzles/towers/towers_contradictions.js'
-import { ordinal } from './util.js'
+import { ordinal, ordinalPossibilitiesForTower } from './util.js'
 
-export default class DetectCellVisibilityProcess extends Process<void> {
+export default class CheckCellSeenHiddenCountProcess extends Process<void> {
   public readonly processId: string;
   public readonly friendlyName: string;
   public readonly interfaceId: number;
