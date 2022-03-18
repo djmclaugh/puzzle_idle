@@ -5,6 +5,10 @@ import LabeledCheckbox from './../util/labeled_checkbox.js'
 import { towersUpgrades } from '../../data/towers/towers_upgrades.js'
 import TowersOptions from '../../data/towers/towers_options.js'
 
+interface TowersOptionsData {
+  showOptions: boolean,
+}
+
 interface TowersOptionsProps {
   interfaceId: number,
   options: TowersOptions,
@@ -13,8 +17,29 @@ interface TowersOptionsProps {
 export default {
   props: ['interfaceId', 'options'],
   setup(props: TowersOptionsProps, {emit}:any ): any {
+    const data: TowersOptionsData = Vue.reactive({
+      showOptions: true,
+    });
+
     return () => {
       let items = [];
+
+      const showOptions = Vue.h(LabeledCheckbox, {
+        value: data.showOptions,
+        label: 'Show Settings',
+        boxId: 'show_options_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.showOptions = t.checked;
+        }
+      });
+      items.push(showOptions);
+
+      if (!data.showOptions) {
+        return Vue.h('div', {}, items);
+      } else {
+        items.push(Vue.h('br'));
+      }
 
       const minSize = 2;
       const maxSize = towersUpgrades.interfaces[props.interfaceId];
