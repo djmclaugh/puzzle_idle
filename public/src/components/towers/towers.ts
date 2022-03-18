@@ -224,10 +224,28 @@ export default {
 
         const canEdit = !props.validationProcess && puzzle.grid[y][x] == -1;
 
+        const facesToSkip: HintFace[] = [];
+
+        if (!props.validationProcess) {
+          if (props.puzzle.northHintMarked[x]) {
+            facesToSkip.push(HintFace.NORTH);
+          }
+          if (props.puzzle.eastHintMarked[y]) {
+            facesToSkip.push(HintFace.EAST);
+          }
+          if (props.puzzle.southHintMarked[x]) {
+            facesToSkip.push(HintFace.SOUTH);
+          }
+          if (props.puzzle.westHintMarked[y]) {
+            facesToSkip.push(HintFace.WEST);
+          }
+        }
+
         const cell = Vue.h(LatinSquareCellComponent, {
           row: y,
           col: x,
           possibilities: puzzle.marksCell(y, x),
+          facesToSkip: facesToSkip,
           visibilityTracker: props.validationProcess ? props.validationProcess.visibilityTracker : props.puzzle.visibility,
           range: canEdit ? n : -1,
           highlight: highlight,

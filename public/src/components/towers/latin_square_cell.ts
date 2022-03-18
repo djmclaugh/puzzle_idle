@@ -3,11 +3,13 @@ import Vue from '../../vue.js'
 import LatinSquareCellVisibilityComponent from './latin_square_cell_visibility.js'
 
 import VisibilityTracker from '../../puzzles/towers/visibility_tracker.js'
+import {HintFace} from '../../puzzles/towers/hint_face.js'
 
 interface LatinCellComponentProps {
   row: number,
   col: number,
   possibilities: Set<number>,
+  facesToSkip: HintFace[],
   range: number,
   visibilityTracker: VisibilityTracker,
   highlight: {
@@ -22,7 +24,7 @@ interface LatinCellComponentData {
 }
 
 export default {
-  props: ['row', 'col', 'possibilities', 'range', 'visibilityTracker', 'highlight'],
+  props: ['row', 'col', 'possibilities', 'facesToSkip', 'range', 'visibilityTracker', 'highlight'],
 
   setup(props: LatinCellComponentProps, {emit}: any) {
 
@@ -56,6 +58,7 @@ export default {
           visibilityInfo: props.visibilityTracker.getWithTriple({
             row: props.row, col: props.col, val: p
           }),
+          facesToSkip: props.facesToSkip,
           interactable: false,
         }));
       } else {
@@ -96,6 +99,7 @@ export default {
             onMouseout: () => { emit('updateHighlight', undefined); },
           }, [(i+1).toString(), Vue.h(LatinSquareCellVisibilityComponent, {
             interactable: false,
+            facesToSkip: props.facesToSkip,
             visibilityInfo: props.visibilityTracker.getWithTriple({
               row: props.row, col: props.col, val: i
             }),

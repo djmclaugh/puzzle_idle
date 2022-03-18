@@ -8,6 +8,7 @@ const complement = '84%'
 
 interface LatinCellVisibilityComponentProps {
   visibilityInfo: DirectionalVisibilityInfo,
+  facesToSkip: HintFace[],
   interactable: boolean,
 }
 
@@ -16,7 +17,7 @@ type HoverData = {
 };
 
 export default {
-  props: ['visibilityInfo', 'interactable'],
+  props: ['visibilityInfo', 'facesToSkip', 'interactable'],
 
   setup(props: LatinCellVisibilityComponentProps, {emit}: any) {
 
@@ -30,12 +31,13 @@ export default {
     function classesForFace(face: HintFace) {
       const seen = props.visibilityInfo[face].seen;
       const hidden = props.visibilityInfo[face].hidden;
+      const skipped = props.facesToSkip.indexOf(face) != -1;
       return {
         'cell-visibility-indicator': true,
-        'cell-visibility-indicator-hover': hoverData[face],
-        'cell-visibility-indicator-seen': seen,
-        'cell-visibility-indicator-hidden': hidden,
-        'cell-visibility-indicator-contradiction': seen && hidden,
+        'cell-visibility-indicator-hover': !skipped && hoverData[face],
+        'cell-visibility-indicator-seen': !skipped && seen,
+        'cell-visibility-indicator-hidden': !skipped && hidden,
+        'cell-visibility-indicator-contradiction': !skipped && seen && hidden,
       }
     }
 
