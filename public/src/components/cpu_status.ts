@@ -18,19 +18,21 @@ export default {
     return () => {
       let items = [];
 
-      items.push(Vue.h('p', {}, [
+      items.push(Vue.h('p', {style: {display: 'inline-block'}}, [
         `Max Speed: ${currentCPU.maxSpeed} Hz `,
         Vue.h('button', {
           onClick: () => { currentStatus.upgradeCpuSpeed(); },
           disabled: !currentStatus.canAffordCpuSpeedUpgrade(),
         }, `Upgrade ($${currentStatus.cpuSpeedUpgradeCost})`),
-        Vue.h('br'),
+        ' ',
         Vue.h('button', {
           onClick: () => { currentCPU.paused = !currentCPU.paused; },
         }, currentCPU.paused ? 'Resume' : 'Pause'),
       ]));
 
-      items.push(Vue.h('p', {}, [
+      items.push(' | ');
+
+      items.push(Vue.h('p', {style: {display: 'inline-block'}}, [
         `Number of Cores: ${currentCPU.cores} `,
         Vue.h('button', {
           onClick: () => {

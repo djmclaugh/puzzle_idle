@@ -27,7 +27,7 @@ export class StatusData {
   }
 
   public get cpuSpeedUpgradeCost(): number {
-    return 2 * currentCPU.maxSpeed;
+    return Math.floor(currentCPU.maxSpeed);
   }
 
   public canAffordCpuSpeedUpgrade(): boolean {
@@ -36,14 +36,14 @@ export class StatusData {
 
   public upgradeCpuSpeed(): void {
     this.money -= this.cpuSpeedUpgradeCost;
-    currentCPU.maxSpeed += 1;
+    currentCPU.maxSpeed += 0.1;
     if (currentCPU.speed == currentCPU.maxSpeed - 1) {
       currentCPU.speed = currentCPU.maxSpeed;
     }
   }
 
   public get cpuCoresUpgradeCost(): number {
-    return Math.pow(20, currentCPU.cores);
+    return Math.pow(10, currentCPU.cores);
   }
 
   public canAffordCpuCoresUpgrade(): boolean {

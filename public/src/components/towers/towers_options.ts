@@ -191,80 +191,56 @@ export default {
         processesItems.push(autoRemoveOnSet);
       }
 
-      if (towersUpgrades.positionsSeenHiddenForSureProcess.isUnlocked) {
-        const autoPositionsSeenHiddenForSure = Vue.h(LabeledCheckbox, {
-          value: props.options.positionVisibilityOn,
-          label: 'Cell Visibility',
-          boxId: 'auto_positions_seen_hidden_for_sure_checkbox_' + props.interfaceId,
+      if (towersUpgrades.removeContradictoryVisibilityProcess.isUnlocked) {
+        const removeContradictoryVisibilityOn = Vue.h(LabeledCheckbox, {
+          value: props.options.removeContradictoryVisibilityOn,
+          label: 'Remove Contradictory Visibility',
+          boxId: 'remove_contradictory_visibility_checkbox_' + props.interfaceId,
           onChange: (e: Event) => {
             const t: HTMLInputElement = e.target as HTMLInputElement;
-            props.options.positionVisibilityOn = t.checked;
+            props.options.removeContradictoryVisibilityOn = t.checked;
           }
         });
-        processesItems.push(autoPositionsSeenHiddenForSure);
-      } else {
-        if (towersUpgrades.positionsSeenForSureProcess.isUnlocked) {
-          const autoPositionsSeenForSure = Vue.h(LabeledCheckbox, {
-            value: props.options.positionsSeenForSureOn,
-            label: 'Cells Seen For Sure',
-            boxId: 'auto_positions_seen_for_sure_checkbox_' + props.interfaceId,
-            onChange: (e: Event) => {
-              const t: HTMLInputElement = e.target as HTMLInputElement;
-              props.options.positionsSeenForSureOn = t.checked;
-            }
-          });
-          processesItems.push(autoPositionsSeenForSure);
-        }
-        if (towersUpgrades.positionsHiddenForSureProcess.isUnlocked) {
-          const autoPositionsHiddenForSure = Vue.h(LabeledCheckbox, {
-            value: props.options.positionsHiddenForSureOn,
-            label: 'Cells Hidden For Sure',
-            boxId: 'auto_positions_hidden_for_sure_checkbox_' + props.interfaceId,
-            onChange: (e: Event) => {
-              const t: HTMLInputElement = e.target as HTMLInputElement;
-              props.options.positionsHiddenForSureOn = t.checked;
-            }
-          });
-          processesItems.push(autoPositionsHiddenForSure);
-        }
+        processesItems.push(removeContradictoryVisibilityOn);
       }
 
-      if (towersUpgrades.towersSeenHiddenForSureProcess.isUnlocked) {
-        const autoTowersSeenHiddenForSure = Vue.h(LabeledCheckbox, {
-          value: props.options.towerVisibilityOn,
-          label: 'Tower Visibility',
-          boxId: 'auto_towers_seen_hidden_for_sure_checkbox_' + props.interfaceId,
+      if (towersUpgrades.detectVisibilityProcess.isUnlocked) {
+        const detectVisibilityOn = Vue.h(LabeledCheckbox, {
+          value: props.options.detectVisibilityOn,
+          label: 'Detect Visibility',
+          boxId: 'detect_visibility_checkbox_' + props.interfaceId,
           onChange: (e: Event) => {
             const t: HTMLInputElement = e.target as HTMLInputElement;
-            props.options.towerVisibilityOn = t.checked;
+            props.options.detectVisibilityOn = t.checked;
           }
         });
-        processesItems.push(autoTowersSeenHiddenForSure);
-      } else {
-        if (towersUpgrades.towersSeenForSureProcess.isUnlocked) {
-          const autoTowersSeenForSure = Vue.h(LabeledCheckbox, {
-            value: props.options.towersSeenForSureOn,
-            label: 'Towers Seen For Sure',
-            boxId: 'auto_towers_seen_for_sure_checkbox_' + props.interfaceId,
-            onChange: (e: Event) => {
-              const t: HTMLInputElement = e.target as HTMLInputElement;
-              props.options.towersSeenForSureOn = t.checked;
-            }
-          });
-          processesItems.push(autoTowersSeenForSure);
-        }
-        if (towersUpgrades.towersHiddenForSureProcess.isUnlocked) {
-          const autoTowersHiddenForSure = Vue.h(LabeledCheckbox, {
-            value: props.options.towersHiddenForSureOn,
-            label: 'Towers Hidden For Sure',
-            boxId: 'auto_towers_hidden_for_sure_checkbox_' + props.interfaceId,
-            onChange: (e: Event) => {
-              const t: HTMLInputElement = e.target as HTMLInputElement;
-              props.options.towersHiddenForSureOn = t.checked;
-            }
-          });
-          processesItems.push(autoTowersHiddenForSure);
-        }
+        processesItems.push(detectVisibilityOn);
+      }
+
+      if (towersUpgrades.cellVisibilityCountProcess.isUnlocked) {
+        const cellVisibilityCountOn = Vue.h(LabeledCheckbox, {
+          value: props.options.cellVisibilityCountOn,
+          label: 'Cell Visibility Count',
+          boxId: 'cell_visibility_count_checkbox_' + props.interfaceId,
+          onChange: (e: Event) => {
+            const t: HTMLInputElement = e.target as HTMLInputElement;
+            props.options.cellVisibilityCountOn = t.checked;
+          }
+        });
+        processesItems.push(cellVisibilityCountOn);
+      }
+
+      if (towersUpgrades.heightVisibilityCountProcess.isUnlocked) {
+        const heightVisibilityCountOn = Vue.h(LabeledCheckbox, {
+          value: props.options.heightVisibilityCountOn,
+          label: 'Height Visibility Count',
+          boxId: 'height_visibility_count_checkbox_' + props.interfaceId,
+          onChange: (e: Event) => {
+            const t: HTMLInputElement = e.target as HTMLInputElement;
+            props.options.heightVisibilityCountOn = t.checked;
+          }
+        });
+        processesItems.push(heightVisibilityCountOn);
       }
 
       const oneView = Vue.h(LabeledCheckbox, {

@@ -71,6 +71,7 @@ export default {
       for (const upgrade of [
         towersUpgrades.removePossibility,
         towersUpgrades.undo,
+        towersUpgrades.visibility,
         towersUpgrades.markHintSatisfied,
         towersUpgrades.guess,
       ]) {
@@ -92,12 +93,10 @@ export default {
       for (const upgrade of [
         towersUpgrades.onlyChoiceInColumnRowProcess,
         towersUpgrades.removeFromColumnRowProcess,
-        towersUpgrades.positionsSeenForSureProcess,
-        towersUpgrades.positionsHiddenForSureProcess,
-        towersUpgrades.positionsSeenHiddenForSureProcess,
-        towersUpgrades.towersSeenForSureProcess,
-        towersUpgrades.towersHiddenForSureProcess,
-        towersUpgrades.towersSeenHiddenForSureProcess,
+        towersUpgrades.detectVisibilityProcess,
+        towersUpgrades.cellVisibilityCountProcess,
+        towersUpgrades.heightVisibilityCountProcess,
+        towersUpgrades.removeContradictoryVisibilityProcess,
         towersUpgrades.maxViewProcess,
         towersUpgrades.oneViewProcess,
         towersUpgrades.notOneViewProcess,

@@ -50,34 +50,37 @@ export default class ProcessLauncher {
   private onPossibilitySet(towers: Towers, t: Triple) {
     if (this.options.removeOnSetOn) {
       const pCol = new RemoveFromColumnProcess(towers, t.val, t.col, t.row, this.id);
-      this.startProcess(pCol, 9);
+      this.startProcess(pCol, 8);
       const pRow = new RemoveFromRowProcess(towers, t.val, t.row, t.col, this.id);
-      this.startProcess(pRow, 9);
+      this.startProcess(pRow, 8);
     }
   }
 
   private onPossibilityRemoved(towers: Towers, t: Triple) {
     if (this.options.onlyInRowColumnOn) {
       const colP = new OnlyChoiceInColumnProcess(towers, t.col, t.val, this.id);
-      this.startProcess(colP, 8);
+      this.startProcess(colP, 7);
       const rowP = new OnlyChoiceInRowProcess(towers, t.row, t.val, this.id);
-      this.startProcess(rowP, 8);
+      this.startProcess(rowP, 7);
     }
 
     for (const face of ALL_FACES) {
       if (isVertical(face)) {
+        if (this.options.detectVisibilityOn) {
+          this.startProcess(new CheckPossibilityVisibilityProcess(towers, face, t.col, this.id), 7);
+        }
         this.recheckVisibility(towers, t.col, face);
       } else {
+        if (this.options.detectVisibilityOn) {
+          this.startProcess(new CheckPossibilityVisibilityProcess(towers, face, t.row, this.id), 7);
+        }
         this.recheckVisibility(towers, t.row, face);
       }
     }
   }
 
   private recheckVisibility(t: Towers, rowIndex: number, face: HintFace) {
-    if (this.options.positionVisibilityOn || this.options.towerVisibilityOn) {
-      this.startProcess(new CheckPossibilityVisibilityProcess(t, face, rowIndex, this.id), 7);
-    }
-    if (this.options.positionVisibilityOn) {
+    if (this.options.cellVisibilityCountOn) {
       this.startProcess(new CheckCellSeenHiddenCountProcess(t, face, rowIndex, this.id), 5);
       // for (let i = 0; i < t.n; ++i) {
       //   let [col, row] = getCoordinates(face, rowIndex, i, t.n);
@@ -85,7 +88,7 @@ export default class ProcessLauncher {
       //   this.startProcess(new CellMustBeHiddenProcess(t, row, col, face, this.id), 5);
       // }
     }
-    if (this.options.towerVisibilityOn) {
+    if (this.options.heightVisibilityCountOn) {
       this.startProcess(new CheckTowerSeenHiddenCountProcess(t, face, rowIndex, this.id), 5);
       // for (let i = 0; i < t.n; ++i) {
       //   let [col, row] = getCoordinates(face, rowIndex, i, t.n);
@@ -96,8 +99,10 @@ export default class ProcessLauncher {
   }
 
   private onVisibilityChanged(towers: Towers, a: VisibilityAction) {
-    const p = new RemovePossibilityWithContradictoryVisibilityProcess(towers, {row: a.row, col: a.col, val: a.val}, a.face, this.id);
-    this.startProcess(p, 9);
+    if (this.options.removeContradictoryVisibilityOn) {
+      const p = new RemovePossibilityWithContradictoryVisibilityProcess(towers, {row: a.row, col: a.col, val: a.val}, a.face, this.id);
+      this.startProcess(p, 9);
+    }
     if (isVertical(a.face)) {
       this.recheckVisibility(towers, a.col, a.face);
     } else {
