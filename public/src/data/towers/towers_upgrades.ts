@@ -24,7 +24,7 @@ export class UnlockableUpgrade {
   }
 }
 
-export class TowersUpgrades {
+export default class TowersUpgrades {
   public constructor() {}
 
   public interfaces: number[] = [2];

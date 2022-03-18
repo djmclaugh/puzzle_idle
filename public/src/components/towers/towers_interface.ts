@@ -1,7 +1,6 @@
 import Vue from '../../vue.js'
 import {fromSimonThatamId, toSimonTathamId} from '../../puzzles/towers/util.js'
-import Towers, {Action, ActionType} from '../../puzzles/towers/towers.js'
-import {HintFace, isVertical, ALL_FACES} from '../../puzzles/towers/hint_face.js'
+import Towers, {Action} from '../../puzzles/towers/towers.js'
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
@@ -11,27 +10,10 @@ import { currentCPU } from '../../data/cpu.js'
 import { randomOfSize, loadTowers } from '../../puzzles/towers/towers_loader.js'
 import Process from '../../data/process.js'
 import RandomGuessProcess from '../../data/processes/towers/random_guess_process.js'
-import OneViewProcess from '../../data/processes/towers/visibility/one_view_process.js'
-import NotOneViewProcess from '../../data/processes/towers/visibility/not_one_view_process.js'
-import CheckPossibilityVisibilityProcess from '../../data/processes/towers/visibility/check_possibility_visibility_process.js'
-import RemovePossibilityWithContradictoryVisibilityProcess from '../../data/processes/towers/visibility/remove_possibility_with_contradictory_visibility_process.js'
-import CellMustBeSeenProcess from '../../data/processes/towers/visibility/cell_must_be_seen_process.js'
-import CellMustBeHiddenProcess from '../../data/processes/towers/visibility/cell_must_be_hidden_process.js'
-import TowerMustBeSeenProcess from '../../data/processes/towers/visibility/tower_must_be_seen_process.js'
-import TowerMustBeHiddenProcess from '../../data/processes/towers/visibility/tower_must_be_hidden_process.js'
-import CheckCellSeenHiddenCount from '../../data/processes/towers/visibility/check_cell_seen_hidden_count_process.js'
-import CheckTowerSeenHiddenCount from '../../data/processes/towers/visibility/check_tower_seen_hidden_count_process.js'
-import MaxViewProcess from '../../data/processes/towers/visibility/max_view_process.js'
-import BetterSimpleViewProcess from '../../data/processes/towers/visibility/better_simple_view_process.js'
-import SimpleViewProcess from '../../data/processes/towers/visibility/simple_view_process.js'
-import OnlyChoiceInColumnProcess from '../../data/processes/towers/latin/only_choice_in_column_process.js'
-import OnlyChoiceInRowProcess from '../../data/processes/towers/latin/only_choice_in_row_process.js'
-import RemoveFromColumnProcess from '../../data/processes/towers/latin/remove_from_column_process.js'
-import RemoveFromRowProcess from '../../data/processes/towers/latin/remove_from_row_process.js'
 import ValidationProcess from '../../data/processes/towers/validation_process.js'
-import FollowSetImplicationsProcess from '../../data/processes/towers/follow_set_implications_process.js'
 import TowersOptions from '../../data/towers/towers_options.js'
 import {towersUpgrades} from '../../data/towers/towers_upgrades.js'
+import ProcessLauncher from '../../data/processes/towers/process_launcher.js'
 
 interface InterfaceComponentProps {
   interfaceId: number,
@@ -115,6 +97,22 @@ export default {
       updateAverageTimeoutId = setTimeout(updateAverages, 2000);
     }
 
+    function startProcess(p: Process<any>, priority: number) {
+      if (currentCPU.addProcess(p, priority, onProcessOver(p))) {
+        data.otherProcesses.add(p);
+      }
+    }
+
+    function onProcessOver<R>(process: Process<R>) {
+      return () => {
+        data.otherProcesses.delete(process);
+        startRandomGuessProcessIfNeeded();
+      }
+    }
+
+    const processLauncher = new ProcessLauncher(options, towersUpgrades, props.interfaceId);
+    processLauncher.addListener(startProcess);
+
     function stopAllProcesses() {
       if (data.validationProcess) {
         currentCPU.killProcess(data.validationProcess);
@@ -137,7 +135,7 @@ export default {
     function restart(): void {
       stopAllProcesses();
       data.currentPuzzle.restart();
-      startInitialRemovalProcessIfNeeded();
+      processLauncher.startInitialProcessesIfNeeded(data.currentPuzzle);
       startRandomGuessProcessIfNeeded();
     }
 
@@ -148,7 +146,7 @@ export default {
       } else {
         data.currentPuzzle.markGuessAsImpossible();
       }
-      startInitialRemovalProcessIfNeeded();
+      processLauncher.startInitialProcessesIfNeeded(data.currentPuzzle);
       startRandomGuessProcessIfNeeded();
     }
 
@@ -175,54 +173,6 @@ export default {
       }
     }
 
-    function startInitialRemovalProcessIfNeeded() {
-      if (data.currentPuzzle.history.length == 0) {
-        if (towersUpgrades.simpleViewProcess.isUnlocked) {
-          if (options.simpleViewOn) {
-            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-              const p = towersUpgrades.betterSimpleViewProcess.isUnlocked ?
-                  new BetterSimpleViewProcess(data.currentPuzzle, face, props.interfaceId) :
-                  new SimpleViewProcess(data.currentPuzzle, face, props.interfaceId);
-              startProcess(p, 9);
-            }
-          }
-        } else {
-          if (options.maxViewOn) {
-            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-              const p = new MaxViewProcess(data.currentPuzzle, face, props.interfaceId);
-              startProcess(p, 9);
-            }
-          }
-          if (options.oneViewOn) {
-            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-              const p = new OneViewProcess(data.currentPuzzle, face, props.interfaceId);
-              startProcess(p, 9);
-            }
-          }
-          if (options.notOneViewOn) {
-            for (const face of [HintFace.NORTH, HintFace.EAST, HintFace.SOUTH, HintFace.WEST]) {
-              const p = new NotOneViewProcess(data.currentPuzzle, face, props.interfaceId);
-              startProcess(p, 9);
-            }
-          }
-        }
-        if (options.removeOnSetOn) {
-          for (let row = 0; row < data.currentPuzzle.n; ++row) {
-            for (let col = 0; col < data.currentPuzzle.n; ++col) {
-              const possibilities = data.currentPuzzle.marksCell(row, col);
-              if (possibilities.size == 1) {
-                const val: number = possibilities.values().next().value;
-                const pCol = new RemoveFromColumnProcess(data.currentPuzzle, val, col, row, props.interfaceId);
-                startProcess(pCol, 9);
-                const pRow = new RemoveFromRowProcess(data.currentPuzzle, val, row, col, props.interfaceId);
-                startProcess(pRow, 9);
-              }
-            }
-          }
-        }
-      }
-    }
-
     function startRandomGuessProcessIfNeeded() {
       if (options.randomGuessOn && !hasProcessRunning() && !data.currentPuzzle.isReadyForValidation() && !data.currentPuzzle.hasContradiction) {
         data.randomGuessProcess = new RandomGuessProcess(data.currentPuzzle, props.interfaceId);
@@ -233,54 +183,11 @@ export default {
       }
     }
 
-    function startProcess(p: Process<any>, priority: number) {
-      if (currentCPU.addProcess(p, priority, onProcessOver(p))) {
-        data.otherProcesses.add(p);
-      }
-    }
-
-    function onProcessOver<R>(process: Process<R>) {
-      return () => {
-        data.otherProcesses.delete(process);
-        startRandomGuessProcessIfNeeded();
-      }
-    }
-
     function cashIn() {
       incomeTracker.push([Date.now(), currentStatus.puzzleReward(options.currentSize)]);
       currentStatus.puzzleCompleted(options.currentSize);
       updateAverages();
       assignNewPuzzle();
-    }
-
-    function onPossibilitySet(row: number, col: number, val: number) {
-      if (data.autoFollowImply) {
-        const triple = { row: row, col: col, val: val };
-        const p = new FollowSetImplicationsProcess(data.currentPuzzle, triple, props.interfaceId);
-        currentCPU.addProcess(p, 9, onProcessOver(p));
-      }
-      if (options.removeOnSetOn) {
-        const pCol = new RemoveFromColumnProcess(data.currentPuzzle, val, col, row, props.interfaceId);
-        startProcess(pCol, 9);
-        const pRow = new RemoveFromRowProcess(data.currentPuzzle, val, row, col, props.interfaceId);
-        startProcess(pRow, 9);
-      }
-    }
-
-    function onPossibilityRemoved(row: number, col: number, val: number) {
-      if (options.onlyInRowColumnOn) {
-        const colP = new OnlyChoiceInColumnProcess(data.currentPuzzle, col, val, props.interfaceId);
-        startProcess(colP, 8);
-        const rowP = new OnlyChoiceInRowProcess(data.currentPuzzle, row, val, props.interfaceId);
-        startProcess(rowP, 8);
-      }
-
-
-      if (options.positionVisibilityOn || options.towerVisibilityOn) {
-        for (const p of CheckPossibilityVisibilityProcess.processesForCell(data.currentPuzzle, row, col, props.interfaceId)) {
-          startProcess(p, 7);
-        }
-      }
     }
 
     function assignNewPuzzle(puzzleId: string = "") {
@@ -314,53 +221,12 @@ export default {
           }
           return;
         }
-        if (a.type == ActionType.SET_POSSIBILITY) {
-          onPossibilitySet(a.row, a.column, a.value);
-          for (let val of a.previousPossibilities) {
-            if (val != a.value) {
-              onPossibilityRemoved(a.row, a.column, val);
-            }
-          }
-        }
-        if (a.type == ActionType.REMOVE_POSSIBILITY) {
-          onPossibilityRemoved(a.row, a.column, a.value);
-          const cell = data.currentPuzzle.marksCell(a.row, a.column);
-          if (cell.size == 1) {
-            const v: number = cell.values().next().value;
-            onPossibilitySet(a.row, a.column, v);
-          }
-        }
-        if (a.type == ActionType.SET_VISIBILITY) {
-          const p = new RemovePossibilityWithContradictoryVisibilityProcess(data.currentPuzzle, {row: a.row, col: a.col, val: a.val}, a.face, props.interfaceId);
-          startProcess(p, 8);
-          if (isVertical(a.face)) {
-            const p1 = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.col, props.interfaceId);
-            startProcess(p1, 5);
-            const p2 = new CheckTowerSeenHiddenCount(data.currentPuzzle, a.face, a.col, props.interfaceId);
-            startProcess(p2, 5);
-          } else {
-            const p1 = new CheckCellSeenHiddenCount(data.currentPuzzle, a.face, a.row, props.interfaceId);
-            startProcess(p1, 5);
-            const p2 = new CheckTowerSeenHiddenCount(data.currentPuzzle, a.face, a.row, props.interfaceId);
-            startProcess(p2, 5);
-          }
-          // if (a.seen) {
-          //   const p1 = new CellMustBeSeenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
-          //   startProcess(p1, 5);
-          //   const p2 = new TowerMustBeSeenProcess(data.currentPuzzle, a.val, isVertical(a.face) ? a.col: a.row, a.face, props.interfaceId);
-          //   startProcess(p2, 5);
-          // } else {
-          //   const p1 = new CellMustBeHiddenProcess(data.currentPuzzle, a.row, a.col, a.face, props.interfaceId);
-          //   startProcess(p1, 5);
-          //   const p2 = new TowerMustBeHiddenProcess(data.currentPuzzle, a.val, isVertical(a.face) ? a.col: a.row, a.face, props.interfaceId);
-          //   startProcess(p2, 5);
-          // }
-        }
+        processLauncher.onAction(data.currentPuzzle, a);
         startRandomGuessProcessIfNeeded();
       });
 
       puzzleUUID += 1;
-      startInitialRemovalProcessIfNeeded();
+      processLauncher.startInitialProcessesIfNeeded(data.currentPuzzle);
       startRandomGuessProcessIfNeeded();
     }
 

@@ -10,6 +10,7 @@ export default class TowerMustBeHidenProcess extends Process<void> {
   public readonly interfaceId: number;
   public readonly ramRequirement: number = 4;
 
+  private mustActuallyBeHidden: boolean = false;
   private towerLatest: number = -1;
   private minEarliestSeenSoFar: number = -1;
   private potentialCovers: number[] = [];
@@ -60,6 +61,14 @@ export default class TowerMustBeHidenProcess extends Process<void> {
   public tick(): boolean {
     if (this.done) {
       return true;
+    } else if (this.mustActuallyBeHidden) {
+      if (this.t.getTowerVisibility(this.height, this.rowIndex, this.face).hidden) {
+        this.actionMessage = `All possibilities marked as hidden.`;
+        this.mustActuallyBeHidden = true;
+      } else {
+        this.actionMessage = `Tower is potentially seen. Can't apply inference. Done!`;
+        this.done = true;
+      }
     } else if (this.height == this.t.n - 1) {
       this.actionMessage = `This is the tallest tower. It will be seen no matter what.`;
       this.noticeContradiction();

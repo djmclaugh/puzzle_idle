@@ -56,7 +56,7 @@ export default class VisibilityTracker {
   }
 
   // Returns true if the information to remove was actually there
-  public removeInfo(t: Triple, face: HintFace, seen: boolean) : boolean {
+  public removeInfo(t: Triple, face: HintFace, seen: boolean): boolean {
     const info = this.getWithTriple(t)[face]
     if (seen) {
       if (!info.seen) {

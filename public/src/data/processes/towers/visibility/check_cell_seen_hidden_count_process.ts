@@ -22,6 +22,15 @@ export default class CheckCellSeenHiddenCountProcess extends Process<void> {
   private done: boolean = false;
   private actionMessage: string = 'Waiting for process to run...'
 
+  public static processesForCell(puzzle: Towers, row: number, col: number, interfaceId: number): CheckCellSeenHiddenCountProcess[] {
+    return [
+      new CheckCellSeenHiddenCountProcess(puzzle, HintFace.NORTH, col, interfaceId),
+      new CheckCellSeenHiddenCountProcess(puzzle, HintFace.EAST, row, interfaceId),
+      new CheckCellSeenHiddenCountProcess(puzzle, HintFace.SOUTH, col, interfaceId),
+      new CheckCellSeenHiddenCountProcess(puzzle, HintFace.WEST, row, interfaceId),
+    ];
+  }
+
   public constructor(
       private t: Towers,
       private face: HintFace,

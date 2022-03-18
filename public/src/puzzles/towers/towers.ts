@@ -1,7 +1,7 @@
 import Puzzle from '../puzzle.js'
 import { Triple, TripleCollection } from './triple_collection.js'
 import ImplicationsTracker from './implications_tracker.js'
-import VisibilityTracker from './visibility_tracker.js'
+import VisibilityTracker, { VisibilityInfo } from './visibility_tracker.js'
 import { HintFace, isVertical } from './hint_face.js'
 import { ContradictionType, TowersContradiction } from './towers_contradictions.js'
 
@@ -82,7 +82,7 @@ export default class Towers extends Puzzle<Action> {
 
   public implications: ImplicationsTracker;
   public marks: TripleCollection;
-  public visibility: VisibilityTracker = new VisibilityTracker();
+  public visibility: VisibilityTracker;
 
   public getContradiction(): TowersContradiction|null {
     return this.contradiction;
@@ -399,6 +399,7 @@ export default class Towers extends Puzzle<Action> {
       }
     }
     this.implications = new ImplicationsTracker(this.n);
+    this.visibility = new VisibilityTracker();
   }
 
   public copy(): Towers {
@@ -466,6 +467,40 @@ export default class Towers extends Puzzle<Action> {
       }
     }
     return solved;
+  }
+
+  public getCellVisibility(row: number, col: number, face: HintFace): VisibilityInfo {
+    let seen = true;
+    let hidden = true;
+
+    for (let p of this.marks.getWithRowCol(row, col)) {
+      const info = this.visibility.getWithTriple({row, col, val: p})[face];
+      seen = seen && info.seen;
+      hidden = hidden && info.hidden;
+    }
+
+    return {seen, hidden};
+  }
+
+  public getTowerVisibility(height: number, rowIndex: number, face: HintFace): VisibilityInfo {
+    let seen = true;
+    let hidden = true;
+
+    if (isVertical(face)) {
+      for (let p of this.marks.getWithColVal(rowIndex, height)) {
+        const info = this.visibility.getWithTriple({row: p, col: rowIndex, val: height})[face];
+        seen = seen && info.seen;
+        hidden = hidden && info.hidden;
+      }
+    } else {
+      for (let p of this.marks.getWithRowVal(rowIndex, height)) {
+        const info = this.visibility.getWithTriple({row: rowIndex, col: p, val: height})[face];
+        seen = seen && info.seen;
+        hidden = hidden && info.hidden;
+      }
+    }
+
+    return {seen, hidden};
   }
 
   public toString() {
