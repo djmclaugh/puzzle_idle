@@ -19,7 +19,7 @@ export default class PriorityQueue<T> {
 
   public toArray(): T[] {
     let result: T[] = [];
-    for (const priority of Array.from(this.items.keys()).sort()) {
+    for (const priority of Array.from(this.items.keys()).sort().reverse()) {
       result = result.concat(this.items.get(priority)!);
     }
     return result;

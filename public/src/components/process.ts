@@ -1,8 +1,6 @@
 import Vue from '../vue.js'
 import Process from '../data/process.js'
 
-import { currentCPU } from '../data/cpu.js'
-
 interface ProcessProps {
   process: Process<any>|null,
   showInterface: boolean,
@@ -23,13 +21,7 @@ export default {
     }
     return () => {
       if (props.process) {
-        const runButton = Vue.h('button', {
-          onMousedown: () => { currentCPU.boostedProcess = props.process; },
-          onMouseup: () => { currentCPU.boostedProcess = null; },
-          onMouseout: () => { currentCPU.boostedProcess = null; },
-        }, currentCPU.isActive(props.process) ? 'Speed Up (keep pressed)' : 'Manually Run (keep pressed)');
-
-        return Vue.h('li', {style: {height: '32px'}}, [runButton, " ", processDescription()]);
+        return Vue.h('li', {style: {height: '32px'}}, processDescription());
       } else {
         return Vue.h('li', {style: {height: '32px'}}, Vue.h('em', {}, 'Core available'));
       }

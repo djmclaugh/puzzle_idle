@@ -14,7 +14,7 @@ export default class CPU {
   public queue: PriorityQueue<Process<any>> = new PriorityQueue();
   private standbyQueue: Map<string, [Process<any>, number, callback]> = new Map();
   private callbacks: Map<string, callback> = new Map();
-  public boostedProcess: Process<any>|null = null;
+  public boosted: boolean = false;
   public paused: boolean = false;
 
   public get coresInUse(): number {
@@ -44,7 +44,10 @@ export default class CPU {
             this.onTick();
           }
         } else {
-          this.onBoostTick();
+          if (this.boosted) {
+            this.onTick();
+            this.onBoostTick();
+          }
         }
         // Check if the next process can be added
         while (this.canAddNextProcess()) {
@@ -116,9 +119,6 @@ export default class CPU {
     // Remove processes that have terminated
     for (let p of toRemove) {
       if (this.activeProcesses.delete(p)) {
-        if (this.boostedProcess == p) {
-          this.boostedProcess = null;
-        }
         if (this.callbacks.has(p.processId)) {
           const callback = this.callbacks.get(p.processId)!;
           this.callbacks.delete(p.processId);
@@ -136,10 +136,10 @@ export default class CPU {
   }
 
   public onBoostTick() {
-    if (!this.boostedProcess) {
+    const p = this.queue.peakNext();
+    if (p === undefined) {
       return;
     }
-    const p = this.boostedProcess;
     const startTimestamp = Date.now();
     const isDone = p.tick();
     const endTimestamp = Date.now();
@@ -147,9 +147,7 @@ export default class CPU {
     if (endTimestamp - startTimestamp > 100) {
       console.log(`Warning: Tick from process ${p.processId} took ${duration}ms.`)
     }
-    // Make sure process hasn't changed during its tick.
-    if (isDone && p === this.boostedProcess) {
-      // Manually bosted processes might be from the queue.
+    if (isDone) {
       this.queue.remove(p);
       this.activeProcesses.delete(p)
       if (this.callbacks.has(p.processId)) {
@@ -157,7 +155,6 @@ export default class CPU {
         this.callbacks.delete(p.processId);
         callback(p.returnValue);
       }
-      this.boostedProcess = null;
       if (this.standbyQueue.has(p.processId)) {
         const processInfo = this.standbyQueue.get(p.processId)!;
         this.standbyQueue.delete(p.processId);

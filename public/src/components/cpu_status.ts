@@ -8,10 +8,6 @@ import { currentStatus } from '../data/status.js'
 import { currentCPU } from '../data/cpu.js'
 import Process from '../data/process.js'
 
-// Process components can cause issues if recycled.
-// Since they are cheap to render, simply re-render them each time.
-let processKey = 0;
-
 export default {
   setup() {
     const showQueue = Vue.ref(true);
@@ -42,13 +38,26 @@ export default {
         }, `Upgrade ($${currentStatus.cpuCoresUpgradeCost})`)
       ]));
 
+      items.push(Vue.h('p', {}, [
+        Vue.h('button', {
+          onMousedown: () => {
+            currentCPU.boosted = true;
+          },
+          onMouseup: () => {
+            currentCPU.boosted = false;
+          },
+          onMouseout: () => {
+            currentCPU.boosted = false;
+          },
+        }, `Double Active Process Speed + Run 1 Queue Process (keep pressed)`)
+      ]));
+
       const activeProcesses: (Process<any>|null)[] = Array.from(currentCPU.activeProcesses).sort();
       while (activeProcesses.length < currentCPU.cores) {
         activeProcesses.push(null);
       }
       let empty_message = Vue.h('em', {}, 'Currently no active processes');
       let process_list = Vue.h('ul', {}, activeProcesses.map(p => Vue.h(ProcessComponent, {
-        key: processKey++,
         process: p,
         showInterface: true,
       })));
@@ -78,7 +87,6 @@ export default {
 
       empty_message = Vue.h('em', {}, 'No processes currently in queue');
       process_list = Vue.h('ul', {}, queue.map(p => Vue.h(ProcessComponent, {
-        key: processKey++,
         process: p,
         showInterface: true,
       })));
