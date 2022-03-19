@@ -7,7 +7,6 @@ import TowersUpgrades from '../../towers/towers_upgrades.js'
 
 import Process from '../../process.js'
 
-import BetterSimpleViewProcess from './visibility/better_simple_view_process.js'
 import SimpleViewProcess from './visibility/simple_view_process.js'
 import MaxViewProcess from './visibility/max_view_process.js'
 import OneViewProcess from './visibility/one_view_process.js'
@@ -139,9 +138,12 @@ export default class ProcessLauncher {
     if (this.upgrades.simpleViewProcess.isUnlocked) {
       if (this.options.simpleViewOn) {
         for (const face of ALL_FACES) {
-          const p = this.upgrades.betterSimpleViewProcess.isUnlocked ?
-              new BetterSimpleViewProcess(t, face, this.id) :
-              new SimpleViewProcess(t, face, this.id);
+          const p = new SimpleViewProcess(t, face,
+            this.upgrades.betterSimpleViewProcess.isUnlocked,
+            this.upgrades.visibility.isUnlocked,
+            this.upgrades.markHintSatisfied.isUnlocked,
+            this.id
+          );
           this.startProcess(p, 9);
         }
       }
