@@ -230,6 +230,32 @@ export default {
         processesItems.push(cellVisibilityCountOn);
       }
 
+      if (towersUpgrades.cellMustBeSeenProcess.isUnlocked) {
+        const cellMustBeSeenOn = Vue.h(LabeledCheckbox, {
+          value: props.options.cellMustBeSeenOn,
+          label: 'Cell Must Be Seen',
+          boxId: 'cell_must_be_seen_checkbox_' + props.interfaceId,
+          onChange: (e: Event) => {
+            const t: HTMLInputElement = e.target as HTMLInputElement;
+            props.options.cellMustBeSeenOn = t.checked;
+          }
+        });
+        processesItems.push(cellMustBeSeenOn);
+      }
+
+      if (towersUpgrades.cellMustBeHiddenProcess.isUnlocked) {
+        const cellMustBeHiddenOn = Vue.h(LabeledCheckbox, {
+          value: props.options.cellMustBeHiddenOn,
+          label: 'Cell Must Be Hidden',
+          boxId: 'cell_must_be_hidden_checkbox_' + props.interfaceId,
+          onChange: (e: Event) => {
+            const t: HTMLInputElement = e.target as HTMLInputElement;
+            props.options.cellMustBeHiddenOn = t.checked;
+          }
+        });
+        processesItems.push(cellMustBeHiddenOn);
+      }
+
       if (towersUpgrades.heightVisibilityCountProcess.isUnlocked) {
         const heightVisibilityCountOn = Vue.h(LabeledCheckbox, {
           value: props.options.heightVisibilityCountOn,
@@ -241,6 +267,32 @@ export default {
           }
         });
         processesItems.push(heightVisibilityCountOn);
+      }
+
+      if (towersUpgrades.heightMustBeSeenProcess.isUnlocked) {
+        const heightMustBeSeenOn = Vue.h(LabeledCheckbox, {
+          value: props.options.heightMustBeSeenOn,
+          label: 'Height Must Be Seen',
+          boxId: 'height_must_be_seen_checkbox_' + props.interfaceId,
+          onChange: (e: Event) => {
+            const t: HTMLInputElement = e.target as HTMLInputElement;
+            props.options.heightMustBeSeenOn = t.checked;
+          }
+        });
+        processesItems.push(heightMustBeSeenOn);
+      }
+
+      if (towersUpgrades.heightMustBeHiddenProcess.isUnlocked) {
+        const heightMustBeHiddenOn = Vue.h(LabeledCheckbox, {
+          value: props.options.heightMustBeHiddenOn,
+          label: 'Height Must Be Hidden',
+          boxId: 'height_must_be_hidden_checkbox_' + props.interfaceId,
+          onChange: (e: Event) => {
+            const t: HTMLInputElement = e.target as HTMLInputElement;
+            props.options.heightMustBeHiddenOn = t.checked;
+          }
+        });
+        processesItems.push(heightMustBeHiddenOn);
       }
 
       const oneView = Vue.h(LabeledCheckbox, {

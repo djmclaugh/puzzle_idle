@@ -64,6 +64,45 @@ export default class ProcessLauncher {
     }
 
     for (const face of ALL_FACES) {
+      const rowIndex = isVertical(face) ? t.col : t.row;
+      if (this.options.cellMustBeSeenOn) {
+        this.startProcess(new CellMustBeSeenProcess(towers, t.row, t.col, face, this.id), 5);
+      }
+      if (this.options.heightMustBeSeenOn) {
+        this.startProcess(new TowerMustBeSeenProcess(towers, t.val, rowIndex, face, this.id), 5);
+      }
+      if (this.options.cellMustBeHiddenOn) {
+        this.startProcess(new CellMustBeHiddenProcess(towers, t.row, t.col, face, this.id), 5);
+        switch (face) {
+          case HintFace.NORTH:
+            for (let i = t.row + 1; i < towers.n; ++ i) {
+              this.startProcess(new CellMustBeHiddenProcess(towers, i, t.col, face, this.id), 5);
+            }
+            break;
+          case HintFace.SOUTH:
+            for (let i = 0; i < t.row; ++ i) {
+              this.startProcess(new CellMustBeHiddenProcess(towers, i, t.col, face, this.id), 5);
+            }
+            break;
+          case HintFace.WEST:
+            for (let i = t.col + 1; i < towers.n; ++ i) {
+              this.startProcess(new CellMustBeHiddenProcess(towers, t.row, i, face, this.id), 5);
+            }
+            break;
+          case HintFace.EAST:
+            for (let i = 0; i < t.col; ++ i) {
+              this.startProcess(new CellMustBeHiddenProcess(towers, t.row, i, face, this.id), 5);
+            }
+            break;
+        }
+      }
+      if (this.options.heightMustBeHiddenOn) {
+        this.startProcess(new TowerMustBeHiddenProcess(towers, t.val, rowIndex, face, this.id), 5);
+        for (let i = 0; i < t.val; ++i) {
+          this.startProcess(new TowerMustBeHiddenProcess(towers, i, rowIndex, face, this.id), 5);
+        }
+      }
+
       if (isVertical(face)) {
         if (this.options.detectVisibilityOn) {
           this.startProcess(new CheckPossibilityVisibilityProcess(towers, face, t.col, this.id), 7);
@@ -81,19 +120,9 @@ export default class ProcessLauncher {
   private recheckVisibility(t: Towers, rowIndex: number, face: HintFace) {
     if (this.options.cellVisibilityCountOn) {
       this.startProcess(new CheckCellSeenHiddenCountProcess(t, face, rowIndex, this.id), 5);
-      // for (let i = 0; i < t.n; ++i) {
-      //   let [col, row] = getCoordinates(face, rowIndex, i, t.n);
-      //   this.startProcess(new CellMustBeSeenProcess(t, row, col, face, this.id), 5);
-      //   this.startProcess(new CellMustBeHiddenProcess(t, row, col, face, this.id), 5);
-      // }
     }
     if (this.options.heightVisibilityCountOn) {
       this.startProcess(new CheckTowerSeenHiddenCountProcess(t, face, rowIndex, this.id), 5);
-      // for (let i = 0; i < t.n; ++i) {
-      //   let [col, row] = getCoordinates(face, rowIndex, i, t.n);
-      //   this.startProcess(new TowerMustBeSeenProcess(t, row, col, face, this.id), 5);
-      //   this.startProcess(new TowerMustBeHiddenProcess(t, row, col, face, this.id), 5);
-      // }
     }
   }
 
@@ -106,6 +135,19 @@ export default class ProcessLauncher {
       this.recheckVisibility(towers, a.col, a.face);
     } else {
       this.recheckVisibility(towers, a.row, a.face);
+    }
+    if (this.options.cellMustBeSeenOn) {
+      this.startProcess(new CellMustBeSeenProcess(towers, a.row, a.col, a.face, this.id), 5);
+    }
+    if (this.options.cellMustBeHiddenOn) {
+      this.startProcess(new CellMustBeHiddenProcess(towers, a.row, a.col, a.face, this.id), 5);
+    }
+    const rowIndex = isVertical(a.face) ? a.col : a.row;
+    if (this.options.heightMustBeSeenOn) {
+      this.startProcess(new TowerMustBeSeenProcess(towers, a.val, rowIndex, a.face, this.id), 5);
+    }
+    if (this.options.heightMustBeHiddenOn) {
+      this.startProcess(new TowerMustBeHiddenProcess(towers, a.val, rowIndex, a.face, this.id), 5);
     }
   }
 
@@ -140,8 +182,9 @@ export default class ProcessLauncher {
         for (const face of ALL_FACES) {
           const p = new SimpleViewProcess(t, face,
             this.upgrades.betterSimpleViewProcess.isUnlocked,
-            this.upgrades.visibility.isUnlocked,
+            this.upgrades.tooShortTooFarUpgrade.isUnlocked,
             this.upgrades.markHintSatisfied.isUnlocked,
+            this.upgrades.twosViewUpgrade.isUnlocked,
             this.id
           );
           this.startProcess(p, 9);

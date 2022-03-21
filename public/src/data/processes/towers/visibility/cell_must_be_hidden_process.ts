@@ -14,6 +14,7 @@ export default class CellMustBeHIddenProcess extends Process<void> {
   private depth: number = 0;
   private rowIndex: number = 0;
 
+  private checkedMustBeHidden: boolean = false;
   private cellMin: number = -1;
   private maxSeenSoFar: number = -1;
   private potentialCovers: number[] = [];
@@ -69,6 +70,15 @@ export default class CellMustBeHIddenProcess extends Process<void> {
   public tick(): boolean {
     if (this.done) {
       return true;
+    } else if (!this.checkedMustBeHidden) {
+      if (this.t.getCellVisibility(this.row, this.col, this.face).hidden) {
+        this.actionMessage = `All possibilities marked as hidden`;
+      } else {
+        this.actionMessage = `Cell potentially seen. Inference does not apply. Done!`;
+        this.done = true;
+      }
+      this.checkedMustBeHidden = true;
+      return false;
     } else if (this.depth == 0) {
       this.actionMessage = `Cell is on the edge. It will be seen no matter what. Contradiction!`;
       this.noticeContradiction();

@@ -12,7 +12,11 @@ export default class TowersOptions {
   public detectVisibilityOn: boolean = false;
   public removeContradictoryVisibilityOn: boolean = false;
   public cellVisibilityCountOn: boolean = false;
+  public cellMustBeHiddenOn: boolean = false;
+  public cellMustBeSeenOn: boolean = false;
   public heightVisibilityCountOn: boolean = false;
+  public heightMustBeHiddenOn: boolean = false;
+  public heightMustBeSeenOn: boolean = false;
   public oneViewOn: boolean = false;
   public notOneViewOn: boolean = false;
   public maxViewOn: boolean = false;

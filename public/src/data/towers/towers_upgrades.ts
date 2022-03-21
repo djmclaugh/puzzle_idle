@@ -135,12 +135,21 @@ export default class TowersUpgrades {
     () => towersUpgrades.interfaces[0] > 2,
   );
 
-  public readonly tooShortTooFarProcess = new UnlockableUpgrade(
+  public readonly tooShortTooFarUpgrade = new UnlockableUpgrade(
     "Too Short Too Far Inference",
-    "If a possibility is shorter than how far it is from the edge, it it must be hidden from that edge.\n" +
-    "For example, a tower height 2 is in the 3rd cell from the edge must be hidden.\n" +
+    "If a possibility is shorter than how far it is from the edge, then it must be hidden from that edge.\n" +
+    "For example, a tower height 2 in the 3rd cell from the edge will be hidden.\n" +
     "This inference will be applied as part of the initial view process.",
-    10,
+    20,
+    () => towersUpgrades.visibility.isUnlocked && towersUpgrades.simpleViewProcess.isUnlocked,
+  );
+
+  public readonly twosViewUpgrade = new UnlockableUpgrade(
+    "2 View Upgrade",
+    "If a view hint is a 2, then only the first cell and the tallest tower will be seen.\n" +
+    "Mark all other possibilities as hidden.\n" +
+    "This inference will be applied as part of the initial view process.",
+    20,
     () => towersUpgrades.visibility.isUnlocked && towersUpgrades.simpleViewProcess.isUnlocked,
   );
 
@@ -168,12 +177,44 @@ export default class TowersUpgrades {
     () => towersUpgrades.detectVisibilityProcess.isUnlocked,
   );
 
+  public readonly cellMustBeHiddenProcess = new UnlockableUpgrade(
+    "Cell Must Be Hidden Process",
+    "If all possibilities in a cell are hidden, then that cell must be hidden.\n" +
+    "This means that at least one cell in front must have a tower that's taller than the hidden cell's shortest possibility.",
+    20,
+    () => towersUpgrades.detectVisibilityProcess.isUnlocked,
+  );
+
+  public readonly cellMustBeSeenProcess = new UnlockableUpgrade(
+    "Cell Must Be Seen Process",
+    "If all possibilities in a cell are seen, then that cell must be seen.\n" +
+    "This means that all of the cells in front can't be taller than the seen cell's tallest possibility.",
+    20,
+    () => towersUpgrades.detectVisibilityProcess.isUnlocked,
+  );
+
   public readonly heightVisibilityCountProcess = new UnlockableUpgrade(
     "Height Visibility Count Process",
     "If all possibilities for a certain height withing a row/column are seen/hidden, then that the tower of that height must be seen/hidden.\n" +
     "If the number of heights that must be seen is equal to the hint, then we know that the other heights must be hidden.\n" +
     "If the number of heights that must be hidden is equal to the size of the puzzle minus the hint, then we know that the other heights must be seen.",
     10,
+    () => towersUpgrades.detectVisibilityProcess.isUnlocked,
+  );
+
+  public readonly heightMustBeHiddenProcess = new UnlockableUpgrade(
+    "Height Must Be Hidden Process",
+    "If all possibilities for a certain height are hidden, then the tower of that height must be hidden.\n" +
+    "This means that at least one of the taller heights must appear in front of hidden height's latest possibility.",
+    20,
+    () => towersUpgrades.detectVisibilityProcess.isUnlocked,
+  );
+
+  public readonly heightMustBeSeenProcess = new UnlockableUpgrade(
+    "Height Must Be Seen Process",
+    "If all possibilities for a certain height are seen, then the tower of that height must be seen.\n" +
+    "This means that all taller heights must appear behind of seen height's earliest possibility.",
+    20,
     () => towersUpgrades.detectVisibilityProcess.isUnlocked,
   );
 

@@ -10,6 +10,7 @@ export default class TowerMustBeSeenProcess extends Process<void> {
   public readonly interfaceId: number;
   public readonly ramRequirement: number = 4;
 
+  private checkedMustBeSeen: boolean = false;
   private towerEarliest: number = -1;
   private minLatestSeenSoFar: number = -1;
   private checkHeight;
@@ -48,6 +49,16 @@ export default class TowerMustBeSeenProcess extends Process<void> {
   public tick(): boolean {
     if (this.done) {
       return true;
+    } else if (this.checkedMustBeSeen) {
+      if (this.t.getTowerVisibility(this.height, this.rowIndex, this.face).seen) {
+        this.actionMessage = `All possibilities marked as seen.`;
+        this.checkedMustBeSeen = true;
+      } else {
+        this.actionMessage = `Height is potentially hidden. Inference does not apply. Done!`;
+        this.done = true;
+      }
+      this.checkedMustBeSeen = true;
+      return false;
     } else if (this.height == this.t.n - 1) {
       this.actionMessage = `This is the tallest tower. It will be seen no matter what.`;
       this.done = true;

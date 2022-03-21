@@ -28,10 +28,16 @@ export default {
               towersUpgrades.oneViewProcess.unlock();
               towersUpgrades.onlyChoiceInColumnRowProcess.unlock();
               towersUpgrades.visibility.unlock();
+              towersUpgrades.tooShortTooFarUpgrade.unlock();
+              towersUpgrades.twosViewUpgrade.unlock();
+              towersUpgrades.cellMustBeSeenProcess.unlock();
+              towersUpgrades.cellMustBeHiddenProcess.unlock();
               towersUpgrades.detectVisibilityProcess.unlock();
               towersUpgrades.removeContradictoryVisibilityProcess.unlock();
               towersUpgrades.cellVisibilityCountProcess.unlock();
               towersUpgrades.heightVisibilityCountProcess.unlock();
+              towersUpgrades.heightMustBeSeenProcess.unlock();
+              towersUpgrades.heightMustBeHiddenProcess.unlock();
               towersUpgrades.randomGuessProcess.unlock();
               towersUpgrades.removeFromColumnRowProcess.unlock();
               towersUpgrades.removePossibility.unlock();

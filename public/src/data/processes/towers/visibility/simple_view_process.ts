@@ -27,6 +27,7 @@ export default class SimpleViewProcess extends Process<void> {
       private withDepth: boolean,
       private withVisibility: boolean,
       private withMarkCompletedHints: boolean,
+      private withTwosView: boolean,
       interfaceId: number) {
     super();
     this.friendlyName = `Initial ${faceToString(face)} Face Check`;
@@ -77,6 +78,7 @@ export default class SimpleViewProcess extends Process<void> {
       this.rowIndex += 1;
       this.checkedHint = false;
       this.step = 0;
+      return false;
     }
     if (this.hint == this.t.n) {
       this.actionMessage = `${ordinal(this.step + 1)} cell has to be ${this.step + 1}.`;
@@ -115,6 +117,11 @@ export default class SimpleViewProcess extends Process<void> {
     }
     if (this.withVisibility) {
       for (let i = 0; i < this.step; ++i) {
+        this.t.setTripleVisibility({row, col, val: i}, this.face, false);
+      }
+    }
+    if (this.hint == 2 && this.withTwosView && this.step > 0) {
+      for (let i = 0; i < this.t.n - 1; ++i) {
         this.t.setTripleVisibility({row, col, val: i}, this.face, false);
       }
     }
