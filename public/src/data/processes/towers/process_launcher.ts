@@ -122,7 +122,7 @@ export default class ProcessLauncher {
       this.startProcess(new CheckCellSeenHiddenCountProcess(t, face, rowIndex, this.id), 5);
     }
     if (this.options.heightVisibilityCountOn) {
-      this.startProcess(new CheckTowerSeenHiddenCountProcess(t, face, rowIndex, this.id), 5);
+      this.startProcess(new CheckTowerSeenHiddenCountProcess(t, face, rowIndex, true, this.id), 5);
     }
   }
 

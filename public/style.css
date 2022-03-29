@@ -332,14 +332,13 @@ details > div {
 
 .crossed-out {
   cursor: default;
-  background-color: #ffa0a0;
-  opacity: 0.3;
+  opacity: 0.2;
 }
 
 .crossed-out:hover {
   cursor: default;
-  background-color: #ffa0a0;
-  opacity: 0.3;
+  background-color: #e0e0e0;
+  opacity: 0.2;
 }
 
 .latin-selection {
@@ -415,9 +414,12 @@ details > div {
 }
 
 .labeled-checkbox {
-  padding: 2px;
-  margin-left: 4px;
-  margin-right: 4px;
+  padding-left: 2px;
+  padding-right: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .labeled-checkbox:hover {

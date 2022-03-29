@@ -49,7 +49,7 @@ export default class TowerMustBeSeenProcess extends Process<void> {
   public tick(): boolean {
     if (this.done) {
       return true;
-    } else if (this.checkedMustBeSeen) {
+    } else if (!this.checkedMustBeSeen) {
       if (this.t.getTowerVisibility(this.height, this.rowIndex, this.face).seen) {
         this.actionMessage = `All possibilities marked as seen.`;
         this.checkedMustBeSeen = true;
