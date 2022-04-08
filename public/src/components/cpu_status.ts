@@ -40,6 +40,12 @@ export default {
       ]));
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+        Vue.h('strong', {}, 'Status'),
+        ': ',
+        currentCPU.coresInUse == 0 ? "No processes to run" : (currentSpeed == currentCPU.maxSpeed ? "Limited by max speed" : "Limited by available power"),
+      ]));
+
+      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
         Vue.h('strong', {}, 'Current Power Consumption'),
         ': #Active Cores × Speed² = ',
         `${currentCPU.coresInUse} × ${currentSpeed}² = `,
