@@ -1,5 +1,6 @@
 import Vue from './vue.js'
 import CPUStatus from './components/cpu_status.js'
+import PowerStatus from './components/power_status.js'
 import Status from './components/status.js'
 import PuzzlesSection from './components/puzzles_section.js'
 import TowersUpgrades from './components/towers/towers_upgrades.js'
@@ -18,30 +19,21 @@ const App = {
     });
 
     return () => {
-      let items = [];
-      items.push(Vue.h(Status));
+      let right = [];
+      right.push(Vue.h(PowerStatus));
+      right.push(Vue.h(CPUStatus));
       if (data.puzzleChoice == "towers") {
-        items.push(Vue.h(TowersUpgrades));
+        right.push(Vue.h(TowersUpgrades));
       }
-      items.push(Vue.h(CPUStatus));
-      // items.push(Vue.h('h3', {}, 'Interfaces: '));
-      // for (let i = 0; i < currentStatus.interfaces.length; ++i) {
-      //   items.push(Vue.h('div', {
-      //     class: {
-      //       'interface-selector': true,
-      //       'interface-selector-selected': i == data.currentInterface,
-      //     },
-      //     onClick: () => {
-      //       data.currentInterface = i;
-      //     }
-      //   }, "" + (i + 1)));
-      // }
-      //
-      // items.push(Vue.h('br'));
-      // items.push(Vue.h('br'));
+      let rightPane = Vue.h('div', {
+        style: {
+            'width': '49.5%',
+        }
+      }, right);
 
+      let puzzleSection;
       if (data.puzzleChoice == "") {
-        items.push(Vue.h("select", {
+        puzzleSection = Vue.h("select", {
           onChange: (e: InputEvent) => {
             data.puzzleChoice = (e.target! as HTMLOptionElement).value;
           }
@@ -49,12 +41,25 @@ const App = {
           Vue.h("option", {value: ""}, "Choose a puzzle type"),
           Vue.h("option", {value: "loopy"}, "Loopy / Slitherlink"),
           Vue.h("option", {value: "towers"}, "Towers / Skyscrapers"),
-        ]));
+        ]);
       } else {
-        items.push(Vue.h(PuzzlesSection, {puzzleType: data.puzzleChoice}));
+        puzzleSection = Vue.h(PuzzlesSection, {
+          puzzleType: data.puzzleChoice,
+          style: {
+              'width': '49.5%',
+          }
+        });
       }
 
-      return Vue.h('div', {}, items);
+      return Vue.h('div', {}, [
+        Vue.h(Status),
+        Vue.h('div', {
+          style: {
+            display: 'flex',
+            'justify-content': 'space-between',
+          },
+        }, [puzzleSection, rightPane]),
+      ]);
     }
   }
 };

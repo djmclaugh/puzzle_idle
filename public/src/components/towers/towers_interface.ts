@@ -1,10 +1,13 @@
 import Vue from '../../vue.js'
 import {fromSimonThatamId, toSimonTathamId} from '../../puzzles/towers/util.js'
 import Towers, {Action} from '../../puzzles/towers/towers.js'
+
 import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
 import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.js'
+import LabeledCheckbox from './../util/labeled_checkbox.js'
+
 import { currentStatus } from '../../data/status.js'
 import { currentCPU } from '../../data/cpu.js'
 import { randomOfSize, loadTowers } from '../../puzzles/towers/towers_loader.js'
@@ -28,6 +31,7 @@ interface InterfaceComponentData {
   validationProcess: ValidationProcess|null;
   randomGuessProcess: RandomGuessProcess|null;
   otherProcesses: Set<Process<any>>;
+  showOptions: boolean,
 }
 
 let puzzleUUID: number = 0;
@@ -46,6 +50,7 @@ export default {
       validationProcess: null,
       randomGuessProcess: null,
       otherProcesses: new Set(),
+      showOptions: true,
     });
 
     const incomeTracker: [number, number][] = [];
@@ -245,13 +250,27 @@ export default {
     return () => {
       let items = [];
 
-      const optionsComponent = Vue.h(TowersOptionsComponent, {
-        interfaceId: props.interfaceId,
-        options: options,
-        onRandomGuessOn: () => { startRandomGuessProcessIfNeeded(); },
-        onSizeChange: () => { assignNewPuzzle() },
+      const showOptions = Vue.h(LabeledCheckbox, {
+        value: data.showOptions,
+        label: 'Show Settings',
+        boxId: 'show_options_checkbox_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          data.showOptions = t.checked;
+        }
       });
-      items.push(optionsComponent);
+      items.push(showOptions);
+      items.push(Vue.h('br'));
+
+      if (data.showOptions) {
+        const optionsComponent = Vue.h(TowersOptionsComponent, {
+          interfaceId: props.interfaceId,
+          options: options,
+          onRandomGuessOn: () => { startRandomGuessProcessIfNeeded(); },
+          onSizeChange: () => { assignNewPuzzle() },
+        });
+        items.push(optionsComponent);
+      }
 
       items.push(Vue.h('br'));
 
@@ -306,10 +325,11 @@ export default {
         style: {
           display: 'flex',
           'flex-wrap': 'wrap',
+          'justify-content': 'space-around',
         }
       }, flexItems));
 
-      if (data.currentPuzzle instanceof Towers) {
+      if (data.currentPuzzle instanceof Towers && data.showOptions) {
         items.push(Vue.h('span', {}, 'Puzzle ID: ' + toSimonTathamId(data.currentPuzzle)));
         items.push(Vue.h('br'));
         items.push(Vue.h('em', {}, '(compatible with Simon Tatham\'s implementation)'));
@@ -325,10 +345,10 @@ export default {
       return Vue.h('details', {open: true, class: 'towers-interface'}, [
         Vue.h('summary', {}, [
           Vue.h('strong', {style: {display: 'inline-block'}}, `Towers ${props.interfaceId + 1}`),
-          ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `Last minute: $${averages.minute}`),
-          ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `Last 10 minutes average: $${averages.tenMinute.toFixed(2)}/min`),
+          // ' | ',
+          // Vue.h('span', {style: {display: 'inline-block'}}, `Last minute: $${averages.minute}`),
+          // ' | ',
+          // Vue.h('span', {style: {display: 'inline-block'}}, `Last 10 minutes average: $${averages.tenMinute.toFixed(2)}/min`),
           ' | ',
           Vue.h('span', {style: {display: 'inline-block'}}, `Last hour average: $${averages.hour.toFixed(2)}/min`),
         ]),

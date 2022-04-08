@@ -7,15 +7,15 @@ export default {
     return () => {
       let items = [];
       items.push(Vue.h('p', {}, [
-        `Current money: $${currentStatus.money}`,
+        `Current money: $${currentStatus.currentMoney}`,
         ' ',
-        Vue.h('button', {onClick: () => {currentStatus.money += 10;}}, 'Give me $10'),
+        Vue.h('button', {onClick: () => {currentStatus.gainMoney(10);}}, 'Give me $10'),
         ' ',
-        Vue.h('button', {onClick: () => {currentStatus.money += 1000;}}, 'Give me $1000'),
+        Vue.h('button', {onClick: () => {currentStatus.gainMoney(1000);}}, 'Give me $1000'),
         ' ',
         Vue.h('button', {
           onClick: () => {
-              const m = currentStatus.money;
+              const m = currentStatus.currentMoney;
 
               towersUpgrades.autoCashIn.unlock();
               towersUpgrades.autoRevertOnContradiction.unlock();
@@ -44,9 +44,11 @@ export default {
               towersUpgrades.simpleViewProcess.unlock();
               towersUpgrades.undo.unlock();
 
-              currentStatus.money = m;
+              currentStatus.gainMoney(m - currentStatus.currentMoney);
           }
         }, 'Unlock All'),
+        Vue.h('br'),
+        `Total money earned: $${currentStatus.allTimeMoney}`,
       ]));
 
 

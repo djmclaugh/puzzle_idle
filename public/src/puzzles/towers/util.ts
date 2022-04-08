@@ -64,30 +64,38 @@ export function fromSimonThatamId(id: String): Towers {
   if (secondSplit.length > 2) {
     throw new Error('Game ID expects at most 1 comma in it.');
   }
-  const view = secondSplit[0].split('/');
-  if (view.length != 4 * size) {
-    throw new Error(`Since size is ${size}, game ID expects exactly 4* size - 1 = ${4*size - 1} backslashes in it.`);
-  }
+
   const nHints = [];
   const sHints = [];
   const wHints = [];
   const eHints = [];
-  for (let i = 0; i < size; ++i) {
-    nHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-  }
-  for (let i = size; i < 2*size; ++i) {
-    sHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-  }
-  for (let i = 2*size; i < 3*size; ++i) {
-    wHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
-  }
-  for (let i = 3*size; i < 4*size; ++i) {
-    eHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
+  if (secondSplit[0].indexOf('/') != -1) {
+    const view = secondSplit[0].split('/');
+    if (view.length != 4 * size) {
+      throw new Error(`Since size is ${size}, game ID expects exactly 4* size - 1 = ${4*size - 1} backslashes in it.`);
+    }
+    for (let i = 0; i < size; ++i) {
+      nHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
+    }
+    for (let i = size; i < 2*size; ++i) {
+      sHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
+    }
+    for (let i = 2*size; i < 3*size; ++i) {
+      wHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
+    }
+    for (let i = 3*size; i < 4*size; ++i) {
+      eHints.push(view[i].length == 0 ? -1 : parseInt(view[i]));
+    }
   }
 
   const grid: number[][] = [];
+  let gridInfo;
   if (secondSplit.length == 2) {
-    const gridInfo = secondSplit[1];
+    gridInfo = secondSplit[1];
+  } else if (secondSplit[0].indexOf('/') == -1) {
+    gridInfo = secondSplit[0];
+  }
+  if (gridInfo) {
     let run = 0;
     let infoIndex = 0;
     for (let y = 0; y < size; ++y) {

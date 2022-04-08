@@ -6,51 +6,49 @@ import ProcessComponent from './process.js'
 
 import { currentStatus } from '../data/status.js'
 import { currentCPU } from '../data/cpu.js'
+import { currentPower } from '../data/power.js'
 import Process from '../data/process.js'
 
 export default {
   setup() {
-    const showQueue = Vue.ref(true);
+    const showQueue = Vue.ref(false);
     return () => {
       let items = [];
 
-      items.push(Vue.h('p', {style: {display: 'inline-block'}}, [
-        `Max Speed: ${currentCPU.maxSpeed} Hz `,
+      const currentSpeed = currentCPU.speedForPower(currentPower.power);
+
+      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+        Vue.h('strong', {}, 'Max Speed'),
+        ': ',
+        `${currentCPU.maxSpeed} Hz`,
+        ' ',
         Vue.h('button', {
           onClick: () => { currentStatus.upgradeCpuSpeed(); },
           disabled: !currentStatus.canAffordCpuSpeedUpgrade(),
-        }, `Upgrade ($${currentStatus.cpuSpeedUpgradeCost})`),
+        }, `+1 Hz ($${currentStatus.cpuSpeedUpgradeCost})`),
+      ]));
+
+      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+        Vue.h('strong', {}, 'Number of Cores'),
+        ': ',
+        `${currentCPU.cores}`,
         ' ',
         Vue.h('button', {
-          onClick: () => { currentCPU.paused = !currentCPU.paused; },
-        }, currentCPU.paused ? 'Resume' : 'Pause'),
-      ]));
-
-      items.push(' | ');
-
-      items.push(Vue.h('p', {style: {display: 'inline-block'}}, [
-        `Number of Cores: ${currentCPU.cores} `,
-        Vue.h('button', {
-          onClick: () => {
-            currentStatus.upgradeCpuCores();
-          },
+          onClick: () => { currentStatus.upgradeCpuCores(); },
           disabled: !currentStatus.canAffordCpuCoresUpgrade(),
-        }, `Upgrade ($${currentStatus.cpuCoresUpgradeCost})`)
+        }, `+1 Core ($${currentStatus.cpuCoresUpgradeCost})`),
       ]));
 
-      items.push(Vue.h('p', {}, [
-        Vue.h('button', {
-          onMousedown: () => {
-            currentCPU.boosted = true;
-          },
-          onMouseup: () => {
-            currentCPU.boosted = false;
-          },
-          onMouseout: () => {
-            currentCPU.boosted = false;
-          },
-        }, `Double Active Process Speed + Run 1 Queue Process (keep pressed)`)
+      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+        Vue.h('strong', {}, 'Current Power Consumption'),
+        ': #Active Cores × Speed² = ',
+        `${currentCPU.coresInUse} × ${currentSpeed}² = `,
+        `${currentCPU.powerForSpeed(currentSpeed)} W`,
       ]));
+
+      // Vue.h('button', {
+      //   onClick: () => { currentCPU.paused = !currentCPU.paused; },
+      // }, currentCPU.paused ? 'Resume' : 'Pause'),
 
       const activeProcesses: (Process<any>|null)[] = Array.from(currentCPU.activeProcesses).sort();
       while (activeProcesses.length < currentCPU.cores) {
@@ -108,11 +106,11 @@ export default {
         Vue.h('summary', {}, [
           Vue.h('strong', {style: {display: 'inline-block'}}, `CPU`),
           ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.speed} Hz `),
+          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} cores active (max ${currentCPU.cores})`),
           ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} out of ${currentCPU.cores} cores active`),
+          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse == 0 ? 'N/A' : currentSpeed} Hz (max ${currentCPU.maxSpeed} Hz)`),
           ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${queue.length} processes waiting in queue`),
+          Vue.h('span', {style: {display: 'inline-block'}}, `${queue.length} in queue`),
         ]),
         Vue.h('div', {}, items),
       ]);

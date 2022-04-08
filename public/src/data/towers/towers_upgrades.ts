@@ -13,13 +13,13 @@ export class UnlockableUpgrade {
     ) {}
 
   public get canAfford(): boolean {
-    return this.cost <= currentStatus.money;
+    return this.cost <= currentStatus.currentMoney;
   }
   public get isUnlocked(): boolean {
     return this.unlocked;
   }
   public unlock() {
-    currentStatus.money -= this.cost;
+    currentStatus.spendMoney(this.cost);
     this.unlocked = true;
   }
 }
@@ -33,10 +33,10 @@ export default class TowersUpgrades {
     return Math.pow(10, i * 2) * 5 * currentStatus.puzzleReward(this.interfaces[i]);
   }
   public canAffordSizeUpgrade(i: number): boolean {
-    return currentStatus.money >= this.sizeUpgradeCost(i);
+    return currentStatus.currentMoney >= this.sizeUpgradeCost(i);
   }
   public upgradeSize(i: number) {
-    currentStatus.money -= this.sizeUpgradeCost(i);
+    currentStatus.spendMoney(this.sizeUpgradeCost(i));
     this.interfaces[i] += 1;
   }
 
@@ -44,10 +44,10 @@ export default class TowersUpgrades {
     return Math.pow(10, (this.interfaces.length - 1) * 2) * 5;
   }
   public canAffordExtraInterface(): boolean {
-    return currentStatus.money >= this.extraInterfaceCost();
+    return currentStatus.currentMoney >= this.extraInterfaceCost();
   }
   public unlockExtraInterface() {
-    currentStatus.money -= this.extraInterfaceCost();
+    currentStatus.spendMoney(this.extraInterfaceCost());
     this.interfaces.push(2);
   }
 
@@ -74,7 +74,7 @@ export default class TowersUpgrades {
 
   public readonly onlyChoiceInColumnRowProcess = new UnlockableUpgrade(
     "Only Choice In Row/Column Process",
-    "When a possibility is removed, check which other cells in that row/columns have that possibility.\n" +
+    "When a possibility is removed, check which other cells in that row/column have that possibility.\n" +
     "If only one cell has that possibility, then that cell must be that possibility.",
     1,
     () => currentCPU.cores > 0,
@@ -220,7 +220,7 @@ export default class TowersUpgrades {
 
   public readonly autoRevertOnContradiction = new UnlockableUpgrade(
     "Auto Revert On Contradiction",
-    "Automatically marks the last guess as impossible if a contradiction is notices.",
+    "Automatically marks the last guess as impossible if a contradiction is noticed.",
     10,
     () => towersUpgrades.guess.isUnlocked,
   );

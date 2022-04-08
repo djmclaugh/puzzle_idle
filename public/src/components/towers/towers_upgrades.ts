@@ -138,9 +138,9 @@ export default {
         Vue.h('summary', {}, [
           Vue.h('strong', {style: {display: 'inline-block'}}, `Puzzle Upgrades`),
           ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${availableUpgrades} new upgrades available`),
+          Vue.h('span', {style: {display: 'inline-block'}}, `${availableUpgrades} new`),
           ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${affordableUpgrades} new upgrades affordable`),
+          Vue.h('span', {style: {display: 'inline-block'}}, `${affordableUpgrades} affordable`),
         ]),
         Vue.h('div', {}, items),
       ]);

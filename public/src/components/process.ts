@@ -21,9 +21,9 @@ export default {
     }
     return () => {
       if (props.process) {
-        return Vue.h('li', {style: {height: '32px'}}, processDescription());
+        return Vue.h('li', {}, processDescription());
       } else {
-        return Vue.h('li', {style: {height: '32px'}}, Vue.h('em', {}, 'Core available'));
+        return Vue.h('li', {}, Vue.h('em', {}, 'Core available'));
       }
     }
   }

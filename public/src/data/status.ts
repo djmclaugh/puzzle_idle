@@ -20,14 +20,32 @@ function interfaceRamRequirements(size: number) {
 export class StatusData {
   public interfaces: number[] = [2];
   public interfacesCurrentSize: number[] = [2];
-  public money: number = 0;
+  private money: number = 0;
+  private allMoney: number = 0;
 
   public constructor() {
     currentRAM.allocate("interface-0", interfaceRamRequirements(this.interfacesCurrentSize[0]));
   }
 
+  public gainMoney(n: number) {
+    this.money += n;
+    this.allMoney += n;
+  }
+
+  public spendMoney(n: number) {
+    this.money -= n;
+  }
+
+  public get currentMoney(): number {
+    return this.money;
+  }
+
+  public get allTimeMoney(): number {
+    return this.allMoney;
+  }
+
   public get cpuSpeedUpgradeCost(): number {
-    return 5 * currentCPU.maxSpeed;
+    return Math.pow(currentCPU.maxSpeed, 2);
   }
 
   public canAffordCpuSpeedUpgrade(): boolean {
@@ -37,13 +55,10 @@ export class StatusData {
   public upgradeCpuSpeed(): void {
     this.money -= this.cpuSpeedUpgradeCost;
     currentCPU.maxSpeed += 1;
-    if (currentCPU.speed == currentCPU.maxSpeed - 1) {
-      currentCPU.speed = currentCPU.maxSpeed;
-    }
   }
 
   public get cpuCoresUpgradeCost(): number {
-    return Math.pow(10, currentCPU.cores);
+    return Math.pow(2, currentCPU.cores);
   }
 
   public canAffordCpuCoresUpgrade(): boolean {
@@ -70,11 +85,11 @@ export class StatusData {
   }
 
   public puzzleReward(size: number): number {
-    return Math.pow(size + 6, size - 2);
+    return Math.pow(size, 2*size - 4);
   }
 
   public puzzleCompleted(size: number): void {
-    this.money += this.puzzleReward(size);
+    this.gainMoney(this.puzzleReward(size));
   }
 }
 
