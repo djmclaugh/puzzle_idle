@@ -18,10 +18,17 @@ function interfaceRamRequirements(size: number) {
 }
 
 export class StatusData {
-  public interfaces: number[] = [2];
-  public interfacesCurrentSize: number[] = [2];
   private money: number = 0;
   private allMoney: number = 0;
+
+  public toState(): string {
+    return this.money.toString(36) + "," + this.allMoney.toString(36);
+  }
+  public fromState(s: string) {
+    const split = s.split(',');
+    this.money = parseInt(split[0], 36);
+    this.allMoney = parseInt(split[1], 36);
+  }
 
   public constructor() {}
 
@@ -66,20 +73,6 @@ export class StatusData {
   public upgradeCpuCores(): void {
     this.money -= this.cpuCoresUpgradeCost;
     currentCPU.cores += 1;
-  }
-
-  public get numberOfInterfacesUpgradeCost(): number {
-    return Math.pow(100, this.interfaces.length);
-  }
-
-  public canAffordNumberOfInterfacesUpgrade(): boolean {
-    return this.money >= this.numberOfInterfacesUpgradeCost;
-  }
-
-  public upgradeNumberOfInterfaces(): void {
-    this.money -= this.numberOfInterfacesUpgradeCost;
-    this.interfaces.push(2);
-    this.interfacesCurrentSize.push(2);
   }
 
   public puzzleReward(size: number): number {

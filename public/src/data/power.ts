@@ -20,6 +20,15 @@ export default class Power {
   public crankLevel: number = 0;
   public biomassPower: BiomassPower = new BiomassPower();
 
+  public toState(): string {
+    return this.crankLevel.toString(36) + "|" + this.biomassPower.toState();
+  }
+  public fromState(s: string) {
+    const split = s.split("|");
+    this.crankLevel = parseInt(split[0], 36);
+    this.biomassPower.fromState(split[1]);
+  }
+
   public get generatedPower(): number {
     let total = 0;
     if (this.manualCrank) {

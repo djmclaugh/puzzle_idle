@@ -23,7 +23,7 @@ const ManualPowerComponent = {
       } else if (currentPower.crankLevel == 3) {
         verb = "Hand Crank (Both Hands)";
         nextUpgrade = "Stationary Bike";
-        nextDescription = "Hook up you generators to a stationary bike.";
+        nextDescription = "Hook up your generators to a stationary bike.";
       } else if (currentPower.crankLevel == 4) {
         verb = "Pedal";
         nextUpgrade = "Better Generator";

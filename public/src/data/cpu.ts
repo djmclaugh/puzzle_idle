@@ -18,6 +18,15 @@ export default class CPU {
   private callbacks: Map<string, callback> = new Map();
   public paused: boolean = false;
 
+  public toState(): string {
+    return this.maxSpeed.toString(36) + "," + this.cores.toString(36)
+  }
+  public fromState(s: string) {
+    const split = s.split(",");
+    this.maxSpeed = parseInt(split[0], 36);
+    this.cores = parseInt(split[1], 36);
+  }
+
   public get coresInUse(): number {
     return this.activeProcesses.size;
   }

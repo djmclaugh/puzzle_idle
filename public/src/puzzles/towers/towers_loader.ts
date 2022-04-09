@@ -1,6 +1,6 @@
 import Towers from "./towers.js";
 
-const LOADED_TOWERS: Map<number, Towers[]> = new Map();
+export const LOADED_TOWERS: Map<number, Towers[]> = new Map();
 
 const utf8Decoder = new TextDecoder('utf-8');
 

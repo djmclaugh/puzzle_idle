@@ -1,11 +1,42 @@
 import Vue from '../../vue.js'
 
 import { currentStatus } from '../status.js'
-import { currentCPU } from '../cpu.js'
 import { currentPower } from '../power.js'
 
+// Order is arbitrary, but must be preserved to not break save states.
+// If a field is removed, it should be set to the empty string.
+// If a field is added, it should be added to the end.
+const upgradeKeys: ((keyof TowersUpgrades)|"")[] = [
+  "autoValidate",
+  "autoCashIn",
+  "randomGuessProcess",
+  "onlyChoiceInColumnRowProcess",
+  "removeFromColumnRowProcess",
+  "oneViewProcess",
+  "notOneViewProcess",
+  "maxViewProcess",
+  "simpleViewProcess",
+  "betterSimpleViewProcess",
+  "visibility",
+  "tooShortTooFarUpgrade",
+  "twosViewUpgrade",
+  "detectVisibilityProcess",
+  "removeContradictoryVisibilityProcess",
+  "cellVisibilityCountProcess",
+  "cellMustBeHiddenProcess",
+  "cellMustBeSeenProcess",
+  "heightVisibilityCountProcess",
+  "heightMustBeHiddenProcess",
+  "heightMustBeSeenProcess",
+  "autoRevertOnContradiction",
+  "removePossibility",
+  "undo",
+  "markHintSatisfied",
+  "guess",
+];
+
 export class UnlockableUpgrade {
-  private unlocked: boolean = false;
+  public unlocked: boolean = false;
   public constructor(
       public readonly name: string,
       public readonly description: string,
@@ -26,8 +57,6 @@ export class UnlockableUpgrade {
 }
 
 export default class TowersUpgrades {
-  public constructor() {}
-
   public interfaces: number[] = [2];
 
   public sizeUpgradeCost(i: number): number {
@@ -253,6 +282,29 @@ export default class TowersUpgrades {
     20,
     () => towersUpgrades.interfaces[0] > 3 && towersUpgrades.undo.isUnlocked,
   );
+
+  public toState(): string {
+    let boolNum = 0;
+    for (let i = 0; i < upgradeKeys.length; ++i) {
+      // @ts-ignore
+      if (upgradeKeys[i] != "" && this[upgradeKeys[i]].unlocked) {
+        boolNum += Math.pow(2, i);
+      }
+    }
+    return JSON.stringify(this.interfaces) + "|" + boolNum.toString(36);
+  }
+  public fromState(s: string) {
+    const split = s.split('|');
+    this.interfaces = JSON.parse(split[0]);
+    let boolNum = parseInt(split[1], 36);
+    for (let i = 0; i < upgradeKeys.length; ++i) {
+      if (upgradeKeys[i] != "") {
+        // @ts-ignore
+        this[upgradeKeys[i]].unlocked = (boolNum % 2) == 1;
+        boolNum = boolNum >> 1;
+      }
+    }
+  }
 }
 
 export const towersUpgrades: TowersUpgrades = Vue.reactive(new TowersUpgrades());

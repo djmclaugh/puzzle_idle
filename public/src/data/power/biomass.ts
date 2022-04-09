@@ -12,6 +12,28 @@ export default class BiomassPower {
   public furnaceCapacity: number = 10;
   public furnaceOn: boolean = false;
 
+  public toState(): string {
+    return [
+      this.level.toString(36),
+      this.biomassMilligrams.toString(36),
+      this.collectLevel.toString(36),
+      this.milligramsPerTick.toString(36),
+      this.furnaceEfficiency.toString(36),
+      this.furnaceCapacity.toString(36),
+      this.furnaceOn ? "1" : "0",
+    ].join(",");
+  }
+  public fromState(s: string) {
+    const split = s.split(",");
+    this.level = parseInt(split[0], 36);
+    this.biomassMilligrams = parseInt(split[1], 36);
+    this.collectLevel = parseInt(split[2], 36);
+    this.milligramsPerTick = parseInt(split[3], 36);
+    this.furnaceEfficiency = parseInt(split[4], 36);
+    this.furnaceCapacity = parseInt(split[5], 36);
+    this.furnaceOn = split[6] == "1";
+  }
+
   // In grams
   public get biomass(): number {
     return this.biomassMilligrams / 1000;

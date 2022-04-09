@@ -86,7 +86,7 @@ const BiomassPowerComponent = {
       }));
       items.push(" ");
       items.push(makeUpgradButton({
-        cost: Math.pow(10, biomassPower.furnaceEfficiency - 1),
+        cost: 5 * Math.pow(2, biomassPower.furnaceEfficiency - 1),
         label: `+1 J/g efficiency`,
         callback: () => {
           biomassPower.furnaceEfficiency += 1;
