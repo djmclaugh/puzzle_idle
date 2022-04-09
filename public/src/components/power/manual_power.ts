@@ -9,29 +9,46 @@ const ManualPowerComponent = {
     return () => {
       let items = [Vue.h('legend', {}, "Manual Power")];
 
+      let verb = "Hand Crank";
+      let nextUpgrade = "Better Hand Crank Generator";
+      let nextDescription = "More efficient generator that produces twice as much power.";
+      if (currentPower.crankLevel == 1) {
+        verb = "Hand Crank";
+        nextUpgrade = "Second Hand Crank Generator";
+        nextDescription = "Let's you use both your hands at once!";
+      } else if (currentPower.crankLevel == 2) {
+        verb = "Hand Crank (Both Hands)";
+        nextUpgrade = "Better Hand Crank Generator";
+        nextDescription = "More efficient generator that produces twice as much power.";
+      } else if (currentPower.crankLevel == 3) {
+        verb = "Hand Crank (Both Hands)";
+        nextUpgrade = "Stationary Bike";
+        nextDescription = "Hook up you generators to a stationary bike.";
+      } else if (currentPower.crankLevel == 4) {
+        verb = "Pedal";
+        nextUpgrade = "Better Generator";
+        nextDescription = "More efficient generator that produces twice as much power.";
+      } else if (currentPower.crankLevel == 5) {
+        verb = "Pedal";
+        nextUpgrade = "";
+        nextDescription = "";
+      }
+
       const crank = Vue.h('button', {
-          onMousedown: () => {
-            currentPower.manualCrank = true;
-          },
-          onMouseup: () => {
-            currentPower.manualCrank = false;
-          },
-          onMouseout: () => {
-            currentPower.manualCrank = false;
-          },
-        }, `Keep pressed to generate ${currentPower.crankLevel} W`);
+          onMousedown: () => { currentPower.manualCrank = true; },
+          onMouseup: () => { currentPower.manualCrank = false; },
+          onMouseout: () => { currentPower.manualCrank = false; },
+        }, `Keep pressed to generate ${Math.pow(2, currentPower.crankLevel)} W`);
+
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-        Vue.h('strong', {}, `Hand Crank${currentPower.crankLevel==2 ? " (both hands)" : ""}`),
-        ': ',
-        crank,
+        Vue.h('strong', {}, verb), ': ', crank,
       ]));
 
-      if (currentPower.crankLevel == 1) {
+      if (nextUpgrade != "") {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-          Vue.h('strong', {}, 'Second Hand Crank Generator'),
-          ": Let's you use both your hands at once! ",
-          makeUpgradButton({cost: 2, callback: () => {
-            currentPower.crankLevel = 2;
+          Vue.h('strong', {}, nextUpgrade), ": " + nextDescription  + " ",
+          makeUpgradButton({cost: Math.pow(2, currentPower.crankLevel), callback: () => {
+            currentPower.crankLevel += 1;
           }}),
         ]));
       }

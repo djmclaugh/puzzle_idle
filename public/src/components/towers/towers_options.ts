@@ -121,8 +121,29 @@ export default {
 
       // Processes settings
       const processesItems = [
-        Vue.h('legend', {}, 'Processes To Run'),
+        Vue.h('legend', {}, 'Processes'),
       ];
+
+      const onStartItems = [
+        Vue.h('legend', {}, 'Trigger After Puzzle Start'),
+      ];
+
+      const onPossibilityRemovedItems = [
+        Vue.h('legend', {}, 'Trigger After Possibility Removal'),
+      ];
+
+      const onPossibilitySetItems = [
+        Vue.h('legend', {}, 'Trigger After Possibility Set'),
+      ];
+
+      const onVisibilityChangedItems = [
+        Vue.h('legend', {}, 'Trigger After Visibility Change'),
+      ];
+
+      const onStuckItems = [
+        Vue.h('legend', {}, 'Trigger After All Other Processes Completed'),
+      ];
+
       const autoRandom = Vue.h(LabeledCheckbox, {
         value: props.options.randomGuessOn,
         label: 'Random Guess',
@@ -136,7 +157,7 @@ export default {
         }
       });
       if (towersUpgrades.randomGuessProcess.isUnlocked) {
-        processesItems.push(autoRandom);
+        onStuckItems.push(autoRandom);
       }
 
       const onlyInRowColumn = Vue.h(LabeledCheckbox, {
@@ -149,7 +170,7 @@ export default {
         }
       });
       if (towersUpgrades.onlyChoiceInColumnRowProcess.isUnlocked) {
-        processesItems.push(onlyInRowColumn);
+        onPossibilityRemovedItems.push(onlyInRowColumn);
       }
 
       const autoRemoveOnSet = Vue.h(LabeledCheckbox, {
@@ -165,7 +186,7 @@ export default {
         }
       });
       if (towersUpgrades.removeFromColumnRowProcess.isUnlocked) {
-        processesItems.push(autoRemoveOnSet);
+        onPossibilitySetItems.push(autoRemoveOnSet);
       }
 
       if (towersUpgrades.removeContradictoryVisibilityProcess.isUnlocked) {
@@ -178,7 +199,7 @@ export default {
             props.options.removeContradictoryVisibilityOn = t.checked;
           }
         });
-        processesItems.push(removeContradictoryVisibilityOn);
+        onVisibilityChangedItems.push(removeContradictoryVisibilityOn);
       }
 
       if (towersUpgrades.detectVisibilityProcess.isUnlocked) {
@@ -191,7 +212,7 @@ export default {
             props.options.detectVisibilityOn = t.checked;
           }
         });
-        processesItems.push(detectVisibilityOn);
+        onPossibilityRemovedItems.push(detectVisibilityOn);
       }
 
       if (towersUpgrades.cellVisibilityCountProcess.isUnlocked) {
@@ -204,7 +225,7 @@ export default {
             props.options.cellVisibilityCountOn = t.checked;
           }
         });
-        processesItems.push(cellVisibilityCountOn);
+        onVisibilityChangedItems.push(cellVisibilityCountOn);
       }
 
       if (towersUpgrades.cellMustBeSeenProcess.isUnlocked) {
@@ -217,7 +238,7 @@ export default {
             props.options.cellMustBeSeenOn = t.checked;
           }
         });
-        processesItems.push(cellMustBeSeenOn);
+        onVisibilityChangedItems.push(cellMustBeSeenOn);
       }
 
       if (towersUpgrades.cellMustBeHiddenProcess.isUnlocked) {
@@ -230,7 +251,7 @@ export default {
             props.options.cellMustBeHiddenOn = t.checked;
           }
         });
-        processesItems.push(cellMustBeHiddenOn);
+        onVisibilityChangedItems.push(cellMustBeHiddenOn);
       }
 
       if (towersUpgrades.heightVisibilityCountProcess.isUnlocked) {
@@ -243,7 +264,7 @@ export default {
             props.options.heightVisibilityCountOn = t.checked;
           }
         });
-        processesItems.push(heightVisibilityCountOn);
+        onVisibilityChangedItems.push(heightVisibilityCountOn);
       }
 
       if (towersUpgrades.heightMustBeSeenProcess.isUnlocked) {
@@ -256,7 +277,7 @@ export default {
             props.options.heightMustBeSeenOn = t.checked;
           }
         });
-        processesItems.push(heightMustBeSeenOn);
+        onVisibilityChangedItems.push(heightMustBeSeenOn);
       }
 
       if (towersUpgrades.heightMustBeHiddenProcess.isUnlocked) {
@@ -269,7 +290,7 @@ export default {
             props.options.heightMustBeHiddenOn = t.checked;
           }
         });
-        processesItems.push(heightMustBeHiddenOn);
+        onVisibilityChangedItems.push(heightMustBeHiddenOn);
       }
 
       const oneView = Vue.h(LabeledCheckbox, {
@@ -282,7 +303,7 @@ export default {
         }
       });
       if (towersUpgrades.oneViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
-        processesItems.push(oneView);
+        onStartItems.push(oneView);
       }
 
       const notOneView = Vue.h(LabeledCheckbox, {
@@ -295,7 +316,7 @@ export default {
         }
       });
       if (towersUpgrades.notOneViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
-        processesItems.push(notOneView);
+        onStartItems.push(notOneView);
       }
 
       const maxView = Vue.h(LabeledCheckbox, {
@@ -308,7 +329,7 @@ export default {
         }
       });
       if (towersUpgrades.maxViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
-        processesItems.push(maxView);
+        onStartItems.push(maxView);
       }
 
       const simpleView = Vue.h(LabeledCheckbox, {
@@ -321,16 +342,32 @@ export default {
         }
       });
       if (towersUpgrades.simpleViewProcess.isUnlocked) {
-        processesItems.push(simpleView);
+        onStartItems.push(simpleView);
+      }
+
+
+      const style = {
+        display: 'flex',
+        'flex-wrap': 'wrap',
+      };
+      if (onStartItems.length > 1) {
+        processesItems.push(Vue.h('fieldset', {style}, onStartItems));
+      }
+      if (onPossibilityRemovedItems.length > 1) {
+        processesItems.push(Vue.h('fieldset', {style}, onPossibilityRemovedItems));
+      }
+      if (onPossibilitySetItems.length > 1) {
+        processesItems.push(Vue.h('fieldset', {style}, onPossibilitySetItems));
+      }
+      if (onVisibilityChangedItems.length > 1) {
+        processesItems.push(Vue.h('fieldset', {style}, onVisibilityChangedItems));
+      }
+      if (onStuckItems.length > 1) {
+        processesItems.push(Vue.h('fieldset', {style}, onStuckItems));
       }
 
       if (processesItems.length > 1) {
-        items.push(Vue.h('fieldset', {
-          style: {
-            display: 'flex',
-            'flex-wrap': 'wrap',
-          }
-        }, processesItems));
+        items.push(Vue.h('fieldset', {}, processesItems));
       }
 
       return Vue.h('div', {}, items);

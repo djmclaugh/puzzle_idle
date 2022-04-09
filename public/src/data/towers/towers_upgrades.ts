@@ -2,6 +2,7 @@ import Vue from '../../vue.js'
 
 import { currentStatus } from '../status.js'
 import { currentCPU } from '../cpu.js'
+import { currentPower } from '../power.js'
 
 export class UnlockableUpgrade {
   private unlocked: boolean = false;
@@ -55,21 +56,21 @@ export default class TowersUpgrades {
     "Auto Validate",
     "Automatically start the validation process once each cell has a value.",
     1,
-    () => currentCPU.cores > 0,
+    () => this.removeFromColumnRowProcess.isUnlocked || this.onlyChoiceInColumnRowProcess.isUnlocked,
   );
 
   public readonly autoCashIn = new UnlockableUpgrade(
     "Auto Cash In",
     "Automatically cash in on successful validation.",
     1,
-    () => currentCPU.cores > 0,
+    () => currentStatus.allTimeMoney > 2,
   );
 
   public readonly randomGuessProcess = new UnlockableUpgrade(
     "Random Guess Process",
     "Makes a random guesse if no other proccesses are running on the puzzle.",
     20,
-    () => currentCPU.cores > 0 && towersUpgrades.guess.isUnlocked,
+    () => towersUpgrades.guess.isUnlocked,
   );
 
   public readonly onlyChoiceInColumnRowProcess = new UnlockableUpgrade(
@@ -77,35 +78,35 @@ export default class TowersUpgrades {
     "When a possibility is removed, check which other cells in that row/column have that possibility.\n" +
     "If only one cell has that possibility, then that cell must be that possibility.",
     1,
-    () => currentCPU.cores > 0,
+    () => this.interfaces.length > 1 || currentPower.biomassPower.level > 0,
   );
 
   public readonly removeFromColumnRowProcess = new UnlockableUpgrade(
     "Remove From Row/Column Process",
     "When a cell is set, remove that possibility from the other cells of that row/column.",
     5,
-    () => currentCPU.cores > 0 && towersUpgrades.removePossibility.isUnlocked,
+    () => (this.interfaces.length > 1 || currentPower.biomassPower.level > 0) && towersUpgrades.removePossibility.isUnlocked,
   );
 
   public readonly oneViewProcess = new UnlockableUpgrade(
     "1 View Process",
     "If the view hint is a 1, then you know that the first tower has to be the tallest tower.\n",
     1,
-    () => currentCPU.cores > 0,
+    () => this.interfaces.length > 1 || currentPower.biomassPower.level > 0,
   );
 
   public readonly notOneViewProcess = new UnlockableUpgrade(
     "Not 1 View Process",
     "If the view hint is not a 1, then you know that the first tower can't be the tallest tower.\n",
     5,
-    () => currentCPU.cores > 0 && towersUpgrades.removePossibility.isUnlocked,
+    () =>  (this.interfaces.length > 1 || currentPower.biomassPower.level > 0) && towersUpgrades.removePossibility.isUnlocked,
   );
 
   public readonly maxViewProcess = new UnlockableUpgrade(
     "Max View Process",
     "If the view hint is the size of the puzzle, then you know that the towers need to be in order.",
     1,
-    () => currentCPU.cores > 0,
+    () => this.interfaces.length > 1 || currentPower.biomassPower.level > 0,
   );
 
   public readonly simpleViewProcess = new UnlockableUpgrade(

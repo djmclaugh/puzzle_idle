@@ -1,6 +1,7 @@
 import Vue from '../../vue.js'
 
 import { makeUpgradButton } from '../util/upgrade_button.js'
+import { gramsToString } from '../util/units.js'
 
 import { currentPower } from '../../data/power.js'
 const biomassPower = currentPower.biomassPower;
@@ -20,24 +21,59 @@ const BiomassPowerComponent = {
           onMouseout: () => {
             biomassPower.manualCollect = false;
           },
-        }, `Keep pressed to generate ${biomassPower.collectLevel} g/s of biomass`);
+        }, `Keep pressed to generate ${gramsToString(Math.pow(2, biomassPower.collectLevel))}/s of biomass`);
+
+      let verb = "Collect Leaves";
+      let nextUpgrade = "Rake";
+      let nextDescription = "Collect leaves twice as fast with a rake.";
+      if (biomassPower.collectLevel == 1) {
+        verb = "Rake Leaves";
+        nextUpgrade = "Wheelbarrow";
+        nextDescription = "Haul leaves twice as fast with a wheelbarrow.";
+      } else if (biomassPower.collectLevel == 2) {
+        verb = "Wheelbarrow Leaves";
+        nextUpgrade = "Collect Branches";
+        nextDescription = "Collect fallen branches instead of leaves.";
+      } else if (biomassPower.collectLevel == 3) {
+        verb = "Wheelbarrow Branches";
+        nextUpgrade = "Axe";
+        nextDescription = "Cut down small trees.";
+      } else if (biomassPower.collectLevel == 4) {
+        verb = "Axe Down Small Trees";
+        nextUpgrade = "Chainsaw";
+        nextDescription = "Cut down larger trees.";
+      } else if (biomassPower.collectLevel == 5) {
+        verb = "Chainsaw Trees";
+        nextUpgrade = "";
+        nextDescription = "";
+      }
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-        Vue.h('strong', {}, `Collect Branches`),
+        Vue.h('strong', {}, verb),
         ': ',
         collect,
-        ` ${biomassPower.biomass.toFixed(1)} g collected (max storage: ${biomassPower.furnaceCapacity} g)`,
+        ` ${gramsToString(biomassPower.biomass)} collected (capacity: ${gramsToString(biomassPower.furnaceCapacity)})`,
       ]));
+
+      if (nextUpgrade != "") {
+        items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+          Vue.h('strong', {}, nextUpgrade), ": " + nextDescription + " ",
+          makeUpgradButton({cost: Math.pow(3, biomassPower.collectLevel + 1), callback: () => {
+            biomassPower.collectLevel += 1;
+          }}),
+        ]));
+      }
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
         Vue.h('strong', {}, `Furnace`),
         `: Burns ${biomassPower.furnaceSpeed} g/s and generates ${biomassPower.furnaceEfficiency} J/g for a total of ${(biomassPower.maxOutput).toFixed(1)} W`,
       ]));
 
+      const capacityIncrease = Math.pow(10, Math.floor(Math.log10(biomassPower.furnaceCapacity)));
       items.push(makeUpgradButton({
-        cost: biomassPower.furnaceCapacity,
-        label: `+10 g storage`,
+        cost: biomassPower.furnaceCapacity * capacityIncrease / 100,
+        label: `+${gramsToString(capacityIncrease)} capacity`,
         callback: () => {
-          biomassPower.furnaceCapacity += 10;
+          biomassPower.furnaceCapacity += capacityIncrease;
         },
       }));
       items.push(" ");
@@ -50,7 +86,7 @@ const BiomassPowerComponent = {
       }));
       items.push(" ");
       items.push(makeUpgradButton({
-        cost: biomassPower.furnaceEfficiency * 10,
+        cost: Math.pow(10, biomassPower.furnaceEfficiency - 1),
         label: `+1 J/g efficiency`,
         callback: () => {
           biomassPower.furnaceEfficiency += 1;

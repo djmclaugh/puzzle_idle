@@ -23,9 +23,7 @@ export class StatusData {
   private money: number = 0;
   private allMoney: number = 0;
 
-  public constructor() {
-    currentRAM.allocate("interface-0", interfaceRamRequirements(this.interfacesCurrentSize[0]));
-  }
+  public constructor() {}
 
   public gainMoney(n: number) {
     this.money += n;
@@ -45,7 +43,7 @@ export class StatusData {
   }
 
   public get cpuSpeedUpgradeCost(): number {
-    return Math.pow(currentCPU.maxSpeed, 2);
+    return Math.pow(5, currentCPU.maxSpeed - 1);
   }
 
   public canAffordCpuSpeedUpgrade(): boolean {
@@ -58,7 +56,7 @@ export class StatusData {
   }
 
   public get cpuCoresUpgradeCost(): number {
-    return Math.pow(2, currentCPU.cores);
+    return Math.floor(5 * Math.pow(1.5, currentCPU.cores - 1));
   }
 
   public canAffordCpuCoresUpgrade(): boolean {

@@ -41,6 +41,16 @@ details > div {
   padding: 12px;
 }
 
+fieldset {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+legend {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 .loopy-grid {
   margin: 8px;
   display: grid;

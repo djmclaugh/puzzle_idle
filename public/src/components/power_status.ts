@@ -1,7 +1,7 @@
 import Vue from '../vue.js'
 
 import { makeUpgradButton } from './util/upgrade_button.js'
-import { secondsToString } from './util/time.js'
+import { secondsToString } from './util/units.js'
 
 import { makeManualPower } from './power/manual_power.js'
 import { makeBiomassPower } from './power/biomass_power.js'
@@ -20,7 +20,7 @@ export default {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, 'Biomass Energy'),
           ": ",
-          makeUpgradButton({cost: 1, callback: () => {
+          makeUpgradButton({cost: 10, callback: () => {
             biomassPower.level = 1;
           }}),
         ]));

@@ -17,13 +17,13 @@ import BiomassPower from './power/biomass.js'
 export default class Power {
   public manualCrank: boolean = false;
   public lastTickDrain: number = 0;
-  public crankLevel: number = 1;
+  public crankLevel: number = 0;
   public biomassPower: BiomassPower = new BiomassPower();
 
   public get generatedPower(): number {
     let total = 0;
     if (this.manualCrank) {
-      total += this.crankLevel;
+      total += Math.pow(2, this.crankLevel);
     }
     total += this.biomassPower.currentOutput;
     return total;
