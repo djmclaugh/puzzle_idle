@@ -3,6 +3,7 @@ import Vue from '../../vue.js'
 import LabeledCheckbox from '../util/labeled_checkbox.js'
 
 import { UnlockableUpgrade, towersUpgrades } from '../../data/towers/towers_upgrades.js'
+import { currentStatus } from '../../data/status.js'
 
 export default {
   setup() {
@@ -134,7 +135,10 @@ export default {
         }, 'No new upgrades currently available.'));
       }
 
-      return Vue.h('details', {open: true}, [
+      return Vue.h('details', {
+        open: true,
+        hidden: currentStatus.allTimeMoney < 3,
+      }, [
         Vue.h('summary', {}, [
           Vue.h('strong', {style: {display: 'inline-block'}}, `Puzzle Upgrades`),
           ' | ',

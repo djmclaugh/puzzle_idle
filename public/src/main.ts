@@ -74,6 +74,7 @@ const App = {
         data.message,
       ]);
       let right = [];
+      right.push(Vue.h(Status));
       right.push(Vue.h(PowerStatus));
       right.push(Vue.h(CPUStatus));
       if (data.puzzleChoice == "towers") {
@@ -107,7 +108,6 @@ const App = {
 
       return Vue.h('div', {}, [
         saveSection,
-        Vue.h(Status),
         Vue.h('div', {
           style: {
             display: 'flex',

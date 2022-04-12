@@ -5,6 +5,7 @@ import LabeledCheckbox from './util/labeled_checkbox.js'
 import ProcessComponent from './process.js'
 
 import { currentStatus } from '../data/status.js'
+import { towersUpgrades } from '../data/towers/towers_upgrades.js'
 import { currentCPU } from '../data/cpu.js'
 import { currentPower } from '../data/power.js'
 import Process from '../data/process.js'
@@ -28,16 +29,19 @@ export default {
         }, `+1 Hz ($${currentStatus.cpuSpeedUpgradeCost})`),
       ]));
 
-      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-        Vue.h('strong', {}, 'Number of Cores'),
-        ': ',
-        `${currentCPU.cores}`,
-        ' ',
-        Vue.h('button', {
-          onClick: () => { currentStatus.upgradeCpuCores(); },
-          disabled: !currentStatus.canAffordCpuCoresUpgrade(),
-        }, `+1 Core ($${currentStatus.cpuCoresUpgradeCost})`),
-      ]));
+      const showQueueInfo = towersUpgrades.interfaces.length > 1 || towersUpgrades.maxViewProcess.isUnlocked || towersUpgrades.oneViewProcess.isUnlocked || towersUpgrades.onlyChoiceInColumnRowProcess.isUnlocked || towersUpgrades.removeFromColumnRowProcess.isUnlocked;
+      if (showQueueInfo) {
+        items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+          Vue.h('strong', {}, 'Number of Cores'),
+          ': ',
+          `${currentCPU.cores}`,
+          ' ',
+          Vue.h('button', {
+            onClick: () => { currentStatus.upgradeCpuCores(); },
+            disabled: !currentStatus.canAffordCpuCoresUpgrade(),
+          }, `+1 Core ($${currentStatus.cpuCoresUpgradeCost})`),
+        ]));
+      }
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
         Vue.h('strong', {}, 'Status'),
@@ -46,15 +50,11 @@ export default {
       ]));
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-        Vue.h('strong', {}, 'Current Power Consumption'),
+        Vue.h('strong', {}, 'Power Consumption'),
         ': #Active Cores × Speed² = ',
         `${currentCPU.coresInUse} × ${currentSpeed}² = `,
         `${currentCPU.powerForSpeed(currentSpeed)} W`,
       ]));
-
-      // Vue.h('button', {
-      //   onClick: () => { currentCPU.paused = !currentCPU.paused; },
-      // }, currentCPU.paused ? 'Resume' : 'Pause'),
 
       const activeProcesses: (Process<any>|null)[] = Array.from(currentCPU.activeProcesses).sort();
       while (activeProcesses.length < currentCPU.cores) {
@@ -94,30 +94,37 @@ export default {
         process: p,
         showInterface: true,
       })));
-      if (showQueue.value) {
-        items.push(Vue.h('p', {}, [
-          showQueueCheckbox,
-          ": ",
-          queue.length == 0 ? empty_message : process_list,
-        ]));
-      } else {
-        items.push(Vue.h('p', {}, [
-          showQueueCheckbox
-        ]));
+      if (showQueueInfo) {
+        if (showQueue.value) {
+          items.push(Vue.h('p', {}, [
+            showQueueCheckbox,
+            ": ",
+            queue.length == 0 ? empty_message : process_list,
+          ]));
+        } else {
+          items.push(Vue.h('p', {}, [
+            showQueueCheckbox
+          ]));
+        }
       }
 
-      // TODO: Allow under/overclocking
+      const info = [Vue.h('strong', {style: {display: 'inline-block'}}, `CPU`)];
+
+      if (showQueueInfo) {
+        info.push(' | ')
+        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} cores active (max ${currentCPU.cores})`));
+      }
+
+      info.push(' | ')
+      info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse == 0 ? '0' : currentSpeed} Hz`));
+
+      if (showQueueInfo) {
+        info.push(' | ')
+        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${queue.length} in queue`));
+      }
 
       return Vue.h('details', {open: true}, [
-        Vue.h('summary', {}, [
-          Vue.h('strong', {style: {display: 'inline-block'}}, `CPU`),
-          ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} cores active (max ${currentCPU.cores})`),
-          ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse == 0 ? 'N/A' : currentSpeed} Hz (max ${currentCPU.maxSpeed} Hz)`),
-          ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `${queue.length} in queue`),
-        ]),
+        Vue.h('summary', {}, info),
         Vue.h('div', {}, items),
       ]);
     }

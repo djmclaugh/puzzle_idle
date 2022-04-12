@@ -1,9 +1,14 @@
 import Vue from '../vue.js'
 import { currentCPU } from './cpu.js'
+import { currentPower } from './power.js'
+import { currentPuzzles } from './towers/towers_puzzles.js'
+import { towersUpgrades } from './towers/towers_upgrades.js'
 
 export class StatusData {
   private money: number = 0;
   private allMoney: number = 0;
+
+  public latestValidationResult: -1|0|1 = 0;
 
   public toState(): string {
     return this.money.toString(36) + "," + this.allMoney.toString(36);
@@ -15,6 +20,41 @@ export class StatusData {
   }
 
   public constructor() {}
+
+  public get nextStep(): string {
+    if (this.allTimeMoney == 0) {
+      if (!currentPuzzles[0] || currentPuzzles[0].n < 2) {
+        return "";
+      }
+      if (this.latestValidationResult == 0) {
+        if (!currentPuzzles[0].isReadyForValidation()) {
+          return 'Solve the puzzle on the left. <a target="_blank" href="https://www.conceptispuzzles.com/index.aspx?uri=puzzle/skyscrapers/rules">How to play towers/skyscrapers (external link)</a>';
+        }
+        if (currentCPU.coresInUse == 0) {
+          return 'Start the validation routine by clicking the "Validate" button.';
+        }
+        if (currentPower.generatedPower == 0) {
+          return 'Validation routine added to CPU. Use the hand crank to power it.';
+        }
+        if (currentPower.generatedPower > 0) {
+          return 'Keep cranking!';
+        }
+      }
+      if (this.latestValidationResult == -1) {
+        return 'Looks like there\'s a mistake in your solution. Try again!';
+      }
+      if (this.latestValidationResult == 1) {
+        return 'Puzzle solved! Click the "Cash In" button for your reward.';
+      }
+    }
+    if (currentPower.crankLevel <= 2 && currentCPU.maxSpeed <= 1) {
+      return 'Try upgrading your generator and your CPU\'s max speed. You\'ll need to upgrade both.';
+    }
+    if (towersUpgrades.interfaces[0] < 3) {
+      return 'That\'s it for the tutorial! Last hint: Upgrading the puzzle size let\'s you make money much faster!';
+    }
+    return "";
+  }
 
   public gainMoney(n: number) {
     this.money += n;

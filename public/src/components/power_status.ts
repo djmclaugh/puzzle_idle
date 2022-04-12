@@ -7,6 +7,7 @@ import { makeManualPower } from './power/manual_power.js'
 import { makeBiomassPower } from './power/biomass_power.js'
 
 import { currentPower } from '../data/power.js'
+import { currentStatus } from '../data/status.js'
 const biomassPower = currentPower.biomassPower;
 
 export default {
@@ -16,7 +17,7 @@ export default {
 
       items.push(makeManualPower());
 
-      if (biomassPower.level == 0) {
+      if (biomassPower.level == 0 && currentStatus.allTimeMoney >= 5) {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, 'Biomass Energy'),
           ": ",
@@ -24,7 +25,7 @@ export default {
             biomassPower.level = 1;
           }}),
         ]));
-      } else {
+      } else if (biomassPower.level > 0){
         items.push(makeBiomassPower());
       }
 

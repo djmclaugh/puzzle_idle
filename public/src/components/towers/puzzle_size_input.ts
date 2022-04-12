@@ -3,6 +3,8 @@ import Vue from '../../vue.js'
 import { towersUpgrades } from '../../data/towers/towers_upgrades.js'
 import TowersOptions from '../../data/towers/towers_options.js'
 import {currentStatus} from '../../data/status.js'
+import {currentPower} from '../../data/power.js'
+import {currentCPU} from '../../data/cpu.js'
 
 interface PuzzleSizeInputProps {
   interfaceId: number,
@@ -30,9 +32,10 @@ export const PuzzleSizeInputComponent = {
       let i = maxSize + 1;
       options.push(Vue.h('option', {value: i, disabled: true}, i + ` ($${Math.pow(i, 2*i - 4)} reward)`));
 
+      const shouldShow = currentStatus.allTimeMoney >= 3 || (currentPower.crankLevel >= 1 && currentCPU.maxSpeed > 1);
       const puzzleSize = Vue.h('div', {
         style: {
-          display: currentStatus.allTimeMoney < 3 ? 'none' : 'inline-block',
+          display: shouldShow ? 'inline-block' : 'none',
           'padding': '4px',
         }
       }, [

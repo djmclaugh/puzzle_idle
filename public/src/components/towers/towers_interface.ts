@@ -138,6 +138,9 @@ export default {
     }
 
     function restart(): void {
+      if (currentStatus.allTimeMoney == 0) {
+        currentStatus.latestValidationResult = 0;
+      }
       stopAllProcesses();
       currentPuzzle.restart();
       processLauncher.startInitialProcessesIfNeeded(currentPuzzle);
@@ -160,6 +163,9 @@ export default {
       data.validationProcess = new ValidationProcess(currentPuzzle, props.interfaceId);
 
       currentCPU.addProcess(data.validationProcess, 10, (isValid: boolean) => {
+        if (currentStatus.allTimeMoney == 0) {
+          currentStatus.latestValidationResult = isValid ? 1 : -1;
+        }
         if (isValid && options.autoCashInOn) {
           cashIn();
         } else if (!isValid && options.autoRevertOnContradiction) {
@@ -200,7 +206,6 @@ export default {
       currentPuzzle = currentPuzzles[props.interfaceId];
       console.log(currentPuzzle.n);
       data.puzzleUUID += 1;
-      console.log("wut");
     });
 
     function assignNewPuzzle(puzzleId: string = "") {
