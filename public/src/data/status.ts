@@ -47,11 +47,11 @@ export class StatusData {
         return 'Puzzle solved! Click the "Cash In" button for your reward.';
       }
     }
-    if (currentPower.crankLevel <= 2 && currentCPU.maxSpeed <= 1) {
+    if (currentPower.crankLevel <= 0 || currentCPU.maxSpeed <= 1) {
       return 'Try upgrading your generator and your CPU\'s max speed. You\'ll need to upgrade both.';
     }
     if (towersUpgrades.interfaces[0] < 3) {
-      return 'That\'s it for the tutorial! Last hint: Upgrading the puzzle size let\'s you make money much faster!';
+      return 'That\'s it for the tutorial! Last hint: Upgrading the puzzle size lets you make money much faster!';
     }
     return "";
   }
