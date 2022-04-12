@@ -37,7 +37,7 @@ interface InterfaceStatusComponentProps {
 
 export default {
   props: ['undoUnlocked', 'guessUnlocked', 'interfaceId', 'isValidating', 'isDone', 'isCorrect', 'size', 'puzzle'],
-  setup(props: InterfaceStatusComponentProps, {attrs, slots, emit}: any): any {
+  setup(props: InterfaceStatusComponentProps, {emit}: any): any {
 
     return () => {
       if (!(props.puzzle instanceof Puzzle)) {

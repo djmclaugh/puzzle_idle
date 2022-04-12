@@ -47,6 +47,9 @@ export default class TowersOptions {
   public simpleViewOn: boolean = false;
   public betterSimpleViewOn: boolean = false;
 
+  // Options that are not saved
+  public showPuzzleId: boolean = false;
+
   public toState(): string {
     let boolNum = 0;
     for (let i = 0; i < booleanKeys.length; ++i) {

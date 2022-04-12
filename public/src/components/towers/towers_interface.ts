@@ -6,7 +6,6 @@ import TowersOptionsComponent from './towers_options.js'
 import TowersComponent from './towers.js'
 import TowersValidatorComponent from './towers_validator.js'
 import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.js'
-import LabeledCheckbox from './../util/labeled_checkbox.js'
 
 import { currentStatus } from '../../data/status.js'
 import { currentCPU } from '../../data/cpu.js'
@@ -28,7 +27,6 @@ interface InterfaceComponentData {
   validationProcess: ValidationProcess|null;
   randomGuessProcess: RandomGuessProcess|null;
   otherProcesses: Set<Process<any>>;
-  showOptions: boolean,
   // Used to detect that the puzzle has changed
   puzzleUUID: number,
 }
@@ -53,7 +51,6 @@ export default {
       validationProcess: null,
       randomGuessProcess: null,
       otherProcesses: new Set(),
-      showOptions: true,
     });
 
     const incomeTracker: [number, number][] = [];
@@ -265,29 +262,13 @@ export default {
     return () => {
       let items = [];
 
-      const showOptions = Vue.h(LabeledCheckbox, {
-        value: data.showOptions,
-        label: 'Show Settings',
-        boxId: 'show_options_checkbox_' + props.interfaceId,
-        onChange: (e: Event) => {
-          const t: HTMLInputElement = e.target as HTMLInputElement;
-          data.showOptions = t.checked;
-        }
+      const optionsComponent = Vue.h(TowersOptionsComponent, {
+        interfaceId: props.interfaceId,
+        options: options,
+        onRandomGuessOn: () => { startRandomGuessProcessIfNeeded(); },
+        onSizeChange: () => { assignNewPuzzle() },
       });
-      items.push(showOptions);
-      items.push(Vue.h('br'));
-
-      if (data.showOptions) {
-        const optionsComponent = Vue.h(TowersOptionsComponent, {
-          interfaceId: props.interfaceId,
-          options: options,
-          onRandomGuessOn: () => { startRandomGuessProcessIfNeeded(); },
-          onSizeChange: () => { assignNewPuzzle() },
-        });
-        items.push(optionsComponent);
-      }
-
-      items.push(Vue.h('br'));
+      items.push(optionsComponent);
 
       const interfaceProps: any = {
         undoUnlocked: towersUpgrades.undo.isUnlocked,
@@ -344,7 +325,7 @@ export default {
         }
       }, flexItems));
 
-      if (currentPuzzle instanceof Towers && data.showOptions) {
+      if (currentPuzzle instanceof Towers && options.showPuzzleId) {
         items.push(Vue.h('span', {}, 'Puzzle ID: ' + toSimonTathamId(currentPuzzle)));
         items.push(Vue.h('br'));
         items.push(Vue.h('em', {}, '(compatible with Simon Tatham\'s implementation)'));

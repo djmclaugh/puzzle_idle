@@ -1,6 +1,7 @@
 import Vue from '../../vue.js'
 
-import LabeledCheckbox from './../util/labeled_checkbox.js'
+import LabeledCheckbox from '../util/labeled_checkbox.js'
+import {makeCollapsableFieldset} from '../util/collapsable_fieldset.js'
 import { makePuzzleSizeInput } from './puzzle_size_input.js'
 
 import { towersUpgrades } from '../../data/towers/towers_upgrades.js'
@@ -24,9 +25,7 @@ export default {
       });
       items.push(puzzleSize);
 
-      const optionsItems = [
-        Vue.h('legend', {}, 'Options'),
-      ];
+      const optionsItems: any = [];
 
       const autoValidate = Vue.h(LabeledCheckbox, {
         value: props.options.autoValidateOn,
@@ -78,18 +77,25 @@ export default {
       });
       optionsItems.push(showValidation);
 
-      items.push(Vue.h('fieldset', {
-        style: {
-          display: 'flex',
-          'flex-wrap': 'wrap',
+      const showPuzzleId = Vue.h(LabeledCheckbox, {
+        value: props.options.showPuzzleId,
+        label: 'Show Puzzle ID',
+        boxId: 'show_puzzle_id_' + props.interfaceId,
+        onChange: (e: Event) => {
+          const t: HTMLInputElement = e.target as HTMLInputElement;
+          props.options.showPuzzleId = t.checked;
         }
-      }, optionsItems));
+      });
+      optionsItems.push(showPuzzleId);
+
+      items.push(makeCollapsableFieldset({
+        label: 'Options',
+        id: 'interface_options_' + props.interfaceId,
+      }, () => optionsItems));
 
 
       // Processes settings
-      const processesItems = [
-        Vue.h('legend', {}, 'Processes'),
-      ];
+      const processesItems: any = [];
 
       const onStartItems = [
         Vue.h('legend', {}, 'Trigger After Puzzle Start'),
@@ -333,8 +339,11 @@ export default {
         processesItems.push(Vue.h('fieldset', {style}, onStuckItems));
       }
 
-      if (processesItems.length > 1) {
-        items.push(Vue.h('fieldset', {}, processesItems));
+      if (processesItems.length > 0) {
+        items.push(makeCollapsableFieldset({
+          label: 'Routines',
+          id: 'processes_interface_options_' + props.interfaceId,
+        }, () => processesItems));
       }
 
       return Vue.h('div', {}, items);

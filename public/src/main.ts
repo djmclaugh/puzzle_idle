@@ -1,5 +1,7 @@
 import Vue from './vue.js'
-import LabeledCheckbox from './components/util/labeled_checkbox.js'
+
+import {makeCollapsableFieldset} from './components/util/collapsable_fieldset.js'
+
 import CPUStatus from './components/cpu_status.js'
 import PowerStatus from './components/power_status.js'
 import Status from './components/status.js'
@@ -21,7 +23,6 @@ interface AppData {
 const App = {
   setup(): any {
     const data: AppData = Vue.reactive({
-      showSave: false,
       saveState: "",
       loadState: "",
       message: "",
@@ -37,7 +38,7 @@ const App = {
     });
 
     return () => {
-      let saveSection = Vue.h('div', {hidden: !data.showSave}, [
+      let saveSection = makeCollapsableFieldset({label: "Save Options", id: "save_section"}, () => [
         "Game auto-saves every minute.",
         Vue.h('br'),
         "Note: Puzzle and process states not saved. Only money, upgrades, and settings are saved.",
@@ -71,7 +72,7 @@ const App = {
         Vue.h('button', {onClick: () => {data.message = 'Load the following state to restart from the very begining: ["0.0.1","0,0","0|0,0,0,a,2,a,0","1,1","[2]|0",["2,4"]]'}}, "Clear ALL Progress"),
         Vue.h('br'),
         data.message,
-      ])
+      ]);
       let right = [];
       right.push(Vue.h(PowerStatus));
       right.push(Vue.h(CPUStatus));
@@ -105,15 +106,6 @@ const App = {
       }
 
       return Vue.h('div', {}, [
-        Vue.h(LabeledCheckbox, {
-          label: "Show Save Options",
-          value: data.showSave,
-          boxId: "show_save_checkbox",
-          onChange: (e: InputEvent) => {
-            const target = e.target as HTMLInputElement
-            data.showSave = target.checked;
-          }
-        }),
         saveSection,
         Vue.h(Status),
         Vue.h('div', {

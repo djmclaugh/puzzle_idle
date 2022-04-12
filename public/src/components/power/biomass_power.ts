@@ -9,7 +9,7 @@ const biomassPower = currentPower.biomassPower;
 const BiomassPowerComponent = {
   setup() {
     return () => {
-      let items = [Vue.h('legend', {}, "Biomass Power")];
+      let items = [Vue.h('legend', {}, "Biomass Energy")];
 
       const collect = Vue.h('button', {
           onMousedown: () => {

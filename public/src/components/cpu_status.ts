@@ -42,7 +42,7 @@ export default {
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
         Vue.h('strong', {}, 'Status'),
         ': ',
-        currentCPU.coresInUse == 0 ? "No processes to run" : (currentSpeed == currentCPU.maxSpeed ? "Limited by max speed" : "Limited by available power"),
+        currentCPU.coresInUse == 0 ? "No routines to run" : (currentSpeed == currentCPU.maxSpeed ? "Limited by max speed" : "Limited by available power"),
       ]));
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
@@ -60,14 +60,14 @@ export default {
       while (activeProcesses.length < currentCPU.cores) {
         activeProcesses.push(null);
       }
-      let empty_message = Vue.h('em', {}, 'Currently no active processes');
+      let empty_message = Vue.h('em', {}, 'Currently no active routines');
       let process_list = Vue.h('ul', {}, activeProcesses.map(p => Vue.h(ProcessComponent, {
         process: p,
         showInterface: true,
       })));
       if (currentCPU.cores > 0) {
         items.push(Vue.h('p', {}, [
-          `Active Processes: `,
+          `Active Routines: `,
           activeProcesses.length == 0 ? empty_message : process_list,
         ]));
       }
@@ -81,7 +81,7 @@ export default {
           'margin-right': '0px',
         },
         value: showQueue.value,
-        label: "Show processes waiting in queue",
+        label: "Show routines waiting in queue",
         boxId: "show_queue_checkbox",
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
@@ -89,7 +89,7 @@ export default {
         }
       });
 
-      empty_message = Vue.h('em', {}, 'No processes currently in queue');
+      empty_message = Vue.h('em', {}, 'No routines currently in queue');
       process_list = Vue.h('ul', {}, queue.map(p => Vue.h(ProcessComponent, {
         process: p,
         showInterface: true,

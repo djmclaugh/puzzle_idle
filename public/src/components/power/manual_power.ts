@@ -7,7 +7,7 @@ import { currentPower } from '../../data/power.js'
 const ManualPowerComponent = {
   setup() {
     return () => {
-      let items = [Vue.h('legend', {}, "Manual Power")];
+      let items = [Vue.h('legend', {}, "Manual Energy")];
 
       let verb = "Hand Crank";
       let nextUpgrade = "Better Hand Crank Generator";

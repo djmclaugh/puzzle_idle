@@ -6,7 +6,7 @@ import { UnlockableUpgrade, towersUpgrades } from '../../data/towers/towers_upgr
 
 export default {
   setup() {
-    const showUnlocked = Vue.ref(true);
+    const showUnlocked = Vue.ref(false);
 
     function shouldShowUpgrade(u: UnlockableUpgrade): boolean {
       return (!u.isUnlocked || showUnlocked.value) && u.isAvailable();
@@ -89,7 +89,7 @@ export default {
         items.push(Vue.h('fieldset', {}, abilitiesItems));
       }
 
-      const processesItems = [Vue.h('legend', {}, 'Processes')];
+      const processesItems = [Vue.h('legend', {}, 'Routines')];
       for (const upgrade of [
         towersUpgrades.onlyChoiceInColumnRowProcess,
         towersUpgrades.removeFromColumnRowProcess,

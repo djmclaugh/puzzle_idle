@@ -1,24 +1,8 @@
 import Vue from '../vue.js'
 import { currentCPU } from './cpu.js'
-import { currentRAM } from './ram.js'
-
-function interfaceRamRequirements(size: number) {
-  let total = 0;
-  // One byte for the possibilities of each cell
-  // Note: if there are more then 8 possibilities, then it take more than one
-  // byte to store which possibility has been eliminated and which hasn't.
-  // TODO: figure out if I want to do anything about that
-  total +=  size * size;
-  // One byte for each potential hint
-  // Note: this can probably be lower
-  // TODO: figure out if I want to do antyhing about that
-  total += (size * size) + (4 * size);
-
-  return total;
-}
 
 export class StatusData {
-  private money: number = 100;
+  private money: number = 0;
   private allMoney: number = 0;
 
   public toState(): string {
