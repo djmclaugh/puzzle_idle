@@ -1,6 +1,7 @@
 import Vue from '../../vue.js'
 
 import LabeledCheckbox from './../util/labeled_checkbox.js'
+import { makePuzzleSizeInput } from './puzzle_size_input.js'
 
 import { towersUpgrades } from '../../data/towers/towers_upgrades.js'
 import TowersOptions from '../../data/towers/towers_options.js'
@@ -16,45 +17,11 @@ export default {
     return () => {
       let items = [];
 
-      const minSize = 2;
-      const maxSize = towersUpgrades.interfaces[props.interfaceId];
-
-      const puzzleSize = Vue.h('div', {
-        style: {
-          display: 'inline-block',
-          'padding': '4px',
-        }
-      }, [
-        Vue.h('label', {for: 'puzzle_size_input'}, Vue.h('strong', {}, 'Puzzle Size: ')),
-        Vue.h('input', {
-          id: 'puzzle_size_input',
-          style: {
-            width: '2.5em',
-          },
-          type: 'number',
-          value: props.options.currentSize,
-          min: minSize,
-          max: maxSize,
-          onChange: (e: InputEvent) => {
-            const t = e.target as HTMLInputElement;
-            const v = parseInt(t.value);
-            if (v === undefined || v < minSize || v > maxSize) {
-              t.value = props.options.currentSize.toString();
-            } else if (props.options.currentSize != v){
-              props.options.currentSize = v;
-              emit('sizeChange');
-            }
-          }
-        }),
-        Vue.h('button', {
-          onClick: () => {
-            towersUpgrades.upgradeSize(props.interfaceId);
-          },
-          disabled: !towersUpgrades.canAffordSizeUpgrade(props.interfaceId),
-        }, `Unlock Size ${maxSize + 1} Puzzles ($${towersUpgrades.sizeUpgradeCost(props.interfaceId)})`),
-        Vue.h('span', {}, " Solving a puzzle of size 𝑛 pays out $𝑛"),
-        Vue.h('sup', {}, "(2𝑛 - 4)"),
-      ]);
+      const puzzleSize = makePuzzleSizeInput({
+        interfaceId: props.interfaceId,
+        options: props.options,
+        onChange: () => { emit('sizeChange'); },
+      });
       items.push(puzzleSize);
 
       const optionsItems = [

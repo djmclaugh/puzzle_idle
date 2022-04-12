@@ -18,7 +18,7 @@ function interfaceRamRequirements(size: number) {
 }
 
 export class StatusData {
-  private money: number = 0;
+  private money: number = 100;
   private allMoney: number = 0;
 
   public toState(): string {
