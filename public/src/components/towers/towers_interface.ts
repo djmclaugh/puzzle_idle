@@ -51,6 +51,7 @@ export default {
       validationProcess: null,
       randomGuessProcess: null,
       otherProcesses: new Set(),
+      puzzleUUID: 0,
     });
 
     const incomeTracker: [number, number][] = [];
@@ -204,7 +205,6 @@ export default {
     onPuzzleChange(() => {
       stopAllProcesses();
       currentPuzzle = currentPuzzles[props.interfaceId];
-      console.log(currentPuzzle.n);
       data.puzzleUUID += 1;
     });
 
@@ -217,7 +217,7 @@ export default {
         currentPuzzle = Vue.reactive(fromSimonThatamId(puzzleId));
       }
       currentPuzzles[props.interfaceId] = currentPuzzle;
-
+      data.puzzleUUID += 1;
       console.log("New puzzle started: " + toSimonTathamId(currentPuzzle));
 
       currentPuzzle.onContradiction(() => {
@@ -243,8 +243,6 @@ export default {
         processLauncher.onAction(currentPuzzle, a);
         startRandomGuessProcessIfNeeded();
       });
-
-      data.puzzleUUID += 1;
       processLauncher.startInitialProcessesIfNeeded(currentPuzzle);
       startRandomGuessProcessIfNeeded();
     }
