@@ -53,7 +53,7 @@ export function toSimonTathamId(t: Towers): string {
   return result;
 }
 
-export function fromSimonThatamId(id: String): Towers {
+export function fromSimonTathamId(id: String): Towers {
   const aCode = 'a'.charCodeAt(0);
   const firstSplit = id.split(':');
   if (firstSplit.length != 2) {

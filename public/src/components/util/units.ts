@@ -3,12 +3,11 @@ const hour = min * 60;
 const day = hour * 24;
 
 const kilo = 1000;
-const mega = 1000;
+const mega = 1000 * kilo;
 
 export function secondsToString(seconds: number): string {
-  seconds = Math.round(seconds);
   if (seconds < min) {
-    return seconds + " s";
+    return seconds.toFixed(0) + " s";
   } else if (seconds < 10 * min) {
     return (seconds/min).toFixed(1) + " min"
   } else if (seconds < hour) {

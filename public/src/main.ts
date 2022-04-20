@@ -7,12 +7,16 @@ import PowerStatus from './components/power_status.js'
 import Status from './components/status.js'
 import PuzzlesSection from './components/puzzles_section.js'
 import TowersUpgrades from './components/towers/towers_upgrades.js'
-import { toSaveState, fromSaveState, saveToCookie, loadFromCookie } from './data/save.js'
 
-toSaveState();
+import { currentTicker } from './data/ticker.js'
+import { toSaveState, fromSaveState, saveToCookie, loadFromCookie, START } from './data/save.js'
+
+import { loadAllTowers, randomOfSize } from './puzzles/towers/towers_loader.js'
 
 interface AppData {
+  puzzlesLoaded: boolean,
   showSave: boolean,
+  upToDate: boolean,
   saveState: string,
   loadState: string,
   message: string,
@@ -23,6 +27,9 @@ interface AppData {
 const App = {
   setup(): any {
     const data: AppData = Vue.reactive({
+      puzzlesLoaded: false,
+      showSave: false,
+      upToDate: false,
       saveState: "",
       loadState: "",
       message: "",
@@ -31,24 +38,44 @@ const App = {
     });
 
     Vue.onMounted(() => {
-      loadFromCookie();
-      setInterval(() => {
-        saveToCookie();
-      }, 1000 * 60);
+      loadAllTowers().then(() => {
+        data.puzzlesLoaded = true;
+        Vue.nextTick(() => {
+          loadFromCookie();
+          data.saveState = toSaveState();
+          setInterval(() => {
+            saveToCookie();
+            data.saveState = toSaveState();
+          }, 1000 * 60);
+          Vue.nextTick(() => {
+            currentTicker.startTicking();
+            data.upToDate = true;
+          });
+        });
+      });
     });
 
     return () => {
+      if (!data.puzzlesLoaded) {
+        return "Loading Puzzles..."
+      }
+      if (!data.saveState) {
+        return "Processing Save Cookie..."
+      }
+      if (!data.upToDate) {
+        return "Processing Offline Progress..."
+      }
       let saveSection = makeCollapsableFieldset({label: "Save Options", id: "save_section"}, () => [
         "Game auto-saves every minute.",
         Vue.h('br'),
-        "Note: Puzzle and process states not saved. Only money, upgrades, and settings are saved.",
+        "Note: In progress puzzles and routines NOT saved. Only money, upgrades, and settings are saved.",
         Vue.h('br'),
         Vue.h('button', {
           onClick: () => {
             data.saveState = toSaveState();
             saveToCookie();
           },
-        }, "Save"),
+        }, "Update Save Now"),
         " : ",
         data.saveState,
         Vue.h('br'),
@@ -69,7 +96,7 @@ const App = {
           },
         }),
         Vue.h('br'),
-        Vue.h('button', {onClick: () => {data.message = 'Load the following state to restart from the very begining: ["0.0.1","0,0","0|0,0,0,a,2,a,0","1,1","[2]|0",["2,4"]]'}}, "Clear ALL Progress"),
+        Vue.h('button', {onClick: () => {data.message = `Load the following state to restart from the very begining: ${START}`}}, "Clear ALL Progress"),
         Vue.h('br'),
         data.message,
       ]);

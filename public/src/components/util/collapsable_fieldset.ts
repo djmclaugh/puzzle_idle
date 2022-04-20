@@ -5,20 +5,26 @@ import LabeledCheckbox from './labeled_checkbox.js'
 export class CollapsableFieldsetProps {
   label: string = "";
   id: string = "";
-  collapsed?: boolean = false;
+  collapsed?: boolean = true;
 }
 
 const CollapsableFieldset = {
   props: Object.keys(new CollapsableFieldsetProps()),
 
   setup(props: CollapsableFieldsetProps, {slots}: any) {
-    const collapsed = Vue.ref(false);
+    const collapsed = Vue.ref(true);
     return () => {
+      const style: any = {};
+      if (collapsed.value) {
+        style['margin-top'] = '8px';
+        style['margin-bottom'] = '8px';
+      }
       const checkbox = Vue.h(LabeledCheckbox, {
         value: collapsed.value,
         label: props.label,
         boxId: props.id + "_checkbox",
-        alternate: ['[+]', '[-]'],
+        alternate: ['[−]', '[+]'],
+        style,
         onChange: (e: InputEvent) => {
           const t = e.target as HTMLInputElement;
           collapsed.value = t.checked;
@@ -26,6 +32,8 @@ const CollapsableFieldset = {
       });
 
       if (collapsed.value) {
+        return checkbox;
+      } else {
         return Vue.h('fieldset', {}, [
           Vue.h('legend', {
             style: {
@@ -35,8 +43,6 @@ const CollapsableFieldset = {
           }, checkbox),
           Vue.h('span', {}, slots),
         ])
-      } else {
-        return checkbox;
       }
     }
   }

@@ -6,7 +6,7 @@ export default class BiomassPower {
   public biomassMilligrams: number = 0;
   public manualCollect: boolean = false;
   public collectLevel: number = 0;
-  public milligramsPerTick: number = 10;
+  public milligramsPerTick: number = 50;
   // J per g
   public furnaceEfficiency: number = 2;
   public furnaceCapacity: number = 10;

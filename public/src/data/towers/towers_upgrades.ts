@@ -1,5 +1,6 @@
 import Vue from '../../vue.js'
 
+import { currentOptions } from './towers_options.js'
 import { currentStatus } from '../status.js'
 import { currentPower } from '../power.js'
 
@@ -42,6 +43,7 @@ export class UnlockableUpgrade {
       public readonly description: string,
       public readonly cost: number,
       public readonly isAvailable: () => boolean,
+      public readonly extraBehaviour?: () => void,
     ) {}
 
   public get canAfford(): boolean {
@@ -53,14 +55,21 @@ export class UnlockableUpgrade {
   public unlock() {
     currentStatus.spendMoney(this.cost);
     this.unlocked = true;
+    if (this.extraBehaviour) {
+      this.extraBehaviour();
+    }
   }
+}
+
+function interfaceMultiplier(i: number) {
+  return Math.pow(5, Math.max(0, (i * 2) - 1));
 }
 
 export default class TowersUpgrades {
   public interfaces: number[] = [2];
 
   public sizeUpgradeCost(i: number): number {
-    return Math.pow(10, i * 2) * 5 * currentStatus.puzzleReward(this.interfaces[i]);
+    return interfaceMultiplier(i) * currentStatus.puzzleReward(this.interfaces[i]) * 5;
   }
   public canAffordSizeUpgrade(i: number): boolean {
     return currentStatus.currentMoney >= this.sizeUpgradeCost(i);
@@ -71,7 +80,7 @@ export default class TowersUpgrades {
   }
 
   public extraInterfaceCost(): number {
-    return Math.pow(10, (this.interfaces.length - 1) * 2) * 5;
+    return interfaceMultiplier(this.interfaces.length);
   }
   public canAffordExtraInterface(): boolean {
     return currentStatus.currentMoney >= this.extraInterfaceCost();
@@ -85,7 +94,12 @@ export default class TowersUpgrades {
     "Auto Validate",
     "Automatically start the validation process once each cell has a value.",
     1,
-    () => this.removeFromColumnRowProcess.isUnlocked || this.onlyChoiceInColumnRowProcess.isUnlocked,
+    () => this.interfaces.length > 1 || this.removeFromColumnRowProcess.isUnlocked || this.onlyChoiceInColumnRowProcess.isUnlocked,
+    () => {
+      for (const option of currentOptions) {
+        option.autoValidateOn = true;
+      }
+    },
   );
 
   public readonly autoCashIn = new UnlockableUpgrade(
@@ -93,6 +107,11 @@ export default class TowersUpgrades {
     "Automatically cash in on successful validation.",
     1,
     () => currentStatus.allTimeMoney > 2,
+    () => {
+      for (const option of currentOptions) {
+        option.autoCashInOn = true;
+      }
+    },
   );
 
   public readonly randomGuessProcess = new UnlockableUpgrade(
@@ -151,7 +170,7 @@ export default class TowersUpgrades {
     "You will see, at most, (𝑖 - 1) + 1 + (𝑛 - ℎ) = 𝑖 + 𝑛 - ℎ towers.\n"+
     "For example, if you put a tower of height 4 in the second cell of a row of a puzzle of size 5, then you will see, at most 2 + 5 - 4 = 3 towers.\n" +
     "This means that if the view hint is 4 or 5, then the second cell can't be 4 or more.",
-    1,
+    20,
     () => towersUpgrades.interfaces[0] > 3 && towersUpgrades.simpleViewProcess.isUnlocked,
   );
 

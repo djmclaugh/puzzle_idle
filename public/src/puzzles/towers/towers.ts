@@ -412,6 +412,77 @@ export default class Towers extends Puzzle<Action> {
     );
   }
 
+  // Returns a copy of this puzzle but rotated r quater cicles counter clockwise.
+  public rotate(r: number): Towers {
+    const newGrid: number[][] = [];
+    switch (r % 4) {
+      case 1: {
+        for (let i = 0; i < this.n; ++i) {
+          newGrid.push([]);
+          for (let j = 0; j < this.n; ++j) {
+            newGrid[i].push(this.grid[j][this.n - i - 1]);
+          }
+        }
+        return new Towers(
+          newGrid,
+          this.getHints(HintFace.NORTH).reverse(),
+          this.getHints(HintFace.EAST),
+          this.getHints(HintFace.SOUTH).reverse(),
+          this.getHints(HintFace.WEST),
+        );
+      }
+      case 2: {
+        for (let i = 0; i < this.n; ++i) {
+          newGrid.push([]);
+          for (let j = 0; j < this.n; ++j) {
+            newGrid[i].push(this.grid[this.n - i - 1][this.n - j - 1]);
+          }
+        }
+        return new Towers(
+          newGrid,
+          this.getHints(HintFace.EAST).reverse(),
+          this.getHints(HintFace.SOUTH).reverse(),
+          this.getHints(HintFace.WEST).reverse(),
+          this.getHints(HintFace.NORTH).reverse(),
+        );
+      }
+      case 3: {
+        for (let i = 0; i < this.n; ++i) {
+          newGrid.push([]);
+          for (let j = 0; j < this.n; ++j) {
+            newGrid[i].push(this.grid[this.n - j - 1][i]);
+          }
+        }
+        return new Towers(
+          newGrid,
+          this.getHints(HintFace.SOUTH),
+          this.getHints(HintFace.WEST).reverse(),
+          this.getHints(HintFace.NORTH),
+          this.getHints(HintFace.EAST).reverse(),
+        );
+      }
+    }
+    return this.copy();
+  }
+
+  // Returns a copy of this puzzle but flipped horizontally.
+  public mirror(): Towers {
+    const newGrid: number[][] = [];
+    for (let i = 0; i < this.n; ++i) {
+      newGrid.push([]);
+      for (let j = 0; j < this.n; ++j) {
+        newGrid[i].push(this.grid[i][this.n - j - 1]);
+      }
+    }
+    return new Towers(
+      newGrid,
+      this.getHints(HintFace.EAST),
+      this.getHints(HintFace.NORTH).reverse(),
+      this.getHints(HintFace.WEST),
+      this.getHints(HintFace.SOUTH).reverse(),
+    );
+  }
+
   public static fromString(s: string): Towers {
     const rows = s.split("\n");
     const wHints: number[] = [];

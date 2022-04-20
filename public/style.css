@@ -424,12 +424,17 @@ legend {
 }
 
 .labeled-checkbox {
+  display: inline-block;
   padding-left: 2px;
   padding-right: 4px;
   padding-top: 2px;
   padding-bottom: 2px;
   margin-left: 2px;
   margin-right: 2px;
+}
+
+.labeled-checkbox-alternate {
+  padding-left: 4px;
 }
 
 .labeled-checkbox:hover {

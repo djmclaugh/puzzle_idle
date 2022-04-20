@@ -21,7 +21,7 @@ export default {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, 'Biomass Energy'),
           ": ",
-          makeUpgradButton({cost: 10, callback: () => {
+          makeUpgradButton({cost: 5, callback: () => {
             biomassPower.level = 1;
           }}),
         ]));

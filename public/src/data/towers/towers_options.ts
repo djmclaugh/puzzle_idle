@@ -1,3 +1,5 @@
+import { towersUpgrades } from './towers_upgrades.js'
+
 // Order is arbitrary, but must be preserved to not break save states.
 // If a field is removed, it should be set to the empty string.
 // If a field is added, it should be added to the end.
@@ -49,6 +51,15 @@ export default class TowersOptions {
 
   // Options that are not saved
   public showPuzzleId: boolean = false;
+
+  public constructor() {
+    if (towersUpgrades.autoCashIn.isUnlocked) {
+      this.autoCashInOn = true;
+    }
+    if (towersUpgrades.autoValidate.isUnlocked) {
+      this.autoValidateOn = true;
+    }
+  }
 
   public toState(): string {
     let boolNum = 0;

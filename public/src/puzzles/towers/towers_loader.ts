@@ -1,4 +1,6 @@
-import Towers from "./towers.js";
+import Towers from "./towers.js"
+
+import { fromSimonTathamId } from "./util.js"
 
 export const LOADED_TOWERS: Map<number, Towers[]> = new Map();
 
@@ -6,8 +8,12 @@ const utf8Decoder = new TextDecoder('utf-8');
 
 export function randomOfSize(size: number): Towers {
   const towers = LOADED_TOWERS.get(size)!;
-  const t = towers[Math.floor(Math.random() * towers.length)];
-  return t.copy();
+  let t = towers[Math.floor(Math.random() * towers.length)];
+  t = t.rotate(Math.floor(Math.random() * 4));
+  if (Math.random() < 0.5) {
+    t = t.mirror();
+  }
+  return t;
 }
 
 export async function loadTowers(size: number): Promise<void> {
@@ -16,7 +22,7 @@ export async function loadTowers(size: number): Promise<void> {
     return;
   }
 
-  const response = await fetch(`./src/puzzles/towers/towers_${size}.txt`);
+  const response = await fetch(`./src/puzzles/towers/${size}.txt`);
   const reader = response.body!.getReader();
   let done = false;
   let data = "";
@@ -25,18 +31,20 @@ export async function loadTowers(size: number): Promise<void> {
     done = result.done;
     data += utf8Decoder.decode(result.value);
   }
-  let puzzles = data.split("-----\n");
-  // The text file ends with the delimiter, so remove the empty string at the
-  // end of the array
-  puzzles.pop();
-  // Remove difficulty rating for now
-  puzzles = puzzles.map(p => {
-    const index = p.indexOf("\n");
-    return p.substring(index + 1, p.length - 1);
-  })
-
+  let puzzles = data.trim().split("\n");
   LOADED_TOWERS.set(size, puzzles.map(p => {
-    let t = Towers.fromString(p);
+    let t = fromSimonTathamId(p);
     return t;
   }));
+}
+
+export async function loadAllTowers(): Promise<void> {
+  await loadTowers(2);
+  await loadTowers(3);
+  await loadTowers(4);
+  await loadTowers(5);
+  await loadTowers(6);
+  await loadTowers(7);
+  await loadTowers(8);
+  await loadTowers(9);
 }

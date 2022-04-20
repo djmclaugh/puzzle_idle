@@ -78,7 +78,7 @@ const BiomassPowerComponent = {
       }));
       items.push(" ");
       items.push(makeUpgradButton({
-        cost: biomassPower.furnaceSpeed * 100,
+        cost: (biomassPower.furnaceSpeed - 0.4) * 50,
         label: `+0.1 g/s burn speed`,
         callback: () => {
           biomassPower.milligramsPerTick += 10;

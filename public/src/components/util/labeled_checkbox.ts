@@ -30,7 +30,7 @@ export default {
       }
 
       return Vue.h('label', {
-        class: 'labeled-checkbox',
+        class: {'labeled-checkbox': true, 'labeled-checkbox-alternate': props.alternate},
         id: props.boxId + "_label",
         for: props.boxId,
       }, items);

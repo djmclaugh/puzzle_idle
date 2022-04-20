@@ -1,5 +1,5 @@
 import Vue from '../../vue.js'
-import {fromSimonThatamId, toSimonTathamId} from '../../puzzles/towers/util.js'
+import {fromSimonTathamId, toSimonTathamId} from '../../puzzles/towers/util.js'
 import Towers, {Action} from '../../puzzles/towers/towers.js'
 
 import TowersOptionsComponent from './towers_options.js'
@@ -214,7 +214,7 @@ export default {
       if (puzzleId == "") {
         currentPuzzle = Vue.reactive(randomOfSize(options.currentSize));
       } else {
-        currentPuzzle = Vue.reactive(fromSimonThatamId(puzzleId));
+        currentPuzzle = Vue.reactive(fromSimonTathamId(puzzleId));
       }
       currentPuzzles[props.interfaceId] = currentPuzzle;
       data.puzzleUUID += 1;
