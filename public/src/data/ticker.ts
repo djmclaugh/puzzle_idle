@@ -24,7 +24,8 @@ export default class Ticker {
   private processTick() {
     let newTimestamp = Date.now();
     let diff = newTimestamp - this.lastTick;
-    let ticks = Math.floor(diff / 100);
+    // Only catch up at a rate of 1000 ticks per tick.
+    let ticks = Math.min(1000, Math.floor(diff / 100));
     this.lastTick += ticks * 100;
     for (let i = 0; i < ticks; ++i) {
       currentTicker.processTickCallbacks();
@@ -34,6 +35,9 @@ export default class Ticker {
   public startTicking() {
     if (this.hasStarted) {
       throw new Error("Should only be started once");
+    }
+    if (this.lastTick == 0) {
+      this.lastTick = Date.now();
     }
     this.hasStarted = true;
     this.processTick();

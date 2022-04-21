@@ -1,6 +1,7 @@
 const min = 60;
 const hour = min * 60;
 const day = hour * 24;
+const year = day * 365;
 
 const kilo = 1000;
 const mega = 1000 * kilo;
@@ -14,12 +15,16 @@ export function secondsToString(seconds: number): string {
     return (seconds/min).toFixed(0) + " min"
   } else if (seconds < 10 * hour) {
     return (seconds/hour).toFixed(1) + " h"
-  } else if (seconds < 86400) {
+  } else if (seconds < day) {
     return (seconds/hour).toFixed(0) + " h"
   } else if (seconds < 10 * day) {
     return (seconds/day).toFixed(1) + " d"
-  } else {
+  } else if (seconds < year) {
     return (seconds/day).toFixed(0) + " d"
+  } else if (seconds < 10 * year) {
+    return (seconds/year).toFixed(1) + " y"
+  } else {
+    return (seconds/year).toFixed(0) + " y"
   }
 }
 

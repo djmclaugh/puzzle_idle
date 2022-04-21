@@ -7,6 +7,7 @@ import PowerStatus from './components/power_status.js'
 import Status from './components/status.js'
 import PuzzlesSection from './components/puzzles_section.js'
 import TowersUpgrades from './components/towers/towers_upgrades.js'
+import { secondsToString } from './components/util/units.js'
 
 import { currentTicker } from './data/ticker.js'
 import { toSaveState, fromSaveState, saveToCookie, loadFromCookie, START } from './data/save.js'
@@ -38,21 +39,34 @@ const App = {
     });
 
     Vue.onMounted(() => {
-      loadAllTowers().then(() => {
-        data.puzzlesLoaded = true;
-        Vue.nextTick(() => {
-          loadFromCookie();
-          data.saveState = toSaveState();
-          setInterval(() => {
-            saveToCookie();
+      setTimeout(() => {
+        loadAllTowers().then(() => {
+          data.puzzlesLoaded = true;
+          setTimeout(() => {
+            loadFromCookie();
             data.saveState = toSaveState();
-          }, 1000 * 60);
-          Vue.nextTick(() => {
-            currentTicker.startTicking();
-            data.upToDate = true;
-          });
+            setInterval(() => {
+              saveToCookie();
+              data.saveState = toSaveState();
+            }, 1000 * 60);
+            if (currentTicker.lastTick == 0) {
+              currentTicker.startTicking();
+              data.upToDate = true;
+            } else {
+              setTimeout(() => {
+                const checkIfCaughtUp = () => {
+                  if (Date.now() - currentTicker.lastTick < 500) {
+                    data.upToDate = true;
+                    currentTicker.removeListener(checkIfCaughtUp);
+                  }
+                };
+                currentTicker.onTick(checkIfCaughtUp);
+                currentTicker.startTicking();
+              }, 1000);
+            }
+          }, 1000);
         });
-      });
+      }, 1000);
     });
 
     return () => {
@@ -63,7 +77,12 @@ const App = {
         return "Processing Save Cookie..."
       }
       if (!data.upToDate) {
-        return "Processing Offline Progress..."
+        return Vue.h('span', {}, [
+          `Processing ${secondsToString((Date.now() - currentTicker.lastTick)/1000)} of Offline Progress... `,
+          Vue.h('button', {
+            onClick: () => {currentTicker.lastTick = Date.now();},
+          }, "Skip (forfeit remaining offline progress)"),
+        ]);
       }
       let saveSection = makeCollapsableFieldset({label: "Save Options", id: "save_section"}, () => [
         "Game auto-saves every minute.",

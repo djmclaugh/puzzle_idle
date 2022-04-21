@@ -6,7 +6,7 @@ import { currentCPU } from './cpu.js'
 import { currentPower } from './power.js'
 import TowersOptions, { currentOptions } from './towers/towers_options.js'
 import { towersUpgrades } from './towers/towers_upgrades.js'
-import { currentPuzzles, notifyChange } from './towers/towers_puzzles.js'
+import { puzzles, assignNewPuzzle } from './towers/towers_puzzles.js'
 import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 
 const version = "0.0.2";
@@ -67,14 +67,9 @@ export function fromSaveState(s: string) {
       currentOptions[i].fromState(states[6][i]);
     }
   }
-  let shouldNotify = false;
   for (let i = 0; i < currentOptions.length; ++i) {
-    if (currentPuzzles.length < i || !currentPuzzles[i] || currentPuzzles[i].n != currentOptions[i].currentSize) {
-      shouldNotify = true;
-      currentPuzzles[i] = Vue.reactive(randomOfSize(currentOptions[i].currentSize));
+    if (puzzles.length < i || !puzzles[i] || puzzles[i].n != currentOptions[i].currentSize) {
+      assignNewPuzzle(i);
     }
-  }
-  if (shouldNotify) {
-    notifyChange();
   }
 }

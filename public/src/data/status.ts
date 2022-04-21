@@ -1,7 +1,7 @@
 import Vue from '../vue.js'
 import { currentCPU } from './cpu.js'
 import { currentPower } from './power.js'
-import { currentPuzzles } from './towers/towers_puzzles.js'
+import { puzzles } from './towers/towers_puzzles.js'
 import { towersUpgrades } from './towers/towers_upgrades.js'
 
 export class StatusData {
@@ -23,11 +23,11 @@ export class StatusData {
 
   public get nextStep(): string {
     if (this.allTimeMoney == 0) {
-      if (!currentPuzzles[0] || currentPuzzles[0].n < 2) {
+      if (!puzzles[0] || puzzles[0].n < 2) {
         return "";
       }
       if (this.latestValidationResult == 0) {
-        if (!currentPuzzles[0].isReadyForValidation()) {
+        if (!puzzles[0].isReadyForValidation()) {
           return 'Solve the puzzle on the left. <a target="_blank" href="https://www.conceptispuzzles.com/index.aspx?uri=puzzle/skyscrapers/rules">How to play towers/skyscrapers (external link)</a>';
         }
         if (currentCPU.coresInUse == 0) {
