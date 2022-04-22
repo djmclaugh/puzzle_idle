@@ -35,6 +35,8 @@ export type Listener = (p: Process<any>, priority: number) => void;
 export default class ProcessLauncher {
   public activeProcesses: Set<Process<any>> = new Set();
   public randomGuess: RandomGuessProcess|null = null;
+  public hasRandomGuess = Vue.ref(false);
+  public processCount = Vue.ref(0);
 
   constructor(private towers: Towers, private options: TowersOptions, private id: number) {
     towers.onAction((a: Action) => { this.onAction(a); });
@@ -50,13 +52,16 @@ export default class ProcessLauncher {
     if (this.randomGuess) {
       currentCPU.killProcess(this.randomGuess);
       this.randomGuess = null;
+      this.hasRandomGuess.value = false;
     }
+    this.processCount.value = this.activeProcesses.size;
   }
 
   private onProcessOver<R>(process: Process<R>) {
     return () => {
       this.activeProcesses.delete(process);
       this.startRandomGuessProcessIfNeeded();
+      this.processCount.value = this.activeProcesses.size;
     }
   }
 
@@ -68,6 +73,7 @@ export default class ProcessLauncher {
     }
     if (currentCPU.addProcess(p, priority, this.onProcessOver(p))) {
       this.activeProcesses.add(p);
+      this.processCount.value = this.activeProcesses.size;
     }
   }
 
@@ -81,11 +87,14 @@ export default class ProcessLauncher {
       const p = new RandomGuessProcess(this.towers, this.id);
       if (currentCPU.addProcess(p, 1, () => {
         this.randomGuess = null;
+        this.hasRandomGuess.value = false;
         this.activeProcesses.delete(p);
         Vue.nextTick(() => { this.startRandomGuessProcessIfNeeded(); });
       })) {
         this.randomGuess = p;
+        this.hasRandomGuess.value = true;
         this.activeProcesses.add(p);
+        this.processCount.value = this.activeProcesses.size;
       }
     }
   }
@@ -200,6 +209,7 @@ export default class ProcessLauncher {
       currentCPU.killProcess(this.randomGuess);
       this.activeProcesses.delete(this.randomGuess);
       this.randomGuess = null;
+      this.hasRandomGuess.value = false;
     }
     if (this.towers.hasContradiction) {
       return;

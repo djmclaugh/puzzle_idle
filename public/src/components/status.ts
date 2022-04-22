@@ -16,6 +16,11 @@ export default {
         `: $${currentStatus.allTimeMoney}`,
       ]));
 
+      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+        Vue.h('strong', {}, 'Last Hour Average: '),
+        `: $${currentStatus.lastHourAveragePerMinute.toFixed(2)}/min`,
+      ]));
+
       if (currentStatus.nextStep) {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, 'Tutorial'),

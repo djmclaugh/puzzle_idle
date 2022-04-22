@@ -43,10 +43,21 @@ export default {
         ]));
       }
 
+      let status: string = "No routines to run";
+      if (currentCPU.coresInUse > 0) {
+        const maxPowerConsumption = currentCPU.coresInUse * Math.pow(currentCPU.maxSpeed, 2);
+        if (maxPowerConsumption == currentPower.power) {
+          status = "Limited by max speed AND available power."
+        } else if (maxPowerConsumption < currentPower.power) {
+          status = `Limited by max speed. Enough power to go up to ${Math.pow(currentPower.power / currentCPU.coresInUse, 0.5).toFixed(2)} Hz.`
+        } else {
+          status = `Limited by available power. Would need ${maxPowerConsumption} W to attain max speed.`
+        }
+      }
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
         Vue.h('strong', {}, 'Status'),
         ': ',
-        currentCPU.coresInUse == 0 ? "No routines to run" : (currentSpeed == currentCPU.maxSpeed ? "Limited by max speed" : "Limited by available power"),
+        status,
       ]));
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [

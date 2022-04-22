@@ -12,7 +12,7 @@ import { secondsToString } from './components/util/units.js'
 import { currentTicker } from './data/ticker.js'
 import { toSaveState, fromSaveState, saveToCookie, loadFromCookie, START } from './data/save.js'
 
-import { loadAllTowers, randomOfSize } from './puzzles/towers/towers_loader.js'
+import { loadAllTowers } from './puzzles/towers/towers_loader.js'
 
 interface AppData {
   puzzlesLoaded: boolean,

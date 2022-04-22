@@ -9,7 +9,7 @@ import InterfaceStatusComponent, {InterfaceHandlers} from '../interface_status.j
 
 import { currentStatus } from '../../data/status.js'
 import TowersOptions, { currentOptions } from '../../data/towers/towers_options.js'
-import {puzzles, processLaunchers, validations, onPuzzleChange, assignNewPuzzle, stopAllProcesses, cashIn, startValidate, stopValidate } from '../../data/towers/towers_puzzles.js'
+import {puzzles, processLaunchers, validations, onPuzzleChange, assignNewPuzzle, stopAllProcesses, startValidate, stopValidate } from '../../data/towers/towers_puzzles.js'
 import {towersUpgrades} from '../../data/towers/towers_upgrades.js'
 
 interface InterfaceComponentProps {
@@ -38,55 +38,6 @@ export default {
       puzzleUUID: 0,
     });
 
-    const incomeTracker: [number, number][] = [];
-    const averages: {minute: number, tenMinute: number, hour: number} = Vue.reactive({
-      minute: 0,
-      tenMinute: 0,
-      hour: 0,
-    });
-
-    let updateAverageTimeoutId = setTimeout(updateAverages, 2000);
-    function updateAverages() {
-      // If this was explictly called, cancel the timeout
-      clearTimeout(updateAverageTimeoutId)
-      const now = Date.now();
-      const minuteAgo = now - (60 * 1000)
-      const tenMinutesAgo = now - (10 * 60 * 1000)
-      const hourAgo = now - (60 * 60 * 1000)
-
-      let minuteSum = 0;
-      let tenMinutesSum = 0;
-      let hourSum = 0;
-
-      let firstRelevantIndex = -1;
-      for (let i = 0; i < incomeTracker.length; ++i) {
-        if (firstRelevantIndex == -1 && incomeTracker[i][0] > hourAgo) {
-          firstRelevantIndex = i;
-        }
-        if (firstRelevantIndex != -1) {
-          hourSum += incomeTracker[i][1];
-          if (incomeTracker[i][0] > tenMinutesAgo) {
-            tenMinutesSum += incomeTracker[i][1];
-            if (incomeTracker[i][0] > minuteAgo) {
-              minuteSum += incomeTracker[i][1];
-            }
-          }
-        }
-      }
-
-      if (firstRelevantIndex == -1) {
-        incomeTracker.splice(0, incomeTracker.length);
-      }
-      incomeTracker.splice(0, firstRelevantIndex);
-
-      averages.minute = minuteSum;
-      averages.tenMinute = tenMinutesSum / 10;
-      averages.hour = hourSum / 60;
-
-      // Update in 2 seconds
-      updateAverageTimeoutId = setTimeout(updateAverages, 2000);
-    }
-
     function restart(): void {
       if (currentStatus.allTimeMoney == 0) {
         currentStatus.latestValidationResult = 0;
@@ -94,12 +45,6 @@ export default {
       stopAllProcesses(props.interfaceId);
       currentPuzzle.restart();
       processLauncher.startInitialProcessesIfNeeded();
-    }
-
-    function manualCashIn() {
-      incomeTracker.push([Date.now(), currentStatus.puzzleReward(options.currentSize)]);
-      updateAverages();
-      cashIn(props.interfaceId);
     }
 
     onPuzzleChange(props.interfaceId, () => {
@@ -196,16 +141,61 @@ export default {
         }}, 'Import With ID'));
       }
 
+      const info = [
+        Vue.h('strong', {style: {display: 'inline-block'}}, `Towers ${props.interfaceId + 1}`),
+      ];
+      info.push(' | ');
+      const red = '#b0000030';
+      const yellow = '#b0b00030';
+      const green = '#00b00030';
+      const styleWithColor = (c: string) => {
+        return {
+          display: 'inline-block',
+          'border-radius': '4px',
+          'padding-left': '6px',
+          'padding-right': '6px',
+          'background-color': c,
+        }
+      }
+      const v = validations[props.interfaceId];
+      if (v) {
+        if (!v.isDone) {
+          info.push(Vue.h('span', {
+            style: styleWithColor(green),
+          }, `Validating...`));
+        } else if (v.returnValue) {
+          info.push(Vue.h('span', {
+            style: styleWithColor(yellow),
+          }, `Ready To Cash In`));
+        } else {
+          info.push(Vue.h('span', {
+            style: styleWithColor(red),
+          }, `Validation Failed`));
+        }
+      } else if (currentPuzzle.hasContradiction) {
+        info.push(Vue.h('span', {
+          style: styleWithColor(red),
+        }, `Contradiction Found`));
+      } else if (currentPuzzle.isReadyForValidation()) {
+        info.push(Vue.h('span', {
+          style: styleWithColor(yellow),
+        }, `Ready For Validation`));
+      } else if (processLaunchers[props.interfaceId].hasRandomGuess.value) {
+        info.push(Vue.h('span', {
+          style: styleWithColor(green),
+        }, `Auto-Guessing...`));
+      } else if (processLaunchers[props.interfaceId].processCount.value > 0) {
+        info.push(Vue.h('span', {
+          style: styleWithColor(green),
+        }, `Auto-Solving...`));
+      } else {
+        info.push(Vue.h('span', {
+          style: styleWithColor(yellow),
+        }, `Manual Solve`));
+      }
+
       return Vue.h('details', {open: true, class: 'towers-interface'}, [
-        Vue.h('summary', {}, [
-          Vue.h('strong', {style: {display: 'inline-block'}}, `Towers ${props.interfaceId + 1}`),
-          // ' | ',
-          // Vue.h('span', {style: {display: 'inline-block'}}, `Last minute: $${averages.minute}`),
-          // ' | ',
-          // Vue.h('span', {style: {display: 'inline-block'}}, `Last 10 minutes average: $${averages.tenMinute.toFixed(2)}/min`),
-          ' | ',
-          Vue.h('span', {style: {display: 'inline-block'}}, `Last hour average: $${averages.hour.toFixed(2)}/min`),
-        ]),
+        Vue.h('summary', {}, info),
         Vue.h('div', {}, items),
       ]);
     };

@@ -7,10 +7,9 @@ import { currentPower } from './power.js'
 import TowersOptions, { currentOptions } from './towers/towers_options.js'
 import { towersUpgrades } from './towers/towers_upgrades.js'
 import { puzzles, assignNewPuzzle } from './towers/towers_puzzles.js'
-import { randomOfSize } from '../puzzles/towers/towers_loader.js'
 
-const version = "0.0.2";
-export const START = '["0.0.2","0","0,0","0|0,0,0,1e,2,a,0","1,1","[2]|0",["2,4"]]'
+const version = "0.0.3";
+export const START = '["0.0.3","0","0,0","0|0,0,0,1e,2,a,0","1,1","[2]|0",["2,4"]]'
 
 export function saveToCookie() {
   document.cookie = toSaveState() + ";SameSite=Strict";
@@ -41,7 +40,7 @@ export function fromSaveState(s: string) {
   const version = states[0];
   if (version == "0.0.1") {
     currentTicker.lastTick = Date.now();
-    currentStatus.fromState(states[1]);
+    currentStatus.fromState(states[1], version);
     currentPower.fromState(states[2]);
     currentCPU.fromState(states[3]);
     towersUpgrades.fromState(states[4]);
@@ -56,7 +55,7 @@ export function fromSaveState(s: string) {
     if (currentTicker.lastTick == 0) {
       currentTicker.lastTick = Date.now();
     }
-    currentStatus.fromState(states[2]);
+    currentStatus.fromState(states[2], version);
     currentPower.fromState(states[3]);
     currentCPU.fromState(states[4]);
     towersUpgrades.fromState(states[5]);
