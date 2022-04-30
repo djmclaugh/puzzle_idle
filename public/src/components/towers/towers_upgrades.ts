@@ -92,8 +92,9 @@ export default {
 
       const processesItems = [Vue.h('legend', {}, 'Routines')];
       for (const upgrade of [
-        towersUpgrades.onlyChoiceInColumnRowProcess,
+        towersUpgrades.lastCellLeftProcess,
         towersUpgrades.removeFromColumnRowProcess,
+        towersUpgrades.onlyChoiceInColumnRowProcess,
         towersUpgrades.detectVisibilityProcess,
         towersUpgrades.cellVisibilityCountProcess,
         towersUpgrades.cellMustBeSeenProcess,

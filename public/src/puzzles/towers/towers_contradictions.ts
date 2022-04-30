@@ -19,16 +19,16 @@ export interface RowContradiction {
   type: ContradictionType.ROW,
   noticedOnMove: number,
   row: number,
-  col1: number,
-  col2: number,
+  col1?: number,
+  col2?: number,
 }
 
 export interface ColumnContradiction {
   type: ContradictionType.COLUMN,
   noticedOnMove: number,
   col: number,
-  row1: number,
-  row2: number,
+  row1?: number,
+  row2?: number,
 }
 
 export interface ViewContradiction {

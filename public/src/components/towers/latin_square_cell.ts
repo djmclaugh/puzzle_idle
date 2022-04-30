@@ -81,9 +81,13 @@ export default {
 
           }
           const node = Vue.h('div', {
-            class: ['latin-possibility', {
+            class: {
+              'latin-possibility': true,
+              'latin-possibility-1-per-row': props.range == 1,
+              'latin-possibility-2-per-row': 2 <= props.range && props.range <= 4,
+              'latin-possibility-3-per-row': 5 <= props.range && props.range <= 9,
               'crossed-out': !props.possibilities.has(i),
-            }],
+            },
             style: style,
             key: i.toString(),
             onClick: (e: MouseEvent) => {

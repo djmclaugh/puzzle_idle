@@ -148,7 +148,7 @@ export default {
 
       const autoRemoveOnSet = Vue.h(LabeledCheckbox, {
         value: props.options.removeOnSetOn,
-        label: 'Remove Set Value From Row/Column',
+        label: towersUpgrades.removeFromColumnRowProcess.isUnlocked ? 'Remove Set Value From Row/Column' : 'Last Cell In Row/Column',
         boxId: 'auto_remove_on_set_checkbox_' + props.interfaceId,
         onChange: (e: Event) => {
           const t: HTMLInputElement = e.target as HTMLInputElement;
@@ -158,7 +158,7 @@ export default {
           }
         }
       });
-      if (towersUpgrades.removeFromColumnRowProcess.isUnlocked) {
+      if (towersUpgrades.lastCellLeftProcess.isUnlocked) {
         onPossibilitySetItems.push(autoRemoveOnSet);
       }
 

@@ -2,7 +2,8 @@ import Process from '../../../process.js'
 import Towers from '../../../../puzzles/towers/towers.js'
 import { HintFace, faceToString, isVertical, isReverse } from '../../../../puzzles/towers/hint_face.js'
 import { ContradictionType } from '../../../../puzzles/towers/towers_contradictions.js'
-import {possibilitiesForTower, ordinal} from './util.js';
+import {possibilitiesForTower} from './util.js';
+import {ordinal} from '../util.js';
 
 export default class CheckTowerSeenHiddenCountProcess extends Process<void> {
   public readonly processId: string;

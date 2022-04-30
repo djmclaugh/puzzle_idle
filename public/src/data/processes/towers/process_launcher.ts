@@ -25,6 +25,7 @@ import CellMustBeHiddenProcess from './visibility/cell_must_be_hidden_process.js
 import TowerMustBeSeenProcess from './visibility/tower_must_be_seen_process.js'
 import TowerMustBeHiddenProcess from './visibility/tower_must_be_hidden_process.js'
 
+import LastCellLeftProcess from './latin/last_cell_left_process.js'
 import RemoveFromColumnProcess from './latin/remove_from_column_process.js'
 import RemoveFromRowProcess from './latin/remove_from_row_process.js'
 import OnlyChoiceInRowProcess from './latin/only_choice_in_row_process.js'
@@ -101,10 +102,17 @@ export default class ProcessLauncher {
 
   private onPossibilitySet(t: Triple) {
     if (this.options.removeOnSetOn) {
-      const pCol = new RemoveFromColumnProcess(this.towers, t.val, t.col, t.row, this.id);
-      this.startProcess(pCol, 8);
-      const pRow = new RemoveFromRowProcess(this.towers, t.val, t.row, t.col, this.id);
-      this.startProcess(pRow, 8);
+      if (upgrades.removePossibility.isUnlocked) {
+        const pCol = new RemoveFromColumnProcess(this.towers, t.val, t.col, t.row, this.id);
+        this.startProcess(pCol, 8);
+        const pRow = new RemoveFromRowProcess(this.towers, t.val, t.row, t.col, this.id);
+        this.startProcess(pRow, 8);
+      } else {
+        const pCol = new LastCellLeftProcess(this.towers, t.col, false, this.id);
+        this.startProcess(pCol, 8);
+        const pRow = new LastCellLeftProcess(this.towers, t.row, true, this.id);
+        this.startProcess(pRow, 8);
+      }
     }
   }
 

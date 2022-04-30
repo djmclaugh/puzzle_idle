@@ -21,7 +21,7 @@ const BiomassPowerComponent = {
           onMouseout: () => {
             biomassPower.manualCollect = false;
           },
-        }, `Keep pressed to generate ${gramsToString(Math.pow(2, biomassPower.collectLevel))}/s of biomass`);
+        }, `Keep pressed to generate ${Math.pow(2, biomassPower.collectLevel)} g/s of biomass`);
 
       let verb = "Collect Leaves";
       let nextUpgrade = "Rake";
@@ -51,11 +51,23 @@ const BiomassPowerComponent = {
         Vue.h('strong', {}, verb),
         ': ',
         collect,
-        ` ${gramsToString(biomassPower.biomass)} collected (capacity: ${gramsToString(biomassPower.furnaceCapacity)})`,
+      ]));
+
+      items.push(Vue.h('div', { style: {'margin-top': '16px'}}, [
+        Vue.h('strong', {}, 'Storage'),
+        `: ${gramsToString(biomassPower.currentBiomass)} collected (capacity: ${gramsToString(biomassPower.furnaceCapacity)})`,
+        Vue.h('br'),
+        makeUpgradButton({
+          cost: Math.floor(Math.log10(biomassPower.capacityLevel)) + 1,
+          label: `+${gramsToString(10)} capacity`,
+          callback: () => {
+            biomassPower.capacityLevel += 1;
+          },
+        }),
       ]));
 
       if (nextUpgrade != "") {
-        items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+        items.push(Vue.h('div', { style: {'margin-top': '16px'}}, [
           Vue.h('strong', {}, nextUpgrade), ": " + nextDescription + " ",
           makeUpgradButton({cost: Math.pow(3, biomassPower.collectLevel + 1), callback: () => {
             biomassPower.collectLevel += 1;
@@ -63,45 +75,48 @@ const BiomassPowerComponent = {
         ]));
       }
 
-      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
+      items.push(Vue.h('div', { style: {'margin-top': '16px'}}, [
         Vue.h('strong', {}, `Furnace`),
-        `: Burns ${biomassPower.furnaceSpeed} g/s and generates ${biomassPower.furnaceEfficiency} J/g for a total of ${(biomassPower.maxOutput).toFixed(1)} W`,
+        `: Burns ${biomassPower.currentSpeed} g/s and generates ${biomassPower.furnaceEfficiency} J/g for a total of ${(biomassPower.currentOutput).toFixed(2)} W`,
       ]));
 
-      const capacityIncrease = Math.pow(10, Math.floor(Math.log10(biomassPower.furnaceCapacity)));
-      items.push(makeUpgradButton({
-        cost: biomassPower.furnaceCapacity * capacityIncrease / 100,
-        label: `+${gramsToString(capacityIncrease)} capacity`,
-        callback: () => {
-          biomassPower.furnaceCapacity += capacityIncrease;
-        },
-      }));
       items.push(" ");
-      items.push(makeUpgradButton({
-        cost: (biomassPower.furnaceSpeed - 0.4) * 50,
-        label: `+0.1 g/s burn speed`,
-        callback: () => {
-          biomassPower.milligramsPerTick += 10;
-        },
-      }));
       items.push(" ");
       items.push(makeUpgradButton({
         cost: 5 * Math.pow(2, biomassPower.furnaceEfficiency - 1),
         label: `+1 J/g efficiency`,
         callback: () => {
-          biomassPower.furnaceEfficiency += 1;
+          biomassPower.efficiencyLevel += 1;
         },
       }));
 
-      items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-        Vue.h('strong', {}, `Furnace Status`),
+      items.push(Vue.h('div', { style: {'margin-top': '16px'}}, [
+        Vue.h('strong', {}, `Adjust Speed`),
         ': ',
-        biomassPower.biomass == 0 ? "Out of biomass " : (biomassPower.furnaceOn ? "Burning " : "Off "),
-        Vue.h('button', {
-          onClick: () => {
-            biomassPower.furnaceOn = ! biomassPower.furnaceOn;
+        `${biomassPower.speedPercentage}% * ${biomassPower.maxSpeed} g/s = ${biomassPower.setSpeed.toFixed(2)} g/s`
+        Vue.h('br'),
+        Vue.h('input', {
+          style: {
+            width: '40%',
+            "min-width": '200px',
           },
-        }, biomassPower.furnaceOn ? "Turn Off" : "Turn On"),
+          type: 'range',
+          min: 0,
+          max: 100,
+          value: biomassPower.speedPercentage,
+          onInput: (e: InputEvent) => {
+            const t = e.target as HTMLInputElement;
+            biomassPower.speedPercentage = Number.parseInt(t.value);
+          },
+        }),
+        Vue.h('br'),
+        makeUpgradButton({
+          cost: (biomassPower.furnaceSpeed - 0.4) * 50,
+          label: `+1 g/s max burn speed`,
+          callback: () => {
+            biomassPower.speedLevel += 1;
+          },
+        }),
       ]));
 
       return Vue.h('fieldset', {}, items);

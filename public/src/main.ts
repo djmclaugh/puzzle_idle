@@ -62,11 +62,11 @@ const App = {
                 };
                 currentTicker.onTick(checkIfCaughtUp);
                 currentTicker.startTicking();
-              }, 1000);
+              }, 500);
             }
-          }, 1000);
+          }, 500);
         });
-      }, 1000);
+      }, 500);
     });
 
     return () => {

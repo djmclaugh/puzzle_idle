@@ -2,7 +2,8 @@ import Process from '../../../process.js'
 import Towers from '../../../../puzzles/towers/towers.js'
 import {HintFace, faceToString, isClockwise, isVertical, getCoordinates} from '../../../../puzzles/towers/hint_face.js'
 import { ContradictionType } from '../../../../puzzles/towers/towers_contradictions.js'
-import { ordinal, ordinalPossibilitiesForTower } from './util.js'
+import { ordinalPossibilitiesForTower } from './util.js'
+import { ordinal } from '../util.js'
 
 export default class TowerMustBeHidenProcess extends Process<void> {
   public readonly processId: string;

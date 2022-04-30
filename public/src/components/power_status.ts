@@ -17,11 +17,11 @@ export default {
 
       items.push(makeManualPower());
 
-      if (biomassPower.level == 0 && currentStatus.allTimeMoney >= 5) {
+      if (biomassPower.level == 0 && currentStatus.allTimeMoney >= 3) {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, 'Biomass Energy'),
           ": ",
-          makeUpgradButton({cost: 5, callback: () => {
+          makeUpgradButton({cost: 1, callback: () => {
             biomassPower.level = 1;
           }}),
         ]));
@@ -36,9 +36,18 @@ export default {
       ];
       if (biomassPower.level > 0) {
         info.push(' | ');
-        const secondsLeft = biomassPower.biomassMilligrams / biomassPower.milligramsPerTick / 10;
-        const timeLeft = secondsToString(secondsLeft);
-        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${timeLeft} of biomass left`))
+        if (biomassPower.setSpeed == 0) {
+          info.push(Vue.h('span', {style: {display: 'inline-block'}}, `Furnace Off`))
+        } else {
+          let timeLeft: string;
+          if (biomassPower.currentSpeed == 0) {
+            timeLeft = secondsToString(0)
+          } else {
+            const secondsLeft = biomassPower.currentBiomass / biomassPower.currentSpeed;
+            timeLeft = secondsToString(secondsLeft);
+          }
+          info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${timeLeft} of biomass left`))
+        }
       }
       return Vue.h('details', {open: true}, [
         Vue.h('summary', {}, info),

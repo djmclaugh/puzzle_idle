@@ -1,18 +1,6 @@
 import { HintFace, isVertical, isReverse } from '../../../../puzzles/towers/hint_face.js'
 import { TripleCollection, Triple } from '../../../../puzzles/towers/triple_collection.js'
 
-export function ordinal(n: number): string {
-  if (n == 1) {
-    return '1st';
-  } else if (n == 2) {
-    return '2nd';
-  } else if (n == 3) {
-    return '3rd';
-  } else {
-    return n + 'th';
-  }
-}
-
 export function possibilitiesForTower(marks: TripleCollection, height: number, rowIndex: number, face: HintFace): Triple[] {
   return isVertical(face) ?
       Array.from(marks.getWithColVal(rowIndex, height)).map(p => {return {row: p, col: rowIndex, val: height}}) :

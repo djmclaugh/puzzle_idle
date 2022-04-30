@@ -34,6 +34,7 @@ const upgradeKeys: ((keyof TowersUpgrades)|"")[] = [
   "undo",
   "markHintSatisfied",
   "guess",
+  "lastCellLeftProcess",
 ];
 
 export class UnlockableUpgrade {
@@ -94,7 +95,7 @@ export default class TowersUpgrades {
     "Auto Validate",
     "Automatically start the validation process once each cell has a value.",
     1,
-    () => this.interfaces.length > 1 || this.removeFromColumnRowProcess.isUnlocked || this.onlyChoiceInColumnRowProcess.isUnlocked,
+    () => currentStatus.allTimeMoney > 2,
     () => {
       for (const option of currentOptions) {
         option.autoValidateOn = true;
@@ -121,19 +122,28 @@ export default class TowersUpgrades {
     () => towersUpgrades.guess.isUnlocked,
   );
 
-  public readonly onlyChoiceInColumnRowProcess = new UnlockableUpgrade(
-    "Only Choice In Row/Column Process",
-    "When a possibility is removed, check which other cells in that row/column have that possibility.\n" +
-    "If only one cell has that possibility, then that cell must be that possibility.",
+  public readonly lastCellLeftProcess = new UnlockableUpgrade(
+    "Last Cell In Row/Column Process",
+    "When a cell is set, check if there's other cells in that row/column that are not set yet.\n" +
+    "If exactly one other cell is not set, then it has to be the remaining value.",
     1,
-    () => this.interfaces.length > 1 || currentPower.biomassPower.level > 0,
+    () => currentStatus.allTimeMoney > 2,
   );
 
   public readonly removeFromColumnRowProcess = new UnlockableUpgrade(
     "Remove From Row/Column Process",
-    "When a cell is set, remove that possibility from the other cells of that row/column.",
-    5,
-    () => (this.interfaces.length > 1 || currentPower.biomassPower.level > 0) && towersUpgrades.removePossibility.isUnlocked,
+    "When a cell is set, remove that possibility from the other cells of that row/column\n." +
+    "Replaces the \"Last Cell In Row/Column\" Processs",
+    10,
+    () => this.lastCellLeftProcess.isUnlocked && towersUpgrades.removePossibility.isUnlocked,
+  );
+
+  public readonly onlyChoiceInColumnRowProcess = new UnlockableUpgrade(
+    "Only Choice In Row/Column Process",
+    "When a possibility is removed, check which other cells in that row/column have that possibility.\n" +
+    "If only one cell has that possibility, then that cell must be that possibility.",
+    10,
+    () => this.removePossibility.isUnlocked,
   );
 
   public readonly oneViewProcess = new UnlockableUpgrade(
