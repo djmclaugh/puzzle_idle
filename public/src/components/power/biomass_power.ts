@@ -93,7 +93,7 @@ const BiomassPowerComponent = {
       items.push(Vue.h('div', { style: {'margin-top': '16px'}}, [
         Vue.h('strong', {}, `Adjust Speed`),
         ': ',
-        `${biomassPower.speedPercentage}% * ${biomassPower.maxSpeed} g/s = ${biomassPower.setSpeed.toFixed(2)} g/s`
+        `${biomassPower.speedPercentage}% * ${biomassPower.maxSpeed} g/s = ${biomassPower.setSpeed.toFixed(2)} g/s`,
         Vue.h('br'),
         Vue.h('input', {
           style: {
@@ -111,7 +111,7 @@ const BiomassPowerComponent = {
         }),
         Vue.h('br'),
         makeUpgradButton({
-          cost: (biomassPower.furnaceSpeed - 0.4) * 50,
+          cost: (biomassPower.speedLevel - 0.4) * 50,
           label: `+1 g/s max burn speed`,
           callback: () => {
             biomassPower.speedLevel += 1;

@@ -84,15 +84,29 @@ export default {
       } else if (props.puzzle.hasContradiction) {
         let c: TowersContradiction = props.puzzle.getContradiction()!;
         if (isRowContradiction(c)) {
-          backgrounds = [
-            {cell: [c.col1, c.row], colour: '#ffc0c0f0'},
-            {cell: [c.col2, c.row], colour: '#ffc0c0f0'},
-          ];
+          if (c.col1 !== undefined && c.col2 !== undefined) {
+            backgrounds = [
+              {cell: [c.col1, c.row], colour: '#ffc0c0f0'},
+              {cell: [c.col2, c.row], colour: '#ffc0c0f0'},
+            ];
+          } else {
+            backgrounds = [];
+            for (let i = 0; i < props.puzzle.n; ++i) {
+              backgrounds.push({cell: [i, c.row], colour: '#ffc0c0f0'})
+            }
+          }
         } else if (isColumnContradiction(c)) {
-          backgrounds = [
-            {cell: [c.col, c.row1], colour: '#ffc0c0f0'},
-            {cell: [c.col, c.row2], colour: '#ffc0c0f0'},
-          ];
+          if (c.row1 !== undefined && c.row2 !== undefined) {
+            backgrounds = [
+              {cell: [c.col, c.row1], colour: '#ffc0c0f0'},
+              {cell: [c.col, c.row2], colour: '#ffc0c0f0'},
+            ];
+          } else {
+            backgrounds = [];
+            for (let i = 0; i < props.puzzle.n; ++i) {
+              backgrounds.push({cell: [c.col, i], colour: '#ffc0c0f0'})
+            }
+          }
         } else if (isNoPossibilitesContradiction(c)) {
           if (c.row !== undefined && c.col !== undefined && c.val === undefined) {
             backgrounds = [

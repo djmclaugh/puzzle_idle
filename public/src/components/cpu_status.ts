@@ -29,7 +29,7 @@ export default {
         }, `+1 Hz ($${currentStatus.cpuSpeedUpgradeCost})`),
       ]));
 
-      const showQueueInfo = towersUpgrades.interfaces.length > 1 || towersUpgrades.maxViewProcess.isUnlocked || towersUpgrades.oneViewProcess.isUnlocked || towersUpgrades.onlyChoiceInColumnRowProcess.isUnlocked || towersUpgrades.removeFromColumnRowProcess.isUnlocked;
+      const showQueueInfo = towersUpgrades.interfaces.length > 1 || towersUpgrades.maxViewProcess.isUnlocked || towersUpgrades.oneViewProcess.isUnlocked || towersUpgrades.lastCellLeftProcess.isUnlocked || towersUpgrades.removeFromColumnRowProcess.isUnlocked;
       if (showQueueInfo) {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, 'Number of Cores'),

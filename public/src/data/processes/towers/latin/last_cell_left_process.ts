@@ -36,7 +36,7 @@ export default class LastCellLeftProcess extends Process<undefined> {
       } else if (this.remainingPossibilities.size > 1) {
         return `Multiple remaining values. Contradiction!`;
       } else {
-        return `${ordinal(this.lastIndex + 1)} cell must be ${this.remainingPossibilities.values().next().value}. Done!`;
+        return `${ordinal(this.lastIndex + 1)} cell must be ${this.remainingPossibilities.values().next().value + 1}. Done!`;
       }
     }
   }
@@ -77,13 +77,14 @@ export default class LastCellLeftProcess extends Process<undefined> {
       }
       this.currentIndex += 1;
       if (this.currentIndex >= this.t.n) {
-        this.step == "setting";
+        this.step = "setting";
       }
     } else if (this.step == "setting") {
       if (this.lastIndex >= 0) {
         if (this.remainingPossibilities.size == 1) {
-          const row = this.isRow ? this.index : this.currentIndex;
-          const col = !this.isRow ? this.index : this.currentIndex;
+          const row = this.isRow ? this.index : this.lastIndex;
+          const col = !this.isRow ? this.index : this.lastIndex;
+          console.log(row, col, this.remainingPossibilities.values().next().value);
           this.t.setCell(row, col, this.remainingPossibilities.values().next().value);
         } else {
           if (this.isRow) {
