@@ -266,45 +266,6 @@ export default {
         onVisibilityChangedItems.push(heightMustBeHiddenOn);
       }
 
-      const oneView = Vue.h(LabeledCheckbox, {
-        value: props.options.oneViewOn,
-        label: '1 View',
-        boxId: 'one_view_checkbox_' + props.interfaceId,
-        onChange: (e: Event) => {
-          const t: HTMLInputElement = e.target as HTMLInputElement;
-          props.options.oneViewOn = t.checked;
-        }
-      });
-      if (towersUpgrades.oneViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
-        onStartItems.push(oneView);
-      }
-
-      const notOneView = Vue.h(LabeledCheckbox, {
-        value: props.options.notOneViewOn,
-        label: 'Not 1 View',
-        boxId: 'not_one_view_checkbox_' + props.interfaceId,
-        onChange: (e: Event) => {
-          const t: HTMLInputElement = e.target as HTMLInputElement;
-          props.options.notOneViewOn = t.checked;
-        }
-      });
-      if (towersUpgrades.notOneViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
-        onStartItems.push(notOneView);
-      }
-
-      const maxView = Vue.h(LabeledCheckbox, {
-        value: props.options.maxViewOn,
-        label: 'Max View',
-        boxId: 'max_view_checkbox_' + props.interfaceId,
-        onChange: (e: Event) => {
-          const t: HTMLInputElement = e.target as HTMLInputElement;
-          props.options.maxViewOn = t.checked;
-        }
-      });
-      if (towersUpgrades.maxViewProcess.isUnlocked && !towersUpgrades.simpleViewProcess.isUnlocked) {
-        onStartItems.push(maxView);
-      }
-
       const simpleView = Vue.h(LabeledCheckbox, {
         value: props.options.simpleViewOn,
         label: 'Initial View',
@@ -314,7 +275,7 @@ export default {
           props.options.simpleViewOn = t.checked;
         }
       });
-      if (towersUpgrades.simpleViewProcess.isUnlocked) {
+      if (towersUpgrades.oneView.isUnlocked || towersUpgrades.maxView.isUnlocked) {
         onStartItems.push(simpleView);
       }
 

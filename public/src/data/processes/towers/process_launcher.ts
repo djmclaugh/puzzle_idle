@@ -12,10 +12,7 @@ import Process from '../../process.js'
 
 import RandomGuessProcess from './random_guess_process.js'
 
-import SimpleViewProcess from './visibility/simple_view_process.js'
-import MaxViewProcess from './visibility/max_view_process.js'
-import OneViewProcess from './visibility/one_view_process.js'
-import NotOneViewProcess from './visibility/not_one_view_process.js'
+import SimpleViewProcess, { SimpleViewProcessOptions } from './visibility/simple_view_process.js'
 import CheckPossibilityVisibilityProcess from './visibility/check_possibility_visibility_process.js'
 import CheckCellSeenHiddenCountProcess from './visibility/check_cell_seen_hidden_count_process.js'
 import CheckTowerSeenHiddenCountProcess from './visibility/check_tower_seen_hidden_count_process.js'
@@ -102,7 +99,7 @@ export default class ProcessLauncher {
 
   private onPossibilitySet(t: Triple) {
     if (this.options.removeOnSetOn) {
-      if (upgrades.removePossibility.isUnlocked) {
+      if (upgrades.removeFromColumnRowProcess.isUnlocked) {
         const pCol = new RemoveFromColumnProcess(this.towers, t.val, t.col, t.row, this.id);
         this.startProcess(pCol, 8);
         const pRow = new RemoveFromRowProcess(this.towers, t.val, t.row, t.col, this.id);
@@ -248,33 +245,19 @@ export default class ProcessLauncher {
     if (this.towers.history.length != 0) {
       return;
     }
-    if (upgrades.simpleViewProcess.isUnlocked) {
-      if (this.options.simpleViewOn) {
-        for (const face of ALL_FACES) {
-          const p = new SimpleViewProcess(this.towers, face,
-            upgrades.betterSimpleViewProcess.isUnlocked,
-            upgrades.tooShortTooFarUpgrade.isUnlocked,
-            upgrades.markHintSatisfied.isUnlocked,
-            upgrades.twosViewUpgrade.isUnlocked,
-            this.id
-          );
-          this.startProcess(p, 9);
-        }
-      }
-    } else {
+    if (this.options.simpleViewOn) {
+      const options: SimpleViewProcessOptions = {};
+      options.with1View = upgrades.oneView.isUnlocked;
+      options.with2View = upgrades.twoView.isUnlocked;
+      options.with2Visibility = upgrades.twoVisibility.isUnlocked;
+      options.withMaxView = upgrades.maxView.isUnlocked;
+      options.withDepth = upgrades.betterSimpleView.isUnlocked;
+      options.withVisibility = upgrades.tooShortTooFarUpgrade.isUnlocked;
+      options.withMarkCompletedHints = upgrades.markHintSatisfied.isUnlocked;
+
       for (const face of ALL_FACES) {
-        if (this.options.maxViewOn) {
-          const p = new MaxViewProcess(this.towers, face, this.id);
-          this.startProcess(p, 9);
-        }
-        if (this.options.oneViewOn) {
-          const p = new OneViewProcess(this.towers, face, this.id);
-          this.startProcess(p, 9);
-        }
-        if (this.options.notOneViewOn) {
-          const p = new NotOneViewProcess(this.towers, face, this.id);
-          this.startProcess(p, 9);
-        }
+        const p = new SimpleViewProcess(this.towers, face, options, this.id);
+        this.startProcess(p, 9);
       }
     }
     if (this.options.removeOnSetOn) {

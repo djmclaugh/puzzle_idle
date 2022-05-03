@@ -103,13 +103,12 @@ export default {
         towersUpgrades.heightMustBeSeenProcess,
         towersUpgrades.heightMustBeHiddenProcess,
         towersUpgrades.removeContradictoryVisibilityProcess,
-        towersUpgrades.maxViewProcess,
-        towersUpgrades.oneViewProcess,
-        towersUpgrades.notOneViewProcess,
-        towersUpgrades.simpleViewProcess,
-        towersUpgrades.betterSimpleViewProcess,
+        towersUpgrades.maxView,
+        towersUpgrades.oneView,
+        towersUpgrades.twoView,
+        towersUpgrades.twoVisibility,
+        towersUpgrades.betterSimpleView,
         towersUpgrades.tooShortTooFarUpgrade,
-        towersUpgrades.twosViewUpgrade,
         towersUpgrades.randomGuessProcess,
       ]) {
         if (shouldShowUpgrade(upgrade)) {
