@@ -9,15 +9,17 @@ import { towersUpgrades } from './towers/towers_upgrades.js'
 import { puzzles, assignNewPuzzle } from './towers/towers_puzzles.js'
 
 const version = "0.0.3";
+const saveStateKey = "PuzzleIdleSaveState";
 export const START = '["0.0.3","0","0,0","0|0,0,0,0,1,1,0","1,1","[2]|0",["2,4"]]';
 
-export function saveToCookie() {
-  document.cookie = toSaveState() + ";SameSite=Strict";
+
+export function saveToLocalStorage() {
+  localStorage.setItem(saveStateKey, toSaveState());
 }
 
-export function loadFromCookie() {
-  const state = document.cookie;
-  console.log("fetching cookie: " + state);
+export function loadFromLocalStorage() {
+  const state = localStorage.getItem(saveStateKey);
+  console.log("fetching save state from local storage: " + state);
   if (state)   {
     fromSaveState(state);
   }

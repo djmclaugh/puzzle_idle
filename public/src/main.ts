@@ -10,7 +10,7 @@ import TowersUpgrades from './components/towers/towers_upgrades.js'
 import { secondsToString } from './components/util/units.js'
 
 import { currentTicker } from './data/ticker.js'
-import { toSaveState, fromSaveState, saveToCookie, loadFromCookie, START } from './data/save.js'
+import { toSaveState, fromSaveState, saveToLocalStorage, loadFromLocalStorage, START } from './data/save.js'
 
 import { loadAllTowers } from './puzzles/towers/towers_loader.js'
 
@@ -43,10 +43,10 @@ const App = {
         loadAllTowers().then(() => {
           data.puzzlesLoaded = true;
           setTimeout(() => {
-            loadFromCookie();
+            loadFromLocalStorage();
             data.saveState = toSaveState();
             setInterval(() => {
-              saveToCookie();
+              saveToLocalStorage();
               data.saveState = toSaveState();
             }, 1000 * 60);
             if (currentTicker.lastTick == 0) {
@@ -74,7 +74,7 @@ const App = {
         return "Loading Puzzles..."
       }
       if (!data.saveState) {
-        return "Processing Save Cookie..."
+        return "Fetching Save State From Local Storage..."
       }
       if (!data.upToDate) {
         return Vue.h('span', {}, [
@@ -95,7 +95,7 @@ const App = {
         Vue.h('button', {
           onClick: () => {
             data.saveState = toSaveState();
-            saveToCookie();
+            saveToLocalStorage();
           },
         }, "Update Save Now"),
         " : ",
@@ -106,7 +106,7 @@ const App = {
             const prev = toSaveState();
             fromSaveState(data.loadState);
             data.message = `Save state ${prev} overwritten by save state ${data.loadState}`;
-            saveToCookie();
+            saveToLocalStorage();
           },
         }, "Load"),
         " : ",
