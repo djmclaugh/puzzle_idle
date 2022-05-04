@@ -75,7 +75,7 @@ export default {
           makeUpgradButton({
             label: "+1 Core",
             cost: currentStatus.cpuCoresUpgradeCost,
-            callback: () => { currentStatus.upgradeCpuCores(); },
+            callback: () => { currentCPU.cores += 1; },
           }),
         ]));
       }

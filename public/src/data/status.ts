@@ -128,11 +128,6 @@ export class StatusData {
     return this.money >= this.cpuCoresUpgradeCost;
   }
 
-  public upgradeCpuCores(): void {
-    this.money -= this.cpuCoresUpgradeCost;
-    currentCPU.cores += 1;
-  }
-
   public puzzleReward(size: number): number {
     return Math.pow(size, 2*size - 4);
   }
