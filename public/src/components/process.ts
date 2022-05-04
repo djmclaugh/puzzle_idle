@@ -14,7 +14,7 @@ export default {
       if (p === null) {
         return 'Core available';
       }
-      let message = `(Towers ${p.interfaceId + 1}) `;
+      let message = `(T${p.interfaceId + 1}) `;
       message += p.friendlyName;
       message += ": " + p.currentAction;
       return message;

@@ -78,13 +78,16 @@ const App = {
       }
       if (!data.upToDate) {
         return Vue.h('span', {}, [
-          `Processing ${secondsToString((Date.now() - currentTicker.lastTick)/1000)} of Offline Progress... `,
+          `Processing ${secondsToString((Date.now() - currentTicker.lastTick)/1000)} of offline progress... `,
+          Vue.h('br'),
+          `Processing at a rate of 1000 seconds per second. Estimated time remaining: ${secondsToString((Date.now() - currentTicker.lastTick)/1000000)}`,
+          Vue.h('br'),
           Vue.h('button', {
             onClick: () => {currentTicker.lastTick = Date.now();},
           }, "Skip (forfeit remaining offline progress)"),
         ]);
       }
-      let saveSection = makeCollapsableFieldset({label: "Save Options", id: "save_section"}, () => [
+      let saveSection = makeCollapsableFieldset({label: "Save Options", id: "save_section", collapsed: true}, () => [
         "Game auto-saves every minute.",
         Vue.h('br'),
         "Note: In progress puzzles and routines NOT saved. Only money, upgrades, and settings are saved.",
@@ -154,6 +157,28 @@ const App = {
 
       return Vue.h('div', {}, [
         saveSection,
+        makeCollapsableFieldset({
+          label: "About",
+          id: "about_fieldset",
+          collapsed: true,
+        }, () => {
+          return [
+            Vue.h('span', ['Made using Vue.js: ', Vue.h('a', {
+              target: "_blank",
+              href: 'https://vuejs.org/',
+            }, 'https://vuejs.org/')]),
+            Vue.h('br'),
+            Vue.h('span', ['Source: ', Vue.h('a', {
+              target: "_blank",
+              href: 'https://github.com/djmclaugh/puzzle_idle',
+            }, 'https://github.com/djmclaugh/puzzle_idle')]),
+            Vue.h('br'),
+            Vue.h('span', ['Feedback/Bug Report: ', Vue.h('a', {
+              target: "_blank",
+              href: 'https://github.com/djmclaugh/puzzle_idle/issues',
+            }, 'https://github.com/djmclaugh/puzzle_idle/issues')]),
+          ];
+        }),
         Vue.h('div', {
           style: {
             display: 'flex',

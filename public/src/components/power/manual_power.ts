@@ -1,13 +1,14 @@
 import Vue from '../../vue.js'
 
 import { makeUpgradButton } from '../util/upgrade_button.js'
+import { makeCollapsableFieldset } from '../util/collapsable_fieldset.js'
 
 import { currentPower } from '../../data/power.js'
 
 const ManualPowerComponent = {
   setup() {
-    return () => {
-      let items = [Vue.h('legend', {}, "Manual Energy")];
+    function generateContents() {
+      let items = [];
 
       let verb = "Hand Crank";
       let nextUpgrade = "Better Hand Crank Generator";
@@ -30,8 +31,12 @@ const ManualPowerComponent = {
         nextDescription = "More efficient generator that produces twice as much power.";
       } else if (currentPower.crankLevel == 5) {
         verb = "Pedal";
-        nextUpgrade = "";
-        nextDescription = "";
+        nextUpgrade = "Spin Class DVD";
+        nextDescription = "Motivates you to pedal twice as fast.";
+      } else if (currentPower.crankLevel >= 6) {
+        verb = "Pedal";
+        nextUpgrade = "Better Generator";
+        nextDescription = "More efficient generator that produces twice as much power.";
       }
 
       const crank = Vue.h('button', {
@@ -47,12 +52,20 @@ const ManualPowerComponent = {
       if (nextUpgrade != "") {
         items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
           Vue.h('strong', {}, nextUpgrade), ": " + nextDescription  + " ",
-          makeUpgradButton({cost: Math.pow(2, currentPower.crankLevel), callback: () => {
+          makeUpgradButton({cost: Math.pow(3, currentPower.crankLevel), callback: () => {
             currentPower.crankLevel += 1;
           }}),
         ]));
       }
-      return Vue.h('fieldset', {}, items);
+      return items;
+    }
+
+    return () => {
+      return makeCollapsableFieldset({
+        label: "Manual Energy",
+        id: "manual_energy_fieldset",
+        collapsed: false,
+      }, generateContents);
     }
   }
 };

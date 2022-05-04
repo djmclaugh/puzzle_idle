@@ -1,6 +1,7 @@
 import Vue from '../vue.js'
 
-import LabeledCheckbox from './util/labeled_checkbox.js'
+import { makeUpgradButton } from './util/upgrade_button.js'
+import { makeCollapsableFieldset } from './util/collapsable_fieldset.js'
 
 import ProcessComponent from './process.js'
 
@@ -12,7 +13,41 @@ import Process from '../data/process.js'
 
 export default {
   setup() {
-    const showQueue = Vue.ref(false);
+    function generateActiveRoutinesContent() {
+      const activeProcesses: (Process<any>|null)[] = Array.from(currentCPU.activeProcesses).sort();
+      while (activeProcesses.length < currentCPU.cores) {
+        activeProcesses.push(null);
+      }
+      let process_list = activeProcesses.map(p => Vue.h(ProcessComponent, {
+        process: p,
+        showInterface: true,
+        style: {
+          'margin-left': '16px',
+        },
+      }));
+      return process_list;
+    }
+
+    function generateQueueContent() {
+      const queue = currentCPU.queue.toArray();
+
+      const empty_message = Vue.h('em', {
+        style: {
+          'text-align': 'center',
+          'display': 'inline-block',
+          'width': '100%'
+        }
+      }, 'No routines currently in queue');
+      const process_list = queue.map(p => Vue.h(ProcessComponent, {
+        process: p,
+        showInterface: true,
+        style: {
+          'margin-left': '16px',
+        },
+      }));
+      return queue.length == 0 ? empty_message : process_list;
+    }
+
     return () => {
       let items = [];
 
@@ -23,10 +58,11 @@ export default {
         ': ',
         `${currentCPU.maxSpeed} Hz`,
         ' ',
-        Vue.h('button', {
-          onClick: () => { currentStatus.upgradeCpuSpeed(); },
-          disabled: !currentStatus.canAffordCpuSpeedUpgrade(),
-        }, `+1 Hz ($${currentStatus.cpuSpeedUpgradeCost})`),
+        makeUpgradButton({
+          label: "+1 Hz",
+          cost: currentStatus.cpuSpeedUpgradeCost,
+          callback: () => { currentCPU.maxSpeed += 1; },
+        }),
       ]));
 
       const showQueueInfo = towersUpgrades.interfaces.length > 1 || towersUpgrades.maxView.isUnlocked || towersUpgrades.oneView.isUnlocked || towersUpgrades.lastCellLeftProcess.isUnlocked || towersUpgrades.removeFromColumnRowProcess.isUnlocked;
@@ -36,10 +72,11 @@ export default {
           ': ',
           `${currentCPU.cores}`,
           ' ',
-          Vue.h('button', {
-            onClick: () => { currentStatus.upgradeCpuCores(); },
-            disabled: !currentStatus.canAffordCpuCoresUpgrade(),
-          }, `+1 Core ($${currentStatus.cpuCoresUpgradeCost})`),
+          makeUpgradButton({
+            label: "+1 Core",
+            cost: currentStatus.cpuCoresUpgradeCost,
+            callback: () => { currentStatus.upgradeCpuCores(); },
+          }),
         ]));
       }
 
@@ -67,72 +104,33 @@ export default {
         `${currentCPU.powerForSpeed(currentSpeed)} W`,
       ]));
 
-      const activeProcesses: (Process<any>|null)[] = Array.from(currentCPU.activeProcesses).sort();
-      while (activeProcesses.length < currentCPU.cores) {
-        activeProcesses.push(null);
-      }
-      let empty_message = Vue.h('em', {}, 'Currently no active routines');
-      let process_list = Vue.h('ul', {}, activeProcesses.map(p => Vue.h(ProcessComponent, {
-        process: p,
-        showInterface: true,
-      })));
-      if (currentCPU.cores > 0) {
-        items.push(Vue.h('p', {}, [
-          `Active Routines: `,
-          activeProcesses.length == 0 ? empty_message : process_list,
-        ]));
-      }
+      items.push(makeCollapsableFieldset({
+        label: `Active Routines (${currentCPU.coresInUse}/${currentCPU.cores})`,
+        id: "active_routines_fieldset",
+        collapsed: false,
+      }, generateActiveRoutinesContent));
 
-      const queue = currentCPU.queue.toArray();
-
-      const showQueueCheckbox = Vue.h(LabeledCheckbox, {
-        style: {
-          display: 'inline-block',
-          'margin-left': '0px',
-          'margin-right': '0px',
-        },
-        value: showQueue.value,
-        label: "Show routines waiting in queue",
-        boxId: "show_queue_checkbox",
-        onChange: (e: Event) => {
-          const t: HTMLInputElement = e.target as HTMLInputElement;
-          showQueue.value = t.checked;
-        }
-      });
-
-      empty_message = Vue.h('em', {}, 'No routines currently in queue');
-      process_list = Vue.h('ul', {}, queue.map(p => Vue.h(ProcessComponent, {
-        process: p,
-        showInterface: true,
-      })));
       if (showQueueInfo) {
-        if (showQueue.value) {
-          items.push(Vue.h('p', {}, [
-            showQueueCheckbox,
-            ": ",
-            queue.length == 0 ? empty_message : process_list,
-          ]));
-        } else {
-          items.push(Vue.h('p', {}, [
-            showQueueCheckbox
-          ]));
-        }
+        items.push(makeCollapsableFieldset({
+          label: "Queued Routines",
+          id: "queued_routines_fieldset",
+          collapsed: true,
+        }, generateQueueContent));
       }
 
       const info = [Vue.h('strong', {style: {display: 'inline-block'}}, `CPU`)];
 
-      if (showQueueInfo) {
+      if (currentCPU.cores > 1) {
         info.push(' | ')
-        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} cores active (max ${currentCPU.cores})`));
+        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse} active cores @ ${currentCPU.coresInUse == 0 ? 'N/A' : currentSpeed} Hz`));
+      } else {
+        info.push(' | ')
+        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse == 0 ? '0' : currentSpeed} Hz`));
       }
 
-      info.push(' | ')
-      info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.coresInUse == 0 ? '0' : currentSpeed} Hz`));
-
       if (showQueueInfo) {
         info.push(' | ')
-        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${queue.length} in queue`));
-      }
+        info.push(Vue.h('span', {style: {display: 'inline-block'}}, `${currentCPU.queue.toArray().length} routines in queue`));      }
 
       return Vue.h('details', {open: true}, [
         Vue.h('summary', {}, info),

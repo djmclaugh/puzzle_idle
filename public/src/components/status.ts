@@ -17,7 +17,7 @@ export default {
       ]));
 
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
-        Vue.h('strong', {}, 'Last Hour Average: '),
+        Vue.h('strong', {}, 'Last Hour Average (This Session)'),
         `: $${currentStatus.lastHourAveragePerMinute.toFixed(2)}/min`,
       ]));
 

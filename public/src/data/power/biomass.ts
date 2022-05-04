@@ -33,10 +33,17 @@ export default class BiomassPower {
     return this.efficiencyLevel;
   }
 
-  public capacityLevel: number = 1;
+  public capacityLevel: number = 0;
   public get furnaceCapacity(): number {
-    return 10 * this.capacityLevel;
+    const base = Math.pow(10, 1 + Math.floor(this.capacityLevel / 9))
+    return base * ((this.capacityLevel % 9) + 1);
   };
+  public get capacityUpgradeAmount(): number {
+    return Math.pow(10, 1 + Math.floor(this.capacityLevel / 9))
+  }
+  public get capacityUpgradeCost(): number {
+    return (1 + Math.floor(this.capacityLevel / 9)) * (this.capacityUpgradeAmount / 10)
+  }
 
   public toState(): string {
     return [

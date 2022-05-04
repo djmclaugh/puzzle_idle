@@ -4,8 +4,9 @@ body {
   background-color: #f9f9f9;
 }
 
-canvas {
-  border: solid;
+h1 {
+  padding: 0px;
+  margin: 0px;
 }
 
 details {
@@ -313,6 +314,7 @@ legend {
   width: calc(100% - 4px);
   height: calc(100% - 4px);
   display: flex;
+  align-content: flex-start;
   flex-wrap: wrap;
   margin: 2px;
 }

@@ -1,5 +1,7 @@
 import Vue from '../vue.js'
 
+import { currentPower } from './power.js'
+
 type callback = () => void;
 
 export default class Ticker {
@@ -24,10 +26,18 @@ export default class Ticker {
   private processTick() {
     let newTimestamp = Date.now();
     let diff = newTimestamp - this.lastTick;
-    // Only catch up at a rate of 1000 ticks per tick.
-    let ticks = Math.min(1000, Math.floor(diff / 100));
-    this.lastTick += ticks * 100;
-    for (let i = 0; i < ticks; ++i) {
+
+    if (currentPower.power > 0 || currentPower.biomassPower.manualCollect) {
+      // If there is power of a button is pressed, only catch up at a rate of
+      // 1000 ticks per tick.
+      // But otherwise, nothing will happen so just skip all of the ticks.
+      let ticks = Math.min(1000, Math.floor(diff / 100));
+      this.lastTick += ticks * 100;
+      for (let i = 0; i < ticks; ++i) {
+        currentTicker.processTickCallbacks();
+      }
+    } else {
+      this.lastTick = newTimestamp;
       currentTicker.processTickCallbacks();
     }
   }

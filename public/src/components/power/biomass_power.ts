@@ -1,15 +1,37 @@
 import Vue from '../../vue.js'
 
 import { makeUpgradButton } from '../util/upgrade_button.js'
+import { makeCollapsableFieldset } from '../util/collapsable_fieldset.js'
 import { gramsToString } from '../util/units.js'
 
 import { currentPower } from '../../data/power.js'
 const biomassPower = currentPower.biomassPower;
 
+const verbs = [
+  "Collect Leaves",
+  "Rake Leaves",
+  "Rake Leaves",
+  "Collect Branches",
+  "Axe Tree",
+  "Axe Tree",
+  "Chainsaw Tree",
+  "Chainsaw Tree",
+]
+const upgrades = [
+  ["Rake", "Collect leaves twice as fast."],
+  ["Wheelbarrow", "Haul leaves twice as fast."],
+  ["Collect Branches", "Collect branches instead of leaves."],
+  ["Axe", "Cut down small trees instead of collecting branches."],
+  ["Car", "Haul twice as fast."],
+  ["Chainsaw", "Cut down trees twice as fast."],
+  ["Truck", "Haul twice as fast."],
+  ["", ""],
+]
+
 const BiomassPowerComponent = {
   setup() {
-    return () => {
-      let items = [Vue.h('legend', {}, "Biomass Energy")];
+    function generateContents() {
+      let items = [];
 
       const collect = Vue.h('button', {
           onMousedown: () => {
@@ -23,30 +45,10 @@ const BiomassPowerComponent = {
           },
         }, `Keep pressed to generate ${Math.pow(2, biomassPower.collectLevel)} g/s of biomass`);
 
-      let verb = "Collect Leaves";
-      let nextUpgrade = "Rake";
-      let nextDescription = "Collect leaves twice as fast with a rake.";
-      if (biomassPower.collectLevel == 1) {
-        verb = "Rake Leaves";
-        nextUpgrade = "Wheelbarrow";
-        nextDescription = "Haul leaves twice as fast with a wheelbarrow.";
-      } else if (biomassPower.collectLevel == 2) {
-        verb = "Wheelbarrow Leaves";
-        nextUpgrade = "Collect Branches";
-        nextDescription = "Collect fallen branches instead of leaves.";
-      } else if (biomassPower.collectLevel == 3) {
-        verb = "Wheelbarrow Branches";
-        nextUpgrade = "Axe";
-        nextDescription = "Cut down small trees.";
-      } else if (biomassPower.collectLevel == 4) {
-        verb = "Axe Down Small Trees";
-        nextUpgrade = "Chainsaw";
-        nextDescription = "Cut down larger trees.";
-      } else if (biomassPower.collectLevel == 5) {
-        verb = "Chainsaw Trees";
-        nextUpgrade = "";
-        nextDescription = "";
-      }
+      let verb = verbs[biomassPower.collectLevel];
+      let nextUpgrade = upgrades[biomassPower.collectLevel][0];
+      let nextDescription = upgrades[biomassPower.collectLevel][1];
+
       items.push(Vue.h('div', { style: {'margin-top': '8px'}}, [
         Vue.h('strong', {}, verb),
         ': ',
@@ -58,8 +60,8 @@ const BiomassPowerComponent = {
         `: ${gramsToString(biomassPower.currentBiomass)} collected (capacity: ${gramsToString(biomassPower.furnaceCapacity)})`,
         Vue.h('br'),
         makeUpgradButton({
-          cost: Math.floor(Math.log10(biomassPower.capacityLevel)) + 1,
-          label: `+${gramsToString(10)} capacity`,
+          cost: biomassPower.capacityUpgradeCost,
+          label: `+${gramsToString(biomassPower.capacityUpgradeAmount)} capacity`,
           callback: () => {
             biomassPower.capacityLevel += 1;
           },
@@ -69,7 +71,7 @@ const BiomassPowerComponent = {
       if (nextUpgrade != "") {
         items.push(Vue.h('div', { style: {'margin-top': '16px'}}, [
           Vue.h('strong', {}, nextUpgrade), ": " + nextDescription + " ",
-          makeUpgradButton({cost: Math.pow(3, biomassPower.collectLevel + 1), callback: () => {
+          makeUpgradButton({cost: Math.pow(4, biomassPower.collectLevel), callback: () => {
             biomassPower.collectLevel += 1;
           }}),
         ]));
@@ -118,8 +120,15 @@ const BiomassPowerComponent = {
           },
         }),
       ]));
+      return items;
+    }
 
-      return Vue.h('fieldset', {}, items);
+    return () => {
+      return makeCollapsableFieldset({
+        label: "Biomass Energy",
+        id: "biomass_energy_fieldset",
+        collapsed: false,
+      }, generateContents);
     }
   }
 };

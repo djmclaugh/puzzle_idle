@@ -1,8 +1,12 @@
 import Vue from '../vue.js'
+
 import { currentCPU } from './cpu.js'
 import { currentPower } from './power.js'
+import { currentTicker } from './ticker.js'
+
 import { puzzles } from './towers/towers_puzzles.js'
 import { towersUpgrades } from './towers/towers_upgrades.js'
+
 
 export class StatusData {
   private money: number = 0;
@@ -14,29 +18,13 @@ export class StatusData {
   public latestValidationResult: -1|0|1 = 0;
 
   public toState(): string {
-    return this.money.toString(36)
-        + "," + this.allMoney.toString(36)
-        + "," + this.incomeTracker.map(i => Math.floor(i[0]/1000).toString(36) + "-" + i[1].toString(36)).join("|");
+    return this.money.toString(36) + "," + this.allMoney.toString(36);
   }
-  public fromState(s: string, version: string) {
-    if (version == "0.0.1" || version == "0.0.2") {
-      const split = s.split(',');
-      this.money = parseInt(split[0], 36);
-      this.allMoney = parseInt(split[1], 36);
-      this.incomeTracker = [];
-    } else {
-      const split = s.split(',');
-      this.money = parseInt(split[0], 36);
-      this.allMoney = parseInt(split[1], 36);
-      if (split[2] == "") {
-        this.incomeTracker = [];
-      } else {
-        this.incomeTracker = split[2].split("|").map(s => {
-          const [a, b] = s.split("-");
-          return [Number.parseInt(a, 36) * 1000, Number.parseInt(b, 36)];
-        });
-      }
-    }
+  public fromState(s: string) {
+    const split = s.split(',');
+    this.money = parseInt(split[0], 36);
+    this.allMoney = parseInt(split[1], 36);
+    this.incomeTracker = [];
     this.updateAverage();
   }
 
@@ -108,7 +96,7 @@ export class StatusData {
   public gainMoney(n: number) {
     this.money += n;
     this.allMoney += n;
-    this.incomeTracker.push([Date.now(), n]);
+    this.incomeTracker.push([currentTicker.lastTick, n]);
     this.updateAverage();
   }
 
@@ -130,11 +118,6 @@ export class StatusData {
 
   public canAffordCpuSpeedUpgrade(): boolean {
     return this.money >= this.cpuSpeedUpgradeCost;
-  }
-
-  public upgradeCpuSpeed(): void {
-    this.money -= this.cpuSpeedUpgradeCost;
-    currentCPU.maxSpeed += 1;
   }
 
   public get cpuCoresUpgradeCost(): number {

@@ -1,7 +1,7 @@
 import Vue from '../vue.js'
 
 import { makeUpgradButton } from './util/upgrade_button.js'
-import { secondsToString } from './util/units.js'
+import { secondsToString, metricToString } from './util/units.js'
 
 import { makeManualPower } from './power/manual_power.js'
 import { makeBiomassPower } from './power/biomass_power.js'
@@ -32,7 +32,7 @@ export default {
       const info = [
         Vue.h('strong', {style: {display: 'inline-block'}}, `Power`),
         ' | ',
-        Vue.h('span', {style: {display: 'inline-block'}}, `${currentPower.generatedPower} W`),
+        Vue.h('span', {style: {display: 'inline-block'}}, `${metricToString(currentPower.generatedPower, "W")}`),
       ];
       if (biomassPower.level > 0) {
         info.push(' | ');

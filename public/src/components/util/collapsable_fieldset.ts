@@ -12,7 +12,7 @@ const CollapsableFieldset = {
   props: Object.keys(new CollapsableFieldsetProps()),
 
   setup(props: CollapsableFieldsetProps, {slots}: any) {
-    const collapsed = Vue.ref(true);
+    const collapsed = Vue.ref(props.collapsed !== false);
     return () => {
       const style: any = {};
       if (collapsed.value) {
@@ -41,7 +41,7 @@ const CollapsableFieldset = {
               'padding-right': '0px',
             }
           }, checkbox),
-          Vue.h('span', {}, slots),
+          Vue.h('slot', {}, slots),
         ])
       }
     }
